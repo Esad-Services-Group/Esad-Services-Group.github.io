@@ -1,0 +1,262 @@
+<!-- HTML for ESAD Document Center (DMS) homepage -->
+<title>ESAD QHSE</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container py-4" style="max-width: 1100px; font-family: 'Segoe UI', Arial, sans-serif;">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4 gap-3 flex-wrap">
+    <div class="d-flex align-items-center gap-3">
+      <img src="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png" alt="ESAD Services Group" style="height: 48px; width: auto;">
+      <h1 class="h4 mb-0 text-dark">ESAD Document Center</h1>
+    </div>
+    <form id="searchForm" class="d-flex gap-2 ms-auto" style="min-width: 280px;">
+      <input type="search" id="q" class="form-control form-control-sm" placeholder="Search documents by title or ID…">
+      <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i></button>
+    </form>
+  </div>
+
+  <!-- My tasks -->
+  <h2 class="h5 mb-3 text-dark">My tasks</h2>
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 mb-4" id="counters"></div>
+
+  <!-- Actions -->
+  <h2 class="h5 mb-3 text-dark">Start something</h2>
+  <div class="row row-cols-1 row-cols-md-3 g-3 mb-4" id="actions"></div>
+
+  <hr class="mb-4">
+
+  <!-- By department -->
+  <h2 class="h5 mb-3 text-dark">Browse by department</h2>
+  <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3 mb-4" id="depts"></div>
+
+  <!-- By type -->
+  <h2 class="h5 mb-3 text-dark">Browse by document type</h2>
+  <div class="row row-cols-2 row-cols-md-4 g-3 mb-4" id="types"></div>
+
+  <hr class="mb-4">
+
+  <div class="row g-4">
+    <!-- Recently published -->
+    <div class="col-12 col-md-7">
+      <h2 class="h5 mb-3 text-dark">Recently published</h2>
+      <div class="list-group" id="recent">
+        <div class="list-group-item bg-light small text-secondary">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Guidance -->
+    <div class="col-12 col-md-5">
+      <h2 class="h5 mb-3 text-dark">Guidance &amp; templates</h2>
+      <div class="list-group mb-4" id="guides"></div>
+
+      <h2 class="h5 mb-3 text-dark">Document control</h2>
+      <div class="list-group mb-4" id="admin"></div>
+
+      <h2 class="h5 mb-3 text-dark">Need help?</h2>
+      <div class="card bg-light border">
+        <div class="card-body small">
+          <p class="mb-1"><i class="bi bi-envelope me-2 text-secondary"></i>Document Control: <a id="dcMail" href="#"></a></p>
+          <p class="mb-0"><i class="bi bi-headset me-2 text-secondary"></i>IT Helpdesk: <a href="mailto:itsupport@esadservices.com">itsupport@esadservices.com</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============ CONFIG — adjust to match the ESADDC site ============ */
+const STUB = true;   // true = every link goes to "#" (except the DCR form); set false to restore real links
+
+const CFG = {
+  site: "https://esadtalents.sharepoint.com/sites/ESADDC",
+  docControlEmail: "documentcontrol@esadservices.com",   // TODO
+  dcrForm: "https://esadtalents.sharepoint.com/sites/QHSE/_layouts/15/listforms.aspx?cid=MDMyNjQxNzYtNjliYi00NDBiLWE3ZWYtOTNkMGYyNWE0Y2Vj&nav=NWQzODkzY2EtYzYxNy00MzU0LTg3NTMtNmVlYjI1MGNjNTMw",
+  lists: {                                                // list/library titles + URL names
+    controlled:   { title: "Controlled Documents",   url: "Controlled Documents" },
+    uncontrolled: { title: "Uncontrolled Documents", url: "Uncontrolled Documents" },
+    ncr:          { title: "Non-Conformance",        url: "Lists/Non-Conformance" },
+    log:          { title: "Document Decision Log",  url: "Lists/Document Decision Log" },
+  },
+  // INTERNAL column names (check in List settings → click column → URL ends with Field=...)
+  f: {
+    dept: "Division", type: "DocumentType", docStatus: "DocumentStatus",
+    docId: "DocumentID", revision: "Revision", effective: "EffectiveDate",
+    nextReview: "NextReviewDate", owner: "DocumentOwner",
+    status: "Status", reviewers: "Reviewers", approvers: "Approvers", requestor: "Requestor",
+  },
+  // Links (edit to real URLs)
+  links: {
+    guidelines:  "SitePages/Guidelines-for-Writing-Controlled-Documents.aspx",
+    templates:   "Document Templates",
+    docControlProc: "SitePages/Document-Control-Procedure.aspx",
+    idGuide:     "SitePages/Document-ID-Numbering.aspx",
+    userGuide:   "SitePages/DMS-User-Guide.aspx",
+    faq:         "SitePages/FAQ.aspx",
+  },
+};
+
+const DEPARTMENTS = [
+  ["Compliance", "bi-shield-check"], ["Legal Affairs", "bi-hammer"], ["Support Services", "bi-life-preserver"],
+  ["Human Resources", "bi-people"], ["Procurement", "bi-cart-check"], ["QHSE", "bi-clipboard2-pulse"],
+  ["IT", "bi-pc-display"], ["B2B Operations", "bi-building"], ["MARCOM", "bi-megaphone"],
+  ["B2C Sales and Operations", "bi-bag"], ["Financial Control", "bi-calculator"], ["Treasury", "bi-cash-coin"],
+  ["Company-wide", "bi-buildings"],
+];
+const TYPES = [
+  ["Policy", "bi-journal-check", "Rules and principles", "Policies"], ["Procedure", "bi-list-ol", "How we do things", "Procedures"],
+  ["Form", "bi-ui-checks", "Records and templates", "Forms"], ["Plan", "bi-map", "Programmes and plans", "Plans"],
+];
+/* ================================================================== */
+
+const $ = id => document.getElementById(id);
+const enc = encodeURIComponent;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const url = p => STUB ? "#" : (/^https?:/.test(p) ? p : `${CFG.site}/${p.split("/").map(enc).join("/")}`);
+const viewUrl = (l, field, val) => STUB ? "#" : `${url(l.url)}/Forms/AllItems.aspx` + (field ? `?FilterField1=${field}&FilterValue1=${enc(val)}&FilterType1=Choice` : "");
+const listUrl = l => STUB ? "#" : `${url(l.url)}/AllItems.aspx`;
+const C = CFG.lists, F = CFG.f;
+
+/* ---- Counters (SharePoint REST, runs as the signed-in user) ---- */
+const COUNTERS = [
+  { id: "approve", label: "Awaiting my approval", icon: "bi-patch-check", hot: true,
+    list: C.uncontrolled.title, person: F.approvers, filter: u => `${F.status} eq 'Under Approval'`,
+    href: viewUrl(C.uncontrolled, F.status, "Under Approval") },
+  { id: "review", label: "Awaiting my review", icon: "bi-eye", hot: true,
+    list: C.uncontrolled.title, person: F.reviewers, filter: u => `${F.status} eq 'Under Reviewer(s)'`,
+    href: viewUrl(C.uncontrolled, F.status, "Under Reviewer(s)") },
+  { id: "qhse", label: "Awaiting QHSE validation", icon: "bi-clipboard-check", hot: true,
+    list: C.uncontrolled.title, filter: u => `${F.status} eq 'Under QHSE Validation'`,
+    href: viewUrl(C.uncontrolled, F.status, "Under QHSE Validation") },
+  { id: "mine", label: "My open requests", icon: "bi-hourglass-split",
+    list: C.uncontrolled.title, person: F.requestor, filter: u => `${F.status} ne 'Approved' and ${F.status} ne 'Rejected'`,
+    href: listUrl(C.uncontrolled) },
+  { id: "due", label: "My documents due for review (30 days)", icon: "bi-calendar-check",
+    list: C.controlled.title, person: F.owner,
+    filter: u => `${F.docStatus} eq 'Active' and ${F.nextReview} le datetime'${new Date(Date.now() + 30 * 864e5).toISOString()}'`,
+    href: viewUrl(C.controlled) },
+];
+
+$("counters").innerHTML = COUNTERS.map(c => `
+  <div class="col">
+    <a href="${c.href}" class="card h-100 bg-light border text-decoration-none text-reset" id="card-${c.id}">
+      <div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-start">
+          <span class="fs-2 fw-semibold lh-1" id="n-${c.id}">–</span>
+          <i class="bi ${c.icon} fs-4 text-secondary"></i>
+        </div>
+        <p class="small text-muted mb-0 mt-2">${esc(c.label)}</p>
+      </div>
+    </a>
+  </div>`).join("");
+
+const rest = async p => {
+  const r = await fetch(`${CFG.site}/_api/${p}`, { headers: { Accept: "application/json;odata=nometadata" }, credentials: "same-origin" });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+};
+
+(async () => {
+  let uid;
+  try { uid = (await rest("web/currentuser?$select=Id")).Id; } catch { /* not on SharePoint / not signed in: leave "–" */ }
+
+  COUNTERS.forEach(async c => {
+    try {
+      let f = c.filter();
+      if (c.person) f = `(${f}) and ${c.person}/Id eq ${uid}`;
+      const q = `web/lists/getbytitle('${c.list}')/items?$select=Id${c.person ? `,${c.person}/Id&$expand=${c.person}` : ""}&$top=500&$filter=${enc(f)}`;
+      const n = (await rest(q)).value.length;
+      $("n-" + c.id).textContent = n >= 500 ? "500+" : n;
+      if (n && c.hot) { $("card-" + c.id).classList.replace("border", "border-warning"); $("n-" + c.id).classList.add("text-warning-emphasis"); }
+      if (!n) $("card-" + c.id).classList.add("opacity-75");
+    } catch { /* leave "–" */ }
+  });
+
+  try {
+    const q = `web/lists/getbytitle('${C.controlled.title}')/items?$select=Id,Title,${F.docId},${F.revision},${F.effective},FileRef&$orderby=${F.effective} desc&$top=6&$filter=${enc(F.docStatus + " eq 'Active'")}`;
+    const items = (await rest(q)).value;
+    $("recent").innerHTML = items.map(i => `
+      <a href="${STUB ? "#" : esc(i.FileRef) + "?web=1"}" class="list-group-item list-group-item-action bg-light d-flex align-items-center gap-2">
+        <i class="bi bi-file-earmark-text text-secondary"></i>
+        <span class="small flex-grow-1">${esc(i.Title)}<br><span class="text-muted" style="font-size:12px;">${esc(i[F.docId])} · ${esc(i[F.revision])}</span></span>
+        <span class="text-muted" style="font-size:12px;">${i[F.effective] ? new Date(i[F.effective]).toLocaleDateString("en-GB") : ""}</span>
+      </a>`).join("") || '<div class="list-group-item bg-light small text-secondary">Nothing published yet</div>';
+  } catch {
+    $("recent").innerHTML = `<a href="${viewUrl(C.controlled)}" class="list-group-item list-group-item-action bg-light small">Open Controlled Documents →</a>`;
+  }
+})();
+
+/* ---- Actions ---- */
+const ACTIONS = [
+  { t: "Submit a document or change request", d: "New document, or a change to an existing one", i: "bi-file-earmark-plus", href: CFG.dcrForm, primary: true },
+  { t: "File a non-conformance report", d: "Report a process, product or service issue", i: "bi-exclamation-triangle", href: STUB ? "#" : `${url(C.ncr.url)}/NewForm.aspx` },
+  { t: "Track my requests", d: "Status of everything I've submitted", i: "bi-signpost-split", href: listUrl(C.uncontrolled) },
+];
+$("actions").innerHTML = ACTIONS.map(a => `
+  <div class="col">
+    <a href="${a.href}" class="card h-100 ${a.primary ? "text-bg-primary border-primary" : "bg-light border"} text-decoration-none">
+      <div class="card-body p-3 d-flex gap-3 align-items-center">
+        <i class="bi ${a.i} fs-3 ${a.primary ? "" : "text-secondary"}"></i>
+        <div>
+          <p class="fw-semibold mb-0" style="font-size: 14px;">${a.t}</p>
+          <p class="mb-0 ${a.primary ? "opacity-75" : "text-muted"}" style="font-size: 12px;">${a.d}</p>
+        </div>
+      </div>
+    </a>
+  </div>`).join("");
+
+/* ---- Departments & types ---- */
+$("depts").innerHTML = DEPARTMENTS.map(([n, i]) => `
+  <div class="col">
+    <a href="${viewUrl(C.controlled, F.dept, n)}" class="card h-100 bg-light border text-decoration-none text-reset">
+      <div class="card-body p-3 text-center">
+        <i class="bi ${i} fs-2 text-primary"></i>
+        <p class="fw-semibold mb-0 mt-2" style="font-size: 13px;">${esc(n)}</p>
+      </div>
+    </a>
+  </div>`).join("");
+
+$("types").innerHTML = TYPES.map(([n, i, d, pl]) => `
+  <div class="col">
+    <a href="${viewUrl(C.controlled, F.type, n)}" class="card h-100 bg-light border text-decoration-none text-reset">
+      <div class="card-body p-3">
+        <i class="bi ${i} fs-4 text-secondary"></i>
+        <p class="fw-semibold mb-0 mt-2" style="font-size: 14px;">${pl}</p>
+        <p class="text-muted mb-0" style="font-size: 12px;">${d}</p>
+      </div>
+    </a>
+  </div>`).join("");
+
+/* ---- Lists ---- */
+const L = CFG.links;
+const rows = items => items.map(([t, i, h]) => `
+  <a href="${h}" class="list-group-item list-group-item-action bg-light d-flex align-items-center gap-2">
+    <i class="bi ${i} text-secondary"></i><span class="small">${t}</span>
+  </a>`).join("");
+
+$("guides").innerHTML = rows([
+  ["Guidelines for writing controlled documents", "bi-pencil-square", url(L.guidelines)],
+  ["Document templates", "bi-file-earmark-ruled", url(L.templates)],
+  ["Document ID numbering guide", "bi-hash", url(L.idGuide)],
+  ["Document control procedure", "bi-journal-text", url(L.docControlProc)],
+  // ["DMS user guide", "bi-book", url(L.userGuide)],
+  // ["FAQ", "bi-question-circle", url(L.faq)],
+]);
+
+$("admin").innerHTML = rows([
+  ["Decision log (approval audit trail)", "bi-clock-history", listUrl(C.log)],
+  ["Archive: superseded & obsolete documents", "bi-archive", viewUrl(C.controlled, F.docStatus, "Obsolete")],
+]);
+
+$("dcMail").href = "mailto:" + CFG.docControlEmail;
+$("dcMail").textContent = CFG.docControlEmail;
+
+$("searchForm").onsubmit = e => {
+  e.preventDefault();
+  const q = $("q").value.trim();
+  if (q) location.href = `${CFG.site}/_layouts/15/search.aspx?q=${enc(q)}`;
+};
+</script>
