@@ -30,14 +30,13 @@
     </form>
   </div>
 
-  <div id="demoBanner" class="alert alert-warning small py-2 d-none"><i class="bi bi-info-circle me-1"></i>Demo mode: showing sample data, no sign-in needed. Everything is clickable; changes reset on reload.</div>
   <div id="error" class="alert alert-danger small d-none"></div>
 
   <!-- ================= HOME ================= -->
   <div id="viewHome">
 
     <h2 class="h5 mb-3 text-dark">My tasks</h2>
-    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 mb-4" id="counters"></div>
+    <div class="d-grid gap-3 mb-4" id="counters" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));"></div>
 
     <h2 class="h5 mb-3 text-dark">Start something</h2>
     <div class="row row-cols-1 row-cols-md-3 g-3 mb-4" id="actions"></div>
@@ -115,64 +114,6 @@
 
   <div id="viewPage" class="d-none"></div>
 
-  <!-- ================= REQUEST FORM ================= -->
-  <div id="viewRequest" class="d-none" style="max-width: 760px;">
-    <h2 class="h5 mb-1 text-dark">Submit a document or change request</h2>
-    <p class="small text-secondary mb-4">Your request goes to QHSE for validation, then to the reviewers and approvers.</p>
-
-    <div id="reqSignin" class="alert alert-secondary small d-none">
-      Sign in to submit a request. <button type="button" class="btn btn-sm btn-primary ms-2" id="signinBtn3">Sign in</button>
-    </div>
-
-    <form id="reqForm" class="card bg-light border" novalidate>
-      <div class="card-body p-4">
-        <div class="mb-3">
-          <label class="form-label small fw-semibold" for="rBy">Requested by</label>
-          <input type="text" class="form-control form-control-sm" id="rBy" readonly>
-        </div>
-        <div class="row g-3 mb-3">
-          <div class="col-12 col-md-7">
-            <label class="form-label small fw-semibold" for="rType">Request type</label>
-            <select class="form-select form-select-sm" id="rType" required></select>
-          </div>
-          <div class="col-12 col-md-5">
-            <label class="form-label small fw-semibold" for="rPri">Priority</label>
-            <select class="form-select form-select-sm" id="rPri" required></select>
-          </div>
-        </div>
-        <div class="mb-3 d-none" id="rDocWrap">
-          <label class="form-label small fw-semibold" for="rDoc">Existing document</label>
-          <select class="form-select form-select-sm" id="rDoc"></select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-semibold" for="rTitle">Document title</label>
-          <input type="text" class="form-control form-control-sm" id="rTitle" required maxlength="255">
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-semibold" for="rDesc">Description of change</label>
-          <textarea class="form-control form-control-sm" id="rDesc" rows="4" required placeholder="What is new or what changed, and why?"></textarea>
-        </div>
-        <div class="mb-4">
-          <label class="form-label small fw-semibold" for="rFile">Document file</label>
-          <input type="file" class="form-control form-control-sm" id="rFile" required accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf">
-          <div class="form-text">Use the approved template for the document type.</div>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-          <button type="submit" class="btn btn-primary btn-sm px-4" id="rSubmit"><i class="bi bi-send me-1"></i>Submit request</button>
-          <span class="small text-secondary d-none" id="rBusy"><span class="spinner-border spinner-border-sm me-2"></span>Submitting…</span>
-          <a href="#" class="small ms-auto text-decoration-none">Cancel</a>
-        </div>
-      </div>
-    </form>
-
-    <div id="reqDone" class="alert alert-success d-none mt-3">
-      <i class="bi bi-check-circle me-1"></i><span id="reqDoneMsg"></span> <a id="trackLink" href="#tasks?v=mine" class="ms-1">Track my requests</a>
-      <div class="mt-2"><button type="button" class="btn btn-sm btn-outline-success" id="rAgain">Submit another</button></div>
-    </div>
-    <div id="reqErr" class="alert alert-danger small d-none mt-3"></div>
-    <p class="small text-muted mt-3">Prefer the SharePoint form? <a id="spForm" href="#">Open it</a></p>
-  </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@4.30.0/lib/msal-browser.min.js"></script>
@@ -204,12 +145,10 @@ const CFG = {
     status: "Status", reviewers: "Reviewers", approvers: "Approvers", requestor: "Requestor",
   },
   activeStatus: "Active",
-  // In-page request form → Uncontrolled Documents (verify choice values + INTERNAL column names)
+  // Request types (used by the demo)
   dcr: {
     changeTypes: ["New document", "Revision to existing document", "Retire / obsolete document"],
     newType: "New document",
-    priorities: ["Low", "Medium", "High"],
-    f: { changeType: "ChangeType", description: "DescriptionofChange", priority: "Priority", document: "Document", requestor: "Requestor" },
   },
   links: {
     guidelines: "SitePages/Guidelines-for-Writing-Controlled-Documents.aspx",
@@ -265,21 +204,19 @@ const COUNTERS = [
   { id: "due", label: "My documents due for review (30 days)", icon: "bi-calendar-check" },
 ];
 $("counters").innerHTML = COUNTERS.map(c => `
-  <div class="col">
-    <a href="#" class="card h-100 bg-light border text-decoration-none text-reset" id="card-${c.id}">
-      <div class="card-body p-3">
-        <div class="d-flex justify-content-between align-items-start">
-          <span class="fs-2 fw-semibold lh-1" id="n-${c.id}">–</span>
-          <i class="bi ${c.icon} fs-4 text-secondary"></i>
-        </div>
-        <p class="small text-muted mb-0 mt-2">${esc(c.label)}</p>
+  <a href="#" class="card h-100 bg-light border text-decoration-none text-reset" id="card-${c.id}">
+    <div class="card-body p-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <span class="fs-2 fw-semibold lh-1" id="n-${c.id}">–</span>
+        <i class="bi ${c.icon} fs-4 text-secondary"></i>
       </div>
-    </a>
-  </div>`).join("");
+      <p class="small text-muted mb-0 mt-2">${esc(c.label)}</p>
+    </div>
+  </a>`).join("");
 
 const ACTIONS = [
-  { t: "Submit a document or change request", d: "New document, or a change to an existing one", i: "bi-file-earmark-plus", href: "#request", primary: true },
-  { t: "File a non-conformance report", d: "Report a process, product or service issue", i: "bi-exclamation-triangle", href: CFG.demo ? "#ncr" : STUB ? "#" : `${spUrl(C.ncr.url)}/NewForm.aspx` },
+  { t: "Submit a document or change request", d: "New document, or a change to an existing one", i: "bi-file-earmark-plus", href: CFG.dcrForm, primary: true },
+  { t: "File a non-conformance report", d: "Report a process, product or service issue", i: "bi-exclamation-triangle", href: "#" },
   { t: "Track my requests", d: "Status of everything I've submitted", i: "bi-signpost-split", href: CFG.demo ? "#tasks?v=mine" : listUrl(C.uncontrolled) },
 ];
 $("actions").innerHTML = ACTIONS.map(a => `
@@ -402,7 +339,6 @@ async function loadCounters(siteId, tok) {
       const n = counts[c.id];
       if (n === null) return;
       $("n-" + c.id).textContent = n;
-      if (n && c.hot) { $("card-" + c.id).classList.replace("border", "border-warning"); }
       if (!n) $("card-" + c.id).classList.add("opacity-75");
     });
   } catch { /* leave "–" */ }
@@ -462,19 +398,13 @@ function render() {
 function route() {
   const [v, qs = ""] = location.hash.slice(1).split("?");
   const p = new URLSearchParams(qs);
-  const isAll = v === "all", isReq = v === "request", isPage = ["tasks", "ncr", "log", "info"].includes(v);
-  $("viewHome").classList.toggle("d-none", isAll || isReq || isPage);
+  const isAll = v === "all", isPage = ["tasks", "log", "info"].includes(v);
+  $("viewHome").classList.toggle("d-none", isAll || isPage);
   $("viewPage").classList.toggle("d-none", !isPage);
   $("viewAll").classList.toggle("d-none", !isAll);
-  $("viewRequest").classList.toggle("d-none", !isReq);
-  $("tabHome").classList.toggle("active", !isAll && !isReq && !isPage);
+  $("tabHome").classList.toggle("active", !isAll && !isPage);
   $("tabAll").classList.toggle("active", isAll);
   if (isPage) { renderPage(v, p); return; }
-  if (isReq) {
-    setupRequest();
-    if (p.get("doc") && reqReady) { $("rType").value = CFG.dcr.changeTypes[1]; $("rType").onchange(); $("rDoc").value = p.get("doc"); $("rDoc").onchange(); }
-    return;
-  }
   if (!isAll) return;
 
   if (!account) { $("allSignin").classList.remove("d-none"); return; }
@@ -497,99 +427,6 @@ $("searchForm").onsubmit = e => {
   const q = $("q").value.trim();
   location.hash = "all?q=" + enc(q);
   if (location.hash.startsWith("#all")) route();
-};
-
-/* ---------- Request form ---------- */
-const R = CFG.dcr.f, SCOPES_W = ["Sites.ReadWrite.All"];
-let reqReady = false;
-$("spForm").href = CFG.dcrForm;
-
-async function tokenWrite() {
-  try { return (await msalApp.acquireTokenSilent({ scopes: SCOPES_W, account })).accessToken; }
-  catch { return (await msalApp.acquireTokenPopup({ scopes: SCOPES_W, account })).accessToken; }   // popup keeps the form (and file) intact
-}
-async function gcall(path, tok, opts = {}) {
-  const r = await fetch("https://graph.microsoft.com/v1.0" + path, { ...opts, headers: { Authorization: "Bearer " + tok, ...(opts.headers || {}) } });
-  if (!r.ok) {
-    let m = ""; try { m = (await r.json()).error.message; } catch {}
-    throw new Error(`${r.status}${m ? ": " + m : ""}`);
-  }
-  return r.json();
-}
-
-function setupRequest() {
-  const signedIn = !!account;
-  $("reqSignin").classList.toggle("d-none", signedIn);
-  $("reqForm").classList.toggle("d-none", !signedIn);
-  if (!signedIn) return;
-  $("rBy").value = account.name || account.username;
-  if (reqReady) return;
-  reqReady = true;
-  const o = a => a.map(v => `<option>${esc(v)}</option>`).join("");
-  $("rType").innerHTML = o(CFG.dcr.changeTypes);
-  $("rPri").innerHTML = o(CFG.dcr.priorities);
-  const active = docs.filter(d => !d.status || d.status === CFG.activeStatus).sort((a, b) => a.docId.localeCompare(b.docId));
-  $("rDoc").innerHTML = '<option value="">Select a document…</option>' +
-    active.map(d => `<option value="${esc(d.id)}">${esc(d.docId)} — ${esc(d.title)}</option>`).join("");
-  $("rType").onchange = () => {
-    const isNew = $("rType").value === CFG.dcr.newType;
-    $("rDocWrap").classList.toggle("d-none", isNew);
-    $("rDoc").required = !isNew;
-  };
-  $("rDoc").onchange = () => {
-    const d = docs.find(x => x.id === $("rDoc").value);
-    if (d && !$("rTitle").value) $("rTitle").value = d.title;
-  };
-}
-
-$("rAgain").onclick = () => {
-  $("reqDone").classList.add("d-none");
-  $("reqForm").classList.remove("d-none");
-  $("reqForm").reset();
-  $("rType").onchange();
-};
-
-$("reqForm").onsubmit = async e => {
-  e.preventDefault();
-  $("reqErr").classList.add("d-none");
-  if (!$("reqForm").reportValidity()) return;
-  const file = $("rFile").files[0];
-  $("rSubmit").disabled = true; $("rBusy").classList.remove("d-none");
-  try {
-    let msg;
-    if (CFG.demo) {
-      await new Promise(r => setTimeout(r, 900));
-      const t = $("rType").value, docId = $("rDoc").value;
-      reqs.unshift({ id: "DCR-" + String(reqs.length + 1).padStart(3, "0"), title: $("rTitle").value.trim(), type: t, doc: t === CFG.dcr.newType ? "" : docId,
-        requestor: ME, priority: $("rPri").value, status: "Under QHSE Validation", desc: $("rDesc").value.trim(), submitted: new Date().toISOString(),
-        hist: [{ stage: "Submitted", by: ME, decision: "Submitted", date: new Date().toISOString(), comment: "" }] });
-      refreshCounters();
-      msg = `Request ${reqs[0].id} submitted to QHSE.`;
-    } else {
-      const tok = await tokenWrite();
-      const site = await gcall(`/sites/${CFG.host}:${CFG.sitePath}`, tok);
-      const drive = await gcall(`/sites/${site.id}/lists/${enc(C.uncontrolled.title)}/drive`, tok);
-      // 1) upload the file into the library
-      const up = await gcall(`/drives/${drive.id}/root:/${enc(file.name)}:/content?@microsoft.graph.conflictBehavior=rename`, tok,
-        { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
-      // 2) fill in the metadata
-      const li = await gcall(`/drives/${drive.id}/items/${up.id}/listItem`, tok);
-      const isNew = $("rType").value === CFG.dcr.newType;
-      const fields = { Title: $("rTitle").value.trim(), [R.changeType]: $("rType").value,
-        [R.description]: $("rDesc").value.trim(), [R.priority]: $("rPri").value };
-      if (!isNew && $("rDoc").value) fields[R.document + "LookupId"] = $("rDoc").value;
-      if (uid) fields[R.requestor + "LookupId"] = uid;
-      await gcall(`/sites/${site.id}/lists/${enc(C.uncontrolled.title)}/items/${li.id}/fields`, tok,
-        { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fields) });
-      msg = `Request submitted: ${up.name}. QHSE will validate it next.`;
-    }
-    $("reqForm").classList.add("d-none");
-    $("reqDoneMsg").textContent = msg;
-    $("reqDone").classList.remove("d-none");
-  } catch (err) {
-    $("reqErr").textContent = "Couldn't submit the request: " + (err.message || err);
-    $("reqErr").classList.remove("d-none");
-  } finally { $("rSubmit").disabled = false; $("rBusy").classList.add("d-none"); }
 };
 
 /* ---------- Demo data ---------- */
@@ -630,7 +467,6 @@ function startDemo() {
   docs = DEMO_DOCS; docsLoaded = true;
   docs.filter(d => d.status === CFG.activeStatus).forEach((d, i) => d.nextReview = iso(i < 3 ? [9, 21, 27][i] : 45 + i * 9));
   $("who").textContent = "Demo mode";
-  $("demoBanner").classList.remove("d-none");
   setupFilters(); renderRecent();
   $("allApp").classList.remove("d-none");
   refreshCounters();
@@ -655,11 +491,6 @@ let reqs = [
   mk("DCR-009", "Petty Cash Procedure", "New document", "", ME, "Low", "Rejected", -30, [H("QHSE validation", "QHSE Team", "Validated", -29), H("Approval", "Approver", "Rejected", -25, "Overlaps with the Expense Policy.")]),
 ];
 let log = reqs.flatMap(r => r.hist.map(h => ({ ...h, ref: r.id + " · " + r.title })));
-let ncrs = [
-  { id: "NCR-001", title: "Calibration certificate expired for scale #4", dept: "B2B Operations", severity: "Major", by: "Omar Khan", date: iso(-9), status: "In progress" },
-  { id: "NCR-002", title: "Visitor log not completed on 28 Sept", dept: "Support Services", severity: "Minor", by: "Hassan Omar", date: iso(-4), status: "Open" },
-  { id: "NCR-003", title: "Supplier delivered wrong PPE size", dept: "Procurement", severity: "Minor", by: "Noor Saleh", date: iso(-15), status: "Closed" },
-];
 const isOpen = r => !["Approved", "Rejected"].includes(r.status);
 const dueDocs = () => docs.filter(d => (!d.status || d.status === CFG.activeStatus) && d.nextReview && new Date(d.nextReview) <= Date.now() + 30 * DAY);
 const getCounts = () => ({ approve: reqs.filter(r => r.status === "Under Approval").length, review: reqs.filter(r => r.status === "Under Reviewer(s)").length,
@@ -667,10 +498,10 @@ const getCounts = () => ({ approve: reqs.filter(r => r.status === "Under Approva
 function refreshCounters() {
   const n = getCounts();
   COUNTERS.forEach(c => {
-    const hot = !!n[c.id] && c.hot, el = $("card-" + c.id);
+    const el = $("card-" + c.id);
     $("n-" + c.id).textContent = n[c.id];
     el.href = "#tasks?v=" + c.id;
-    el.classList.toggle("border-warning", hot); el.classList.toggle("border", !hot); el.classList.toggle("opacity-75", !n[c.id]);
+    el.classList.toggle("opacity-75", !n[c.id]);
   });
 }
 const SB = { "Under QHSE Validation": "text-bg-primary", "Under Reviewer(s)": "text-bg-info", "Under Approval": "text-bg-warning", Approved: "text-bg-success", Rejected: "text-bg-danger",
@@ -733,24 +564,13 @@ function renderPage(v, p) {
     } else if (k === "mine") {
       el.innerHTML = back + `<h2 class="h5 text-dark mb-3">My requests</h2>` +
         tbl(["ID", "Title", "Type", "Priority", "Submitted", "Status"], reqs.filter(r => r.requestor === ME).map(r => `<tr><td class="small text-nowrap">${r.id}</td><td class="small">${esc(r.title)}${last(r)}</td><td class="small">${esc(r.type)}</td><td class="small">${esc(r.priority)}</td><td class="small">${fmt(r.submitted)}</td><td>${sb(r.status)}</td></tr>`).join(""), "You haven't submitted any requests.") +
-        '<a href="#request" class="btn btn-primary btn-sm mt-3"><i class="bi bi-file-earmark-plus me-1"></i>New request</a>';
+        `<a href="${CFG.dcrForm}" target="_blank" rel="noopener" class="btn btn-primary btn-sm mt-3"><i class="bi bi-file-earmark-plus me-1"></i>New request</a>`;
     } else {
       const T = TASKS[k];
       el.innerHTML = back + `<h2 class="h5 text-dark mb-3">${T.title}</h2>` +
         tbl(["ID", "Title", "Type", "Requestor", "Priority", "Submitted", ""], reqs.filter(r => r.status === T.st).map(r => `<tr><td class="small text-nowrap">${r.id}</td><td class="small">${esc(r.title)}${last(r)}</td><td class="small">${esc(r.type)}</td><td class="small">${esc(r.requestor)}</td><td class="small">${esc(r.priority)}</td><td class="small">${fmt(r.submitted)}</td>
           <td class="text-end text-nowrap">${T.acts.map(([to, label, c]) => `<button class="btn btn-sm btn-${c} ms-1" data-act="decide" data-id="${r.id}" data-to="${to}">${label}</button>`).join("")}</td></tr>`).join(""), "Nothing is waiting for you.");
     }
-  } else if (v === "ncr") {
-    el.innerHTML = back + `<h2 class="h5 text-dark mb-3">Non-conformance reports</h2>
-      <form id="ncrForm" class="card bg-light border mb-4"><div class="card-body p-3"><div class="row g-2">
-        <div class="col-12 col-md-6"><input class="form-control form-control-sm" id="nTitle" placeholder="What happened?" required></div>
-        <div class="col-6 col-md-3"><select class="form-select form-select-sm" id="nDept">${DEPARTMENTS.map(([n]) => `<option>${esc(n)}</option>`).join("")}</select></div>
-        <div class="col-6 col-md-3"><select class="form-select form-select-sm" id="nSev"><option>Minor</option><option>Major</option><option>Critical</option></select></div>
-        <div class="col-12 col-md-9"><input class="form-control form-control-sm" id="nDesc" placeholder="Details (optional)"></div>
-        <div class="col-12 col-md-3"><button class="btn btn-primary btn-sm w-100"><i class="bi bi-exclamation-triangle me-1"></i>File report</button></div>
-      </div></div></form>` +
-      tbl(["ID", "Title", "Department", "Severity", "Raised by", "Date", "Status", ""], ncrs.map(n => `<tr><td class="small text-nowrap">${n.id}</td><td class="small">${esc(n.title)}</td><td class="small">${esc(n.dept)}</td><td>${sb(n.severity)}</td><td class="small">${esc(n.by)}</td><td class="small">${fmt(n.date)}</td><td>${sb(n.status)}</td>
-        <td class="text-end">${n.status === "Closed" ? "" : `<button class="btn btn-sm btn-outline-secondary" data-act="ncr-next" data-id="${n.id}">${n.status === "Open" ? "Start" : "Close"}</button>`}</td></tr>`).join(""), "No reports yet.");
   } else if (v === "log") {
     el.innerHTML = back + `<h2 class="h5 text-dark mb-3">Decision log</h2>` +
       tbl(["Date", "Request", "Stage", "Decision", "By", "Comment"], [...log].sort((a, b) => b.date.localeCompare(a.date)).map(l => `<tr><td class="small text-nowrap">${fmt(l.date)}</td><td class="small">${esc(l.ref)}</td><td class="small">${esc(l.stage)}</td><td>${sb(l.decision)}</td><td class="small">${esc(l.by)}</td><td class="small">${esc(l.comment)}</td></tr>`).join(""), "No decisions yet.");
@@ -765,21 +585,13 @@ $("viewPage").addEventListener("click", e => {
   const a = b.dataset.act, id = b.dataset.id;
   if (a === "decide") decide(id, b.dataset.to);
   else if (a === "due-ok") { const d = docs.find(x => x.id === id); d.nextReview = iso(365); refreshCounters(); }
-  else if (a === "due-rev") { location.hash = "request?doc=" + enc(id); return; }
-  else if (a === "ncr-next") { const n = ncrs.find(x => x.id === id); n.status = n.status === "Open" ? "In progress" : "Closed"; }
+  else if (a === "due-rev") { window.open(CFG.dcrForm, "_blank", "noopener"); return; }
   else if (a === "tpl") { alert("Demo: template download."); return; }
   route();
 });
-$("viewPage").addEventListener("submit", e => {
-  if (e.target.id !== "ncrForm") return;
-  e.preventDefault();
-  ncrs.unshift({ id: "NCR-" + String(ncrs.length + 1).padStart(3, "0"), title: $("nTitle").value.trim(), dept: $("nDept").value, severity: $("nSev").value, by: ME, date: iso(), status: "Open" });
-  route();
-});
-
 /* ---------- Start ---------- */
 const signIn = () => msalApp && msalApp.loginRedirect({ scopes: SCOPES });
-$("signinBtn").onclick = $("signinBtn2").onclick = $("signinBtn3").onclick = signIn;
+$("signinBtn").onclick = $("signinBtn2").onclick = signIn;
 
 (async () => {
   if (CFG.demo) { startDemo(); return; }
