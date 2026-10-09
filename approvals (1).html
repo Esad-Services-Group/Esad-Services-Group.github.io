@@ -1,0 +1,1555 @@
+<!-- Approvals: company-wide approvals demo. Plain HTML, Bootstrap 5 and JavaScript; data is kept in this browser. People, request types and settings are at the top of the script. -->
+<title>Approvals</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+
+<div class="container py-3 py-md-4" style="max-width: 1100px; font-family: 'Segoe UI', Arial, sans-serif;">
+
+  <!-- Demo control: who you are -->
+  <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+    <label for="asUser" class="text-secondary small text-nowrap" title="Viewing as"><i class="bi bi-person-badge"></i><span class="d-none d-sm-inline ms-1">Viewing as</span></label>
+    <select id="asUser" class="form-select form-select-sm w-auto" style="max-width: 340px; min-width: 0;" aria-label="Viewing as"></select>
+  </div>
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-3 mb-3">
+    <div class="d-flex align-items-center gap-3" style="min-width: 0;">
+      <img src="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png" alt="ESAD" style="height: 48px; width: auto;">
+      <h1 class="h4 mb-0 text-truncate"><a href="#inbox" class="text-dark text-decoration-none">Approvals</a></h1>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+      <div class="dropdown">
+        <button type="button" class="btn btn-sm btn-outline-secondary position-relative" id="bellBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notifications" title="Notifications">
+          <i class="bi bi-bell"></i><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger fw-normal d-none" id="bellCount"></span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end p-0 shadow-sm" style="width: 340px; max-width: calc(100vw - 24px);" id="bellMenu"></div>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="awayBtn" title="Out of office"><i class="bi bi-airplane"></i><span class="d-none d-md-inline ms-1" id="awayText">Out of office</span></button>
+      <a href="#new" class="btn btn-sm btn-primary" title="New request"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">New request</span></a>
+    </div>
+  </div>
+
+  <!-- Menu -->
+  <ul class="nav nav-underline flex-nowrap overflow-x-auto text-nowrap gap-2 gap-sm-3 border-bottom mb-4" id="nav">
+    <li class="nav-item"><a class="nav-link" href="#inbox" data-nav="inbox">Inbox<span class="badge rounded-pill text-bg-danger fw-normal ms-1 d-none" data-count="inbox"></span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#mine" data-nav="mine">My requests</a></li>
+    <li class="nav-item d-none" id="navAll"><a class="nav-link" href="#all" data-nav="all">All requests</a></li>
+  </ul>
+
+  <div id="alertBox"></div>
+  <div id="view"></div>
+
+  <div class="border-top mt-5 pt-3 d-flex flex-wrap justify-content-between gap-2 text-secondary" style="font-size: 12px;">
+    <span id="demoNote">Demo: requests are saved in this browser only.</span>
+    <button type="button" class="btn btn-link btn-sm p-0 text-secondary text-decoration-none" style="font-size: 12px;" id="resetBtn">Reset demo data</button>
+  </div>
+
+  <!-- Out of office -->
+  <div class="modal fade" id="awayModal" tabindex="-1" aria-labelledby="awayTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 mb-0" id="awayTitle">Out of office</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="small text-secondary">While you're away, the person you choose can approve requests that are waiting for you. You can still approve them yourself.</p>
+          <div class="mb-3">
+            <label for="awayTo" class="form-label small fw-semibold">Who approves for you</label>
+            <select id="awayTo" class="form-select form-select-sm"></select>
+            <div class="invalid-feedback" id="awayToErr">Choose someone.</div>
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label for="awayFrom" class="form-label small fw-semibold">From</label>
+              <input type="date" id="awayFrom" class="form-control form-control-sm">
+              <div class="invalid-feedback">Choose a start date.</div>
+            </div>
+            <div class="col-6">
+              <label for="awayUntil" class="form-label small fw-semibold">Until</label>
+              <input type="date" id="awayUntil" class="form-control form-control-sm">
+              <div class="invalid-feedback">Must be on or after the start date.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-danger me-auto d-none" id="awayStop">Stop delegating</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast align-items-center text-bg-dark border-0" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body small" id="toastMsg"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+(() => {
+  'use strict';
+
+  /* ============================== EDIT HERE ============================== */
+  const CFG = {
+    currency: 'SAR',
+    weekend: [5, 6],          // Friday and Saturday are not working days
+    overdueDays: 3,           // a step waiting this long is flagged as overdue
+    reminderHours: 24,        // the requester can send one reminder per step in this window
+    maxFileMB: 1,             // per attachment (the demo keeps files in the browser)
+    defaultUser: 'yousef',
+    storageKey: 'esad-approvals-demo-v1',
+  };
+
+  // Teams resolve to approvers ("any one member can decide") and to who can see a request type.
+  const TEAMS = {
+    HR: 'HR team', Finance: 'Finance team', IT: 'IT team', Procurement: 'Procurement',
+    GR: 'Government relations', Admins: 'System admins',
+  };
+
+  // Directory. In the live version this comes from Entra ID (manager, department, groups).
+  const PEOPLE = [
+    { id: 'abdullah', name: 'Abdullah Al-Mutairi', title: 'Chief Executive Officer', dept: 'Executive', manager: null, teams: [] },
+    { id: 'mohammed', name: 'Mohammed Al-Ghamdi', title: 'Chief Financial Officer', dept: 'Finance', manager: 'abdullah', teams: [] },
+    { id: 'faisal', name: 'Faisal Al-Qahtani', title: 'Finance Manager', dept: 'Finance', manager: 'mohammed', teams: ['Finance'] },
+    { id: 'lina', name: 'Lina Mansour', title: 'Accountant', dept: 'Finance', manager: 'faisal', teams: ['Finance'] },
+    { id: 'tariq', name: 'Tariq Al-Shehri', title: 'Procurement Officer', dept: 'Finance', manager: 'faisal', teams: ['Procurement'] },
+    { id: 'sara', name: 'Sara Al-Harbi', title: 'HR Manager', dept: 'HR', manager: 'abdullah', teams: ['HR'] },
+    { id: 'nadia', name: 'Nadia Farouk', title: 'HR Specialist', dept: 'HR', manager: 'sara', teams: ['HR'] },
+    { id: 'aisha', name: 'Aisha Rahman', title: 'Recruitment Lead', dept: 'HR', manager: 'sara', teams: ['HR'] },
+    { id: 'majed', name: 'Majed Al-Dossary', title: 'Government Relations Officer', dept: 'HR', manager: 'sara', teams: ['GR'] },
+    { id: 'hana', name: 'Hana Al-Zahrani', title: 'IT Manager', dept: 'IT', manager: 'abdullah', teams: ['IT', 'Admins'] },
+    { id: 'khalid', name: 'Khalid Al-Anazi', title: 'Systems Engineer', dept: 'IT', manager: 'hana', teams: ['IT'] },
+    { id: 'yousef', name: 'Yousef Al-Otaibi', title: 'Operations Manager', dept: 'Operations', manager: 'abdullah', teams: [] },
+    { id: 'omar', name: 'Omar Haddad', title: 'Project Coordinator', dept: 'Operations', manager: 'yousef', teams: [] },
+    { id: 'maryam', name: 'Maryam Khan', title: 'Fleet Coordinator', dept: 'Operations', manager: 'yousef', teams: [] },
+    { id: 'imran', name: 'Imran Siddiqui', title: 'Site Supervisor', dept: 'Operations', manager: 'yousef', teams: [] },
+    { id: 'rania', name: 'Rania Saleh', title: 'Sales Manager', dept: 'Sales', manager: 'abdullah', teams: [] },
+    { id: 'bilal', name: 'Bilal Siddiqui', title: 'Account Manager', dept: 'Sales', manager: 'rania', teams: [] },
+  ];
+  const DEPARTMENTS = ['Executive', 'Finance', 'HR', 'IT', 'Operations', 'Sales'];
+
+  // Building blocks for request types
+  const field = {
+    text: (id, label, o = {}) => ({ id, label, type: 'text', ...o }),
+    area: (id, label, o = {}) => ({ id, label, type: 'textarea', ...o }),
+    number: (id, label, o = {}) => ({ id, label, type: 'number', ...o }),
+    money: (id, label, o = {}) => ({ id, label, type: 'money', ...o }),
+    date: (id, label, o = {}) => ({ id, label, type: 'date', ...o }),
+    choice: (id, label, options, o = {}) => ({ id, label, type: 'choice', options, ...o }),
+    yesno: (id, label, o = {}) => ({ id, label, type: 'yesno', ...o }),
+    person: (id, label, o = {}) => ({ id, label, type: 'person', ...o }),
+    file: (id, label, o = {}) => ({ id, label, type: 'file', ...o }),
+    calc: (id, label, compute, o = {}) => ({ id, label, type: 'computed', compute, ...o }),
+  };
+  const by = {
+    manager: { role: 'manager', label: 'Line manager' },
+    team: t => ({ team: t, label: TEAMS[t] }),
+    person: (id, label) => ({ person: id, label }),
+    field: (id, label) => ({ field: id, label }),
+  };
+  const step = (name, slots, extra = {}) => ({ name, slots: [].concat(slots), ...extra });
+  const dateOrder = (v, a, b, msg) => (v[a] && v[b] && v[b] < v[a] ? { [b]: msg } : null);
+
+  // Request types: their form fields and who approves them, in order.
+  // "restricted" fields (health, personal reasons) are only shown to the requester, the approvers and HR.
+  // A step with several approvers (slots) runs in parallel and needs all of them.
+  // "when" adds a step only if the condition is true; "whenText" explains why.
+  const TYPES = [
+    {
+      id: 'leave', name: 'Leave request', category: 'HR and people', icon: 'calendar-week', prefix: 'LV', viewers: ['HR'],
+      description: 'Annual, sick, emergency and other leave.',
+      fields: [
+        field.choice('leaveType', 'Leave type', ['Annual', 'Sick', 'Emergency', 'Unpaid', 'Hajj', 'Marriage', 'Bereavement'], { required: true, half: true }),
+        field.person('cover', 'Who covers your work', { half: true, excludeSelf: true }),
+        field.date('from', 'First day of leave', { required: true, half: true }),
+        field.date('to', 'Last day of leave', { required: true, half: true }),
+        field.calc('days', 'Working days', v => (v.from && v.to ? workingDays(v.from, v.to) : ''), { half: true, format: n => plural(n, 'day'), help: 'Fridays and Saturdays are not counted.' }),
+        field.area('reason', 'Reason', { requiredIf: v => ['Emergency', 'Unpaid'].includes(v.leaveType), restricted: true }),
+        field.file('medical', 'Medical report', { showIf: v => v.leaveType === 'Sick', required: true, accept: '.pdf,image/*', restricted: true }),
+      ],
+      validate: v => dateOrder(v, 'from', 'to', 'The last day must be on or after the first day.')
+        || (v.from && v.to && !workingDays(v.from, v.to) ? { to: 'These dates only cover a weekend.' } : null),
+      steps: [step('Line manager', by.manager), step('HR team', by.team('HR'))],
+      summary: v => `${v.leaveType} leave · ${dateRange(v.from, v.to)} · ${plural(v.days || 0, 'working day')}`,
+    },
+    {
+      id: 'letter', name: 'HR letter', category: 'HR and people', icon: 'envelope-paper', prefix: 'LTR', viewers: ['HR'],
+      description: 'Salary certificate, employment letter, NOC or experience letter.',
+      fields: [
+        field.choice('letterType', 'Letter', ['Salary certificate', 'Employment letter', 'No objection certificate (NOC)', 'Experience letter'], { required: true, half: true }),
+        field.choice('language', 'Language', ['English', 'Arabic', 'English and Arabic'], { required: true, half: true }),
+        field.text('addressedTo', 'Addressed to', { required: true, help: 'For example a bank, an embassy or "To whom it may concern".' }),
+        field.area('purpose', 'Purpose'),
+      ],
+      steps: [step('HR team', by.team('HR'))],
+      summary: v => `${v.letterType} · to ${v.addressedTo}`,
+    },
+    {
+      id: 'overtime', name: 'Overtime', category: 'HR and people', icon: 'clock-history', prefix: 'OT', viewers: ['HR'],
+      description: 'Approval for hours worked beyond your schedule.',
+      fields: [
+        field.date('date', 'Date', { required: true, half: true, notFuture: true }),
+        field.number('hours', 'Hours', { required: true, half: true, min: 0.5, max: 12, step: 0.5 }),
+        field.area('reason', 'Reason', { required: true }),
+      ],
+      steps: [step('Line manager', by.manager), step('HR team', by.team('HR'))],
+      summary: v => `${plural(v.hours, 'hour')} on ${fmtDate(v.date)}`,
+    },
+    {
+      id: 'visa', name: 'Exit re-entry visa', category: 'HR and people', icon: 'passport', prefix: 'ERV', viewers: ['HR', 'GR'],
+      description: 'Exit re-entry visa for travel outside Saudi Arabia.',
+      fields: [
+        field.choice('visaType', 'Visa type', ['Single', 'Multiple'], { required: true, half: true }),
+        field.text('destination', 'Destination', { required: true, half: true }),
+        field.date('departure', 'Departure', { required: true, half: true, notPast: true }),
+        field.date('returnBy', 'Return by', { required: true, half: true, notPast: true }),
+        field.area('reason', 'Reason', { restricted: true }),
+      ],
+      validate: v => dateOrder(v, 'departure', 'returnBy', 'The return date must be on or after the departure.'),
+      steps: [step('Line manager', by.manager), step('HR team', by.team('HR')), step('Government relations', by.team('GR'))],
+      summary: v => `${v.visaType} · ${v.destination} · ${dateRange(v.departure, v.returnBy)}`,
+    },
+    {
+      id: 'manpower', name: 'Manpower requisition', category: 'HR and people', icon: 'person-plus', prefix: 'MR', viewers: ['HR'],
+      description: 'Request to hire for new or replacement positions.',
+      fields: [
+        field.text('position', 'Position', { required: true, half: true }),
+        field.choice('department', 'Department', DEPARTMENTS, { required: true, half: true }),
+        field.number('headcount', 'Number of people', { required: true, half: true, min: 1, max: 100 }),
+        field.choice('employmentType', 'Employment type', ['Full-time', 'Contract', 'Outsourced'], { required: true, half: true }),
+        field.date('startDate', 'Needed from', { half: true, notPast: true }),
+        field.yesno('budgeted', 'This position is in the approved budget', { half: true }),
+        field.area('justification', 'Justification', { required: true }),
+      ],
+      steps: [
+        step('Line manager', by.manager), step('HR team', by.team('HR')),
+        step('Finance team', by.team('Finance'), { when: v => !v.budgeted, whenText: 'the position is not in the approved budget' }),
+        step('CEO', by.person('abdullah', 'CEO'), { when: v => !v.budgeted, whenText: 'the position is not in the approved budget' }),
+      ],
+      summary: v => `${v.headcount} × ${v.position} · ${v.employmentType}${v.budgeted ? '' : ' · not budgeted'}`,
+    },
+    {
+      id: 'clearance', name: 'Resignation clearance', category: 'HR and people', icon: 'box-arrow-right', prefix: 'CLR', viewers: ['HR'],
+      description: 'Clearance from IT, Finance and Government relations before your last day.',
+      fields: [
+        field.date('lastDay', 'Last working day', { required: true, half: true, notPast: true }),
+        field.text('forwarding', 'Personal email for final documents', { half: true, restricted: true }),
+        field.area('items', 'Company items to return', { required: true, help: 'For example: laptop, mobile phone, access card.' }),
+      ],
+      steps: [
+        step('Line manager', by.manager),
+        step('Clearance', [by.team('IT'), by.team('Finance'), by.team('GR')]),
+        step('HR team', by.team('HR')),
+      ],
+      summary: v => `Last working day ${fmtDate(v.lastDay)}`,
+    },
+    {
+      id: 'advance', name: 'Salary advance', category: 'Finance and purchasing', icon: 'cash-coin', prefix: 'ADV', viewers: ['HR', 'Finance'],
+      description: 'An advance on your salary, repaid through payroll.',
+      fields: [
+        field.money('amount', 'Amount', { required: true, half: true, min: 500, max: 30000 }),
+        field.choice('months', 'Repay over', ['1', '2', '3', '4', '5', '6'], { required: true, half: true, suffix: 'months' }),
+        field.calc('monthly', 'Monthly deduction', v => (v.amount > 0 && v.months ? Math.round(v.amount / Number(v.months) * 100) / 100 : ''), { half: true, format: n => money(n) }),
+        field.area('reason', 'Reason', { required: true, restricted: true }),
+      ],
+      steps: [
+        step('Line manager', by.manager), step('HR team', by.team('HR')), step('Finance team', by.team('Finance')),
+        step('CFO', by.person('mohammed', 'CFO'), { when: v => v.amount > 10000, whenText: `the amount is over ${CFG.currency} 10,000` }),
+      ],
+      summary: v => `${money(v.amount)} over ${plural(Number(v.months), 'month')}`,
+    },
+    {
+      id: 'expense', name: 'Expense claim', category: 'Finance and purchasing', icon: 'receipt', prefix: 'EXP', viewers: ['Finance'],
+      description: 'Get reimbursed for business expenses you paid.',
+      fields: [
+        field.date('date', 'Date of expense', { required: true, half: true, notFuture: true }),
+        field.choice('category', 'Category', ['Travel', 'Accommodation', 'Meals', 'Transport', 'Client entertainment', 'Other'], { required: true, half: true }),
+        field.money('amount', 'Amount', { required: true, half: true, min: 1, max: 100000 }),
+        field.area('description', 'Description', { required: true }),
+        field.file('receipts', 'Receipts', { required: true, accept: '.pdf,image/*' }),
+      ],
+      steps: [
+        step('Line manager', by.manager), step('Finance team', by.team('Finance')),
+        step('CFO', by.person('mohammed', 'CFO'), { when: v => v.amount > 5000, whenText: `the amount is over ${CFG.currency} 5,000` }),
+      ],
+      summary: v => `${v.category} · ${money(v.amount)}`,
+    },
+    {
+      id: 'travel', name: 'Business travel', category: 'Finance and purchasing', icon: 'airplane-engines', prefix: 'TRV', viewers: ['Finance', 'HR'],
+      description: 'Approval and budget for a business trip.',
+      fields: [
+        field.text('destination', 'Destination', { required: true }),
+        field.date('from', 'Departure', { required: true, half: true, notPast: true }),
+        field.date('to', 'Return', { required: true, half: true, notPast: true }),
+        field.money('cost', 'Estimated total cost', { required: true, half: true, min: 1 }),
+        field.yesno('advance', 'I need a cash advance', { half: true }),
+        field.money('advanceAmount', 'Advance amount', { showIf: v => v.advance, required: true, half: true, min: 1 }),
+        field.area('purpose', 'Purpose', { required: true }),
+      ],
+      validate: v => dateOrder(v, 'from', 'to', 'The return must be on or after the departure.')
+        || (v.advance && v.advanceAmount > v.cost ? { advanceAmount: 'The advance can\'t be more than the estimated cost.' } : null),
+      steps: [
+        step('Line manager', by.manager), step('Finance team', by.team('Finance')),
+        step('CEO', by.person('abdullah', 'CEO'), { when: v => v.cost > 15000, whenText: `the cost is over ${CFG.currency} 15,000` }),
+      ],
+      summary: v => `${v.destination} · ${dateRange(v.from, v.to)} · ${money(v.cost)}`,
+    },
+    {
+      id: 'purchase', name: 'Purchase request', category: 'Finance and purchasing', icon: 'cart3', prefix: 'PR', viewers: ['Procurement', 'Finance'],
+      description: 'Buy or rent goods and services.',
+      fields: [
+        field.text('item', 'What do you need', { required: true }),
+        field.number('quantity', 'Quantity', { required: true, half: true, min: 1, max: 100000 }),
+        field.money('cost', 'Estimated total cost', { required: true, half: true, min: 1 }),
+        field.text('vendor', 'Suggested vendor', { half: true }),
+        field.date('neededBy', 'Needed by', { required: true, half: true, notPast: true }),
+        field.area('justification', 'Justification', { required: true }),
+        field.file('quotes', 'Quotations', { accept: '.pdf,image/*' }),
+      ],
+      steps: [
+        step('Line manager', by.manager), step('Procurement', by.team('Procurement')), step('Finance team', by.team('Finance')),
+        step('CEO', by.person('abdullah', 'CEO'), { when: v => v.cost > 20000, whenText: `the cost is over ${CFG.currency} 20,000` }),
+      ],
+      summary: v => `${v.quantity} × ${v.item} · ${money(v.cost)}`,
+    },
+    {
+      id: 'contract', name: 'Contract or discount', category: 'Finance and purchasing', icon: 'file-earmark-text', prefix: 'CON', viewers: ['Finance'],
+      description: 'Sign-off for client contracts, renewals and discounts.',
+      fields: [
+        field.text('client', 'Client', { required: true, half: true }),
+        field.money('value', 'Contract value', { required: true, half: true, min: 1 }),
+        field.number('discount', 'Discount (%)', { half: true, min: 0, max: 100, step: 0.5 }),
+        field.number('term', 'Term (months)', { required: true, half: true, min: 1, max: 120 }),
+        field.area('notes', 'Notes'),
+        field.file('draft', 'Contract draft', { accept: '.pdf,.doc,.docx' }),
+      ],
+      steps: [
+        step('Line manager', by.manager), step('Finance team', by.team('Finance')),
+        step('CEO', by.person('abdullah', 'CEO'), { when: v => v.discount > 10 || v.value > 1000000, whenText: `the discount is over 10% or the value is over ${CFG.currency} 1,000,000` }),
+      ],
+      summary: v => `${v.client} · ${money(v.value)}${v.discount ? ` · ${v.discount}% discount` : ''}`,
+    },
+    {
+      id: 'it', name: 'IT request', category: 'IT', icon: 'laptop', prefix: 'IT', viewers: ['IT'],
+      description: 'System access, equipment and software.',
+      fields: [
+        field.choice('category', 'Request', ['System access', 'Laptop', 'Mobile phone', 'Software licence', 'Email or distribution list', 'Other'], { required: true, half: true }),
+        field.date('neededBy', 'Needed by', { half: true, notPast: true }),
+        field.text('item', 'System or item', { required: true }),
+        field.area('details', 'Details', { required: true }),
+      ],
+      steps: [step('Line manager', by.manager), step('IT team', by.team('IT'))],
+      summary: v => `${v.category}: ${v.item}`,
+    },
+    {
+      id: 'general', name: 'General approval', category: 'Other', icon: 'check2-square', prefix: 'GEN', viewers: [],
+      description: 'Anything else. You choose up to three approvers, in order.',
+      fields: [
+        field.text('subject', 'Subject', { required: true }),
+        field.area('details', 'Details', { required: true }),
+        field.money('amount', 'Amount', { half: true, min: 0 }),
+        field.file('files', 'Attachments'),
+        field.person('approver1', 'First approver', { required: true, half: true, excludeSelf: true }),
+        field.person('approver2', 'Second approver', { half: true, excludeSelf: true }),
+        field.person('approver3', 'Third approver', { half: true, excludeSelf: true, showIf: v => !!v.approver2 }),
+      ],
+      validate: v => {
+        if (v.approver2 && v.approver2 === v.approver1) return { approver2: 'Choose a different person from the first approver.' };
+        if (v.approver3 && (v.approver3 === v.approver1 || v.approver3 === v.approver2)) return { approver3: 'Choose someone who is not already an approver.' };
+        return null;
+      },
+      steps: [
+        step('First approver', by.field('approver1', 'First approver')),
+        step('Second approver', by.field('approver2', 'Second approver'), { when: v => !!v.approver2 }),
+        step('Third approver', by.field('approver3', 'Third approver'), { when: v => !!v.approver2 && !!v.approver3 }),
+      ],
+      summary: v => v.subject,
+    },
+  ];
+  /* ======================================================================= */
+
+  const VERSION = 1;
+  const DAY = 864e5;
+  const TYPE = new Map(TYPES.map(t => [t.id, t]));
+  const PERSON = new Map(PEOPLE.map(p => [p.id, p]));
+
+  /* ---------- helpers ---------- */
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  const low = v => String(v ?? '').toLowerCase();
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const clone = v => JSON.parse(JSON.stringify(v));
+  const nameOf = id => PERSON.get(id)?.name || 'Unknown';
+  const you = id => (id === me ? 'you' : esc(nameOf(id)));
+  const You = id => (id === me ? 'You' : esc(nameOf(id)));
+  const money = n => `${CFG.currency} ${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtSize = b => (b < 1024 ? `${b} B` : b < 1048576 ? `${Math.round(b / 102.4) / 10} KB` : `${Math.round(b / 104857.6) / 10} MB`);
+
+  const ymd = d => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+  const parseYmd = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '')); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  const todayYmd = () => ymd(new Date());
+  const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+  function workingDays(a, b) {
+    const s = parseYmd(a), e = parseYmd(b);
+    if (!s || !e || e < s) return 0;
+    let n = 0;
+    for (const d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) if (!CFG.weekend.includes(d.getDay())) n++;
+    return n;
+  }
+  const fmtDate = v => { const d = typeof v === 'number' ? new Date(v) : parseYmd(v); return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''; };
+  const fmtStamp = t => new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  function dateRange(a, b) {
+    const s = parseYmd(a), e = parseYmd(b);
+    if (!s) return '';
+    if (!e || a === b) return fmtDate(a);
+    const m = d => d.toLocaleDateString('en-GB', { month: 'short' });
+    if (s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth()) return `${s.getDate()}–${e.getDate()} ${m(e)} ${e.getFullYear()}`;
+    if (s.getFullYear() === e.getFullYear()) return `${s.getDate()} ${m(s)} – ${e.getDate()} ${m(e)} ${e.getFullYear()}`;
+    return `${fmtDate(a)} – ${fmtDate(b)}`;
+  }
+  function ago(t) {
+    const mins = Math.round((Date.now() - t) / 6e4);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins} min ago`;
+    const midnight = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const days = Math.round((midnight(new Date()) - midnight(new Date(t))) / DAY);
+    if (days <= 0) return plural(Math.round(mins / 60), 'hour') + ' ago';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    return fmtDate(t);
+  }
+  const when = t => (t ? `<span title="${esc(fmtStamp(t))}">${esc(ago(t))}</span>` : '');
+  const waitDays = t => Math.floor((Date.now() - t) / DAY);
+  function waitedHtml(t) {
+    const d = waitDays(t);
+    const text = d < 1 ? 'Today' : plural(d, 'day');
+    return d >= CFG.overdueDays
+      ? `<span class="text-warning-emphasis fw-semibold text-nowrap" title="Waiting since ${esc(fmtStamp(t))}"><i class="bi bi-exclamation-circle me-1"></i>${text}</span>`
+      : `<span class="text-nowrap" title="Waiting since ${esc(fmtStamp(t))}">${text}</span>`;
+  }
+
+  // A tiny valid PDF, so sample attachments open like real files
+  function samplePdf(lines) {
+    const text = lines.map((l, i) => `BT /F1 ${i ? 11 : 16} Tf 56 ${780 - i * 24} Td (${String(l).replace(/[\\()]/g, '\\$&')}) Tj ET`).join('\n');
+    const objs = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      `<< /Length ${text.length} >>\nstream\n${text}\nendstream`,
+    ];
+    let pdf = '%PDF-1.4\n';
+    const offsets = objs.map((o, i) => { const at = pdf.length; pdf += `${i + 1} 0 obj\n${o}\nendobj\n`; return at; });
+    const xref = pdf.length;
+    pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offsets.map(o => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}`;
+    pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    return { url: 'data:application/pdf;base64,' + btoa(pdf), size: pdf.length };
+  }
+
+  /* ---------- storage ---------- */
+  const store = {
+    data: null,
+    persist: (() => { try { localStorage.setItem('__probe', '1'); localStorage.removeItem('__probe'); return true; } catch { return false; } })(),
+    read() {
+      if (!this.persist) return !!this.data;
+      try {
+        const d = JSON.parse(localStorage.getItem(CFG.storageKey) || 'null');
+        if (d && d.version === VERSION) { this.data = d; return true; }
+      } catch { /* ignore broken data */ }
+      return false;
+    },
+    save() {
+      if (!this.persist) return true;
+      try { localStorage.setItem(CFG.storageKey, JSON.stringify(this.data)); return true; } catch { return false; }
+    },
+    reset() { this.data = seedData(); this.save(); },
+  };
+  // Every change: re-read (another tab may have changed things), apply, save. Undo if the browser can't store it.
+  function commit(fn) {
+    store.read();
+    const before = JSON.stringify(store.data);
+    try {
+      const out = fn();
+      if (!store.save()) { store.data = JSON.parse(before); throw new Error("This browser's storage is full. Remove large attachments or reset the demo data."); }
+      return out;
+    } catch (err) {
+      store.data = JSON.parse(before);
+      throw err;
+    }
+  }
+  const reqById = id => store.data.requests.find(r => r.id === id);
+  const typeOf = r => TYPE.get(r.typeId);
+
+  /* ---------- approval engine ---------- */
+  const teamMembers = t => PEOPLE.filter(p => p.teams.includes(t)).map(p => p.id);
+  function resolveSlot(def, values, requesterId) {
+    if (def.role === 'manager') return { ids: [PERSON.get(requesterId)?.manager].filter(Boolean), none: 'No line manager on record' };
+    if (def.team) return { ids: teamMembers(def.team), none: `No one is in ${TEAMS[def.team]}` };
+    if (def.person) return { ids: [def.person], none: 'No approver set' };
+    if (def.field) return { ids: [values[def.field]].filter(Boolean), none: 'Not chosen yet' };
+    return { ids: [], none: 'No approver set' };
+  }
+  // Turn a type's chain into concrete steps for one request. The requester never approves their own request.
+  function buildSteps(type, values, requesterId) {
+    return type.steps.filter(def => !def.when || def.when(values)).map(def => {
+      const slots = def.slots.map(sd => {
+        const { ids, none } = resolveSlot(sd, values, requesterId);
+        const approverIds = ids.filter(id => id !== requesterId);
+        const note = approverIds.length ? '' : ids.length ? `${nameOf(ids[0])} can't approve their own request` : none;
+        return { label: sd.label, approverIds, decision: approverIds.length ? null : 'skipped', by: null, onBehalfOf: null, at: null, comment: '', note };
+      });
+      return { name: def.name, reason: def.when ? def.whenText || '' : '', slots, status: slots.every(s => s.decision === 'skipped') ? 'skipped' : 'waiting', startedAt: null, endedAt: null, remindedAt: null };
+    });
+  }
+  function activeDelegate(ownerId) {
+    const d = store.data.delegations[ownerId];
+    if (!d) return null;
+    const today = todayYmd();
+    return today >= d.from && today <= d.until ? d.to : null;
+  }
+  const delegatingToMe = () => PEOPLE.filter(p => p.id !== me && activeDelegate(p.id) === me);
+  // The slots this person can decide right now, directly or as someone's delegate
+  function actionable(userId, req) {
+    if (req.status !== 'pending' || req.requesterId === userId) return [];
+    const st = req.steps[req.current];
+    if (!st || st.status !== 'current') return [];
+    return st.slots.filter(s => s.decision === null).map(s => {
+      if (s.approverIds.includes(userId)) return { slot: s, behalf: null };
+      const owner = s.approverIds.find(id => activeDelegate(id) === userId);
+      return owner ? { slot: s, behalf: owner } : null;
+    }).filter(Boolean);
+  }
+  const pendingPeople = st => {
+    const ids = st.slots.filter(s => s.decision === null).flatMap(s => s.approverIds);
+    return [...ids, ...ids.map(activeDelegate).filter(Boolean)];
+  };
+  function log(req, at, by, action, extra = {}) {
+    req.history.push({ at, by, action, ...extra });
+    req.updated = Math.max(req.updated || 0, at);
+  }
+  function notify(ids, at, req, text) {
+    for (const id of new Set(ids)) {
+      if (id) store.data.notifications.push({ id: store.data.nextNotif++, userId: id, at, requestId: req.id, text, read: false });
+    }
+  }
+  const label = req => `${typeOf(req).name} ${req.ref}`;
+  // Start the next step that needs someone; finish the request when none is left.
+  function advance(req, from, at) {
+    for (let i = from; i < req.steps.length; i++) {
+      const st = req.steps[i];
+      if (st.status === 'skipped') {
+        log(req, at, null, 'skipped', { step: st.name, comment: st.slots.map(s => s.note).filter(Boolean).join('. ') });
+        continue;
+      }
+      st.status = 'current';
+      st.startedAt = at;
+      req.current = i;
+      st.slots.filter(s => s.decision === 'skipped').forEach(s => log(req, at, null, 'skipped', { step: `${st.name}: ${s.label}`, comment: s.note }));
+      notify(pendingPeople(st), at, req, `${nameOf(req.requesterId)} needs your approval on ${label(req)}`);
+      return;
+    }
+    req.status = 'approved';
+    req.current = -1;
+    req.closedAt = at;
+    log(req, at, null, 'completed');
+    notify([req.requesterId], at, req, `Approved: your ${label(req)}`);
+  }
+  function prepareValues(type, values) {
+    const v = clone(values);
+    for (const f of type.fields) {
+      if (f.showIf && !f.showIf(v)) delete v[f.id];
+      else if (f.type === 'computed') v[f.id] = f.compute(v);
+    }
+    return v;
+  }
+  function submit(userId, typeId, values, attachments, at = Date.now()) {
+    const type = TYPE.get(typeId);
+    const v = prepareValues(type, values);
+    const key = `${type.prefix}-${new Date(at).getFullYear()}`;
+    const n = (store.data.seq[key] || 0) + 1;
+    store.data.seq[key] = n;
+    const req = {
+      id: store.data.nextId++, ref: `${key}-${String(n).padStart(4, '0')}`, typeId, requesterId: userId, values: v,
+      attachments: attachments.filter(a => !type.fields.find(f => f.id === a.field && f.showIf && !f.showIf(v))),
+      status: 'pending', round: 1, rounds: [], steps: buildSteps(type, v, userId), current: -1, created: at, updated: at, closedAt: null, history: [],
+    };
+    store.data.requests.push(req);
+    log(req, at, userId, 'submitted');
+    advance(req, 0, at);
+    return req;
+  }
+  function decide(userId, reqId, action, comment, at = Date.now()) {
+    const req = reqById(reqId);
+    const mine = req ? actionable(userId, req) : [];
+    if (!mine.length) throw new Error('This request is no longer waiting for you.');
+    comment = String(comment || '').trim();
+    if (action !== 'approve' && !comment) throw new Error(action === 'reject' ? 'Add a comment explaining why you are rejecting it.' : 'Add a comment explaining what needs to change.');
+    const st = req.steps[req.current];
+    const decision = { approve: 'approved', reject: 'rejected', return: 'returned' }[action];
+    mine.forEach(({ slot, behalf }) => Object.assign(slot, { decision, by: userId, onBehalfOf: behalf, at, comment }));
+    log(req, at, userId, decision, { step: st.name, comment, onBehalfOf: mine.find(m => m.behalf)?.behalf || null });
+    if (decision === 'approved') {
+      if (st.slots.every(s => s.decision === 'approved' || s.decision === 'skipped')) {
+        st.status = 'approved';
+        st.endedAt = at;
+        advance(req, req.current + 1, at);
+      }
+    } else {
+      st.status = decision;
+      st.endedAt = at;
+      req.status = decision;
+      if (decision === 'rejected') { req.closedAt = at; req.current = -1; }
+      notify([req.requesterId], at, req, `${decision === 'rejected' ? 'Rejected' : 'Returned for changes'}: your ${label(req)}`);
+    }
+    return req;
+  }
+  function withdraw(userId, reqId, at = Date.now()) {
+    const req = reqById(reqId);
+    if (!req || req.requesterId !== userId || !['pending', 'returned'].includes(req.status)) throw new Error('This request can no longer be withdrawn.');
+    const st = req.steps[req.current];
+    if (st && st.status === 'current') {
+      st.status = 'withdrawn';
+      st.endedAt = at;
+      notify(pendingPeople(st), at, req, `Withdrawn: ${label(req)} no longer needs your approval`);
+    }
+    req.status = 'withdrawn';
+    req.current = -1;
+    req.closedAt = at;
+    log(req, at, userId, 'withdrawn');
+    return req;
+  }
+  function resubmit(userId, reqId, values, attachments, at = Date.now()) {
+    const req = reqById(reqId);
+    if (!req || req.requesterId !== userId || req.status !== 'returned') throw new Error('This request can no longer be changed.');
+    const type = typeOf(req);
+    req.rounds.push({ round: req.round, steps: req.steps });
+    req.round += 1;
+    req.values = prepareValues(type, values);
+    req.attachments = attachments.filter(a => !type.fields.find(f => f.id === a.field && f.showIf && !f.showIf(req.values)));
+    req.steps = buildSteps(type, req.values, userId);
+    req.status = 'pending';
+    req.current = -1;
+    log(req, at, userId, 'resubmitted');
+    advance(req, 0, at);
+    return req;
+  }
+  function remind(userId, reqId, at = Date.now()) {
+    const req = reqById(reqId);
+    const st = req?.steps[req.current];
+    if (!req || req.requesterId !== userId || req.status !== 'pending' || !st) throw new Error('This request is not waiting for anyone.');
+    if (st.remindedAt && at - st.remindedAt < CFG.reminderHours * 3600e3) throw new Error('You already sent a reminder for this step.');
+    st.remindedAt = at;
+    log(req, at, userId, 'reminded', { step: st.name });
+    notify(pendingPeople(st), at, req, `Reminder from ${nameOf(userId)}: ${label(req)} is waiting for your approval`);
+    return req;
+  }
+  const chainPeople = req => [...req.rounds.flatMap(r => r.steps), ...req.steps].flatMap(st => st.slots.flatMap(s => [...s.approverIds, s.by].filter(Boolean)));
+  function addComment(userId, reqId, text, at = Date.now()) {
+    const req = reqById(reqId);
+    text = String(text || '').trim();
+    if (!req || !canView(userId, req)) throw new Error("You can't comment on this request.");
+    if (!text) throw new Error('Write a comment first.');
+    log(req, at, userId, 'comment', { comment: text });
+    const st = req.steps[req.current];
+    const deciders = req.steps.flatMap(s => s.slots.map(sl => sl.by)).filter(Boolean);
+    notify([req.requesterId, ...deciders, ...(st && st.status === 'current' ? pendingPeople(st) : [])].filter(id => id !== userId), at, req, `${nameOf(userId)} commented on ${label(req)}`);
+    return req;
+  }
+  // Who may see a request: the requester, the people approving it (and their delegates),
+  // everyone above the requester in the reporting line, and the teams that handle that type
+  // of request (system admins handle all). Peers and other departments can't.
+  const isAdmin = id => PERSON.get(id)?.teams.includes('Admins');
+  const oversees = (id, type) => isAdmin(id) || type.viewers.some(t => PERSON.get(id)?.teams.includes(t));
+  const reportsOf = id => PEOPLE.filter(p => p.manager === id).map(p => p.id);
+  function reportingLine(id) {            // everyone below this person, at any level
+    const out = new Set(), todo = [id];
+    while (todo.length) for (const r of reportsOf(todo.pop())) if (!out.has(r)) { out.add(r); todo.push(r); }
+    return out;
+  }
+  function isAbove(userId, personId) {
+    for (let m = PERSON.get(personId)?.manager, n = 0; m && n < 50; m = PERSON.get(m)?.manager, n++) if (m === userId) return true;
+    return false;
+  }
+  const inChain = (userId, req) => { const ids = chainPeople(req); return ids.includes(userId) || ids.some(id => activeDelegate(id) === userId); };
+  const canView = (userId, req) => req.requesterId === userId || isAbove(userId, req.requesterId) || oversees(userId, typeOf(req)) || inChain(userId, req);
+  // Sensitive details stay with the requester, the approvers and HR, even for managers higher up.
+  const canSeePrivate = (userId, req) => req.requesterId === userId || inChain(userId, req) || !!PERSON.get(userId)?.teams.includes('HR');
+  const overseenTypes = id => TYPES.filter(t => oversees(id, t));
+  // "All requests" lists your reporting line plus the request types your team handles.
+  const inScope = (userId, req) => oversees(userId, typeOf(req)) || isAbove(userId, req.requesterId);
+  const hasScope = id => isAdmin(id) || overseenTypes(id).length > 0 || reportsOf(id).length > 0;
+  function scopeText(id) {
+    if (isAdmin(id)) return 'All requests in the company.';
+    const team = reportingLine(id).size, types = overseenTypes(id);
+    const people = team >= PEOPLE.length - 1 ? 'everyone in the company' : team === 1 ? 'the 1 person in your reporting line' : team ? `the ${team} people in your reporting line` : '';
+    const handled = types.map(t => t.name).join(', ');
+    if (people && handled) return `Requests from ${people}, plus every request your team handles: ${handled}.`;
+    return people ? `Requests from ${people}.` : `Every request your team handles: ${handled}.`;
+  }
+
+  /* ---------- demo data ---------- */
+  function seedData() {
+    store.data = { version: VERSION, nextId: 1, nextNotif: 1, seq: {}, requests: [], notifications: [], delegations: {} };
+    const T = (d, h = 0) => Date.now() - Math.round((d * 24 + h) * 3600e3);
+    const D = n => addDays(todayYmd(), n);
+    const pdf = (fieldId, name, lines) => ({ id: uid(), field: fieldId, name, type: 'application/pdf', ...samplePdf(lines) });
+    const sub = (who, typeId, values, d, h = 0, files = []) => submit(who, typeId, values, files, T(d, h));
+    const ok = (who, r, d, h = 0, c = '') => decide(who, r.id, 'approve', c, T(d, h));
+
+    store.data.delegations.abdullah = { to: 'mohammed', from: D(-1), until: D(5) };
+
+    sub('maryam', 'leave', { leaveType: 'Annual', cover: 'imran', from: D(12), to: D(16), reason: 'Family visit to Lahore.' }, 1, 2);
+    sub('imran', 'overtime', { date: D(-4), hours: 4, reason: 'The concrete pour at the Jubail site ran late.' }, 3, 5);
+    sub('omar', 'it', { category: 'Laptop', item: 'Replacement laptop', neededBy: D(10), details: 'My laptop is five years old and shuts down when running Project and Teams together.' }, 0, 3);
+
+    const generator = sub('omar', 'purchase', { item: 'Portable generator (20 kVA) rental', quantity: 2, cost: 46000, vendor: 'Al Khobar Power Rentals', neededBy: D(14), justification: 'Backup power for the Jubail site during the substation upgrade.' }, 5, 1,
+      [pdf('quotes', 'Quotation - Al Khobar Power Rentals.pdf', ['Quotation Q-2231', 'Al Khobar Power Rentals', '2 x 20 kVA generator, 30 days: SAR 46,000.00'])]);
+    ok('yousef', generator, 4, 6);
+    ok('tariq', generator, 3, 4, 'Compared two quotes; this one is cheaper and includes fuel delivery.');
+    ok('faisal', generator, 2, 2);
+
+    const dinner = sub('yousef', 'expense', { date: D(-8), category: 'Client entertainment', amount: 680, description: 'Dinner with the Gulf Star Logistics operations team.' }, 7, 0,
+      [pdf('receipts', 'Receipt - dinner.pdf', ['Receipt', 'Client dinner, 4 guests', 'Total: SAR 680.00'])]);
+    ok('abdullah', dinner, 6, 3);
+    ok('lina', dinner, 5, 1);
+
+    const riyadh = sub('yousef', 'travel', { destination: 'Riyadh', from: D(9), to: D(11), cost: 4200, advance: false, purpose: 'Quarterly review with Nadeem Facilities.' }, 2, 2);
+    decide('abdullah', riyadh.id, 'return', 'The hotel is above policy (SAR 600 a night in Riyadh). Please update the estimated cost.', T(1, 1));
+
+    const gulf = sub('bilal', 'contract', { client: 'Gulf Star Logistics', value: 850000, discount: 12, term: 24, notes: 'Renewal. The client asked for 12% to match a competitor.' }, 2, 4,
+      [pdf('draft', 'Gulf Star renewal draft.pdf', ['Service agreement renewal (draft)', 'Gulf Star Logistics', 'Term: 24 months. Discount: 12%'])]);
+    ok('rania', gulf, 1, 6, 'Strategic account; worth matching the competitor.');
+
+    const advance = sub('tariq', 'advance', { amount: 6000, months: '3', reason: 'School fees for the new term.' }, 3, 0);
+    ok('faisal', advance, 2, 6);
+    ok('nadia', advance, 1, 2);
+
+    const visa = sub('khalid', 'visa', { visaType: 'Multiple', destination: 'Islamabad', departure: D(20), returnBy: D(34), reason: 'Annual leave at home.' }, 4, 0);
+    ok('hana', visa, 3, 2);
+    ok('sara', visa, 2, 1);
+
+    sub('nadia', 'letter', { letterType: 'Salary certificate', language: 'English', addressedTo: 'Al Rajhi Bank', purpose: 'Car financing application.' }, 0, 5);
+
+    const supervisors = sub('aisha', 'manpower', { position: 'Site supervisor', department: 'Operations', headcount: 4, employmentType: 'Outsourced', startDate: D(30), budgeted: false, justification: 'The new facilities management contract in Dammam starts next month.' }, 6, 0);
+    ok('sara', supervisors, 5, 4);
+    ok('nadia', supervisors, 5, 1);
+    ok('faisal', supervisors, 4, 2, 'Covered by the contract margin.');
+
+    const leaving = sub('imran', 'clearance', { lastDay: D(12), forwarding: 'imran.personal@example.com', items: 'Laptop, site access card, safety equipment.' }, 2, 3);
+    ok('yousef', leaving, 2, 1);
+    ok('khalid', leaving, 1, 3, 'Laptop and accounts will be collected on the last day.');
+
+    const fuel = sub('maryam', 'expense', { date: D(-10), category: 'Transport', amount: 340, description: 'Fuel for the fleet inspection trip to Ras Tanura.' }, 9, 0,
+      [pdf('receipts', 'Receipt - fuel.pdf', ['Receipt', 'Fuel station, Ras Tanura road', 'Total: SAR 340.00'])]);
+    ok('yousef', fuel, 8, 2);
+    decide('faisal', fuel.id, 'reject', "Fuel for company vehicles is paid with the fleet card. Please don't claim it as an expense.", T(7, 3));
+
+    const sick = sub('omar', 'leave', { leaveType: 'Sick', from: D(-12), to: D(-11) }, 13, 0,
+      [pdf('medical', 'Medical report.pdf', ['Medical report', 'Patient: Omar Haddad', 'Advised rest for 2 days'])]);
+    ok('yousef', sick, 12, 6);
+    ok('nadia', sick, 12, 2);
+
+    const crm = sub('rania', 'it', { category: 'Software licence', item: 'CRM licence', details: 'Licence for the new account manager starting next month.' }, 16, 0);
+    withdraw('rania', crm.id, T(15, 2));
+
+    sub('sara', 'leave', { leaveType: 'Annual', from: D(30), to: D(37), reason: 'Summer holiday.' }, 0, 6);
+    sub('hana', 'purchase', { item: 'Network switch (48-port)', quantity: 2, cost: 18400, neededBy: D(21), justification: 'Replace the failing switches on the Khobar office first floor.' }, 1, 3);
+
+    const signatories = sub('faisal', 'general', { subject: 'Update bank signatories', details: 'Add the new CFO as a joint signatory on the main operating account.', approver1: 'mohammed', approver2: 'abdullah' }, 10, 0);
+    ok('mohammed', signatories, 9, 2);
+    ok('abdullah', signatories, 8, 4);
+
+    const lunch = sub('bilal', 'expense', { date: D(-5), category: 'Client entertainment', amount: 7200, description: 'Lunch with Nadeem Facilities management after the contract signing (14 guests).' }, 3, 2,
+      [pdf('receipts', 'Receipt - lunch.pdf', ['Receipt', 'Business lunch, 14 guests', 'Total: SAR 7,200.00'])]);
+    ok('rania', lunch, 2, 20);
+    ok('faisal', lunch, 2, 1);
+
+    const old = T(2);
+    store.data.notifications.forEach(n => { n.read = n.at < old; });
+    return store.data;
+  }
+
+  /* ---------- state and small UI helpers ---------- */
+  let me = CFG.defaultUser;
+  try { me = PERSON.has(sessionStorage.getItem('approvals-as')) ? sessionStorage.getItem('approvals-as') : CFG.defaultUser; } catch { /* private mode */ }
+  const ui = { mine: { tab: 'all', q: '' }, all: { q: '', type: '', status: '', dept: '' }, back: '#inbox' };
+  let form = null;          // the request form being filled in
+  const view = qs('#view');
+
+  const STATUS = {
+    pending: { label: 'Pending', cls: 'text-bg-warning', icon: 'hourglass-split' },
+    returned: { label: 'Returned', cls: 'text-bg-primary', icon: 'arrow-return-left' },
+    approved: { label: 'Approved', cls: 'text-bg-success', icon: 'check2' },
+    rejected: { label: 'Rejected', cls: 'text-bg-danger', icon: 'x-lg' },
+    withdrawn: { label: 'Withdrawn', cls: 'text-bg-light border text-secondary', icon: 'dash' },
+  };
+  const statusBadge = s => { const x = STATUS[s]; return `<span class="badge fw-normal ${x.cls}"><i class="bi bi-${x.icon} me-1"></i>${x.label}</span>`; };
+  const STEP_ICON = {
+    approved: ['check-circle-fill', 'text-success'], current: ['hourglass-split', 'text-warning'], waiting: ['circle', 'text-secondary'],
+    skipped: ['dash-circle', 'text-secondary'], rejected: ['x-circle-fill', 'text-danger'], returned: ['arrow-return-left', 'text-primary'], withdrawn: ['dash-circle', 'text-secondary'],
+  };
+  const slotWho = s => (s.approverIds.length === 1 ? esc(nameOf(s.approverIds[0])) : esc(s.label));
+  // Where a request is now, in one line
+  function whereHtml(req) {
+    if (req.status === 'pending') {
+      const st = req.steps[req.current];
+      const who = st.slots.filter(s => s.decision === null).map(slotWho).join(', ');
+      return `With ${who}${who === esc(st.name) ? '' : ` <span class="text-secondary">· ${esc(st.name)}</span>`}`;
+    }
+    const last = [...req.history].reverse().find(h => ['returned', 'rejected', 'withdrawn', 'completed'].includes(h.action));
+    if (req.status === 'returned') return `Returned by ${you(last.by)}`;
+    if (req.status === 'rejected') return `Rejected by ${you(last.by)}`;
+    if (req.status === 'withdrawn') return `Withdrawn ${esc(fmtDate(req.closedAt))}`;
+    return `Approved ${esc(fmtDate(req.closedAt))}`;
+  }
+  const requestCell = req => `<a href="#request/${req.id}" class="fw-semibold text-decoration-none">${esc(req.ref)}</a> <span class="text-secondary">· ${esc(typeOf(req).name)}</span>
+    <div class="text-secondary" style="font-size: 12px;">${esc(typeOf(req).summary(req.values))}</div>`;
+  const onDesktop = html => `<div class="d-none d-md-block">${html}</div>`;
+  const onPhone = (html, extra = '') => `<div class="list-group d-md-none ${extra}">${html}</div>`;
+  const metaLine = parts => `<div class="text-secondary mt-1" style="font-size: 12px;">${parts.filter(Boolean).join(' · ')}</div>`;
+  const phoneCard = (req, right, meta) => `<a href="#request/${req.id}" class="list-group-item list-group-item-action py-2">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <div class="small" style="min-width: 0;"><span class="fw-semibold text-primary">${esc(req.ref)}</span> <span class="text-secondary">· ${esc(typeOf(req).name)}</span>
+          <div class="text-body">${esc(typeOf(req).summary(req.values))}</div></div>
+        <div class="flex-shrink-0">${right}</div>
+      </div>${metaLine(meta)}</a>`;
+  const empty = (icon, title, text = '', action = '') => `
+    <div class="card bg-light border"><div class="card-body text-center py-5">
+      <i class="bi bi-${icon} fs-3 text-secondary"></i>
+      <p class="fw-semibold mb-1 mt-2" style="font-size: 14px;">${esc(title)}</p>
+      ${text ? `<p class="text-muted mb-3" style="font-size: 12px;">${text}</p>` : '<div class="mb-3"></div>'}
+      ${action}
+    </div></div>`;
+  const table = (head, rows) => `<div class="table-responsive border rounded">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr>${head.map((h, i) => `<th class="small${i === 0 ? ' ps-3' : ''}${i === head.length - 1 ? ' pe-3' : ''}">${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table></div>`;
+
+  function toast(msg) {
+    qs('#toastMsg').textContent = msg;
+    bootstrap.Toast.getOrCreateInstance(qs('#toast'), { delay: 3500 }).show();
+  }
+  function showAlert(msg) {
+    qs('#alertBox').innerHTML = `<div class="alert alert-light border d-flex align-items-start gap-2 small py-2" role="alert">
+      <i class="bi bi-exclamation-circle text-danger"></i><div class="flex-grow-1">${esc(msg)}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- chrome: person switcher, menu counts, notifications ---------- */
+  function renderChrome() {
+    const sel = qs('#asUser');
+    if (!sel.options.length) {
+      sel.innerHTML = DEPARTMENTS.map(d => `<optgroup label="${esc(d)}">${PEOPLE.filter(p => p.dept === d).map(p => `<option value="${p.id}">${esc(p.name)} · ${esc(p.title)}</option>`).join('')}</optgroup>`).join('');
+    }
+    sel.value = me;
+    const inbox = store.data.requests.filter(r => actionable(me, r).length || (r.requesterId === me && r.status === 'returned')).length;
+    const badge = qs('[data-count=inbox]');
+    badge.textContent = inbox;
+    badge.classList.toggle('d-none', !inbox);
+    qs('#navAll').classList.toggle('d-none', !hasScope(me));
+    const unread = store.data.notifications.filter(n => n.userId === me && !n.read).length;
+    qs('#bellCount').textContent = unread > 9 ? '9+' : unread;
+    qs('#bellCount').classList.toggle('d-none', !unread);
+    qs('#bellBtn').setAttribute('aria-label', `Notifications${unread ? `, ${unread} unread` : ''}`);
+    const away = activeDelegate(me);
+    const d = store.data.delegations[me];
+    const btn = qs('#awayBtn');
+    btn.classList.toggle('btn-warning', !!away);
+    btn.classList.toggle('btn-outline-secondary', !away);
+    qs('#awayText').textContent = away ? `Away until ${fmtDate(d.until)}` : 'Out of office';
+    btn.title = away ? `You're away until ${fmtDate(d.until)}; ${nameOf(away)} can approve for you` : 'Out of office';
+  }
+  function renderBell() {
+    const list = store.data.notifications.filter(n => n.userId === me).sort((a, b) => b.at - a.at).slice(0, 12);
+    const unread = list.some(n => !n.read);
+    qs('#bellMenu').innerHTML = `
+      <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+        <span class="small fw-semibold">Notifications</span>
+        ${unread ? '<button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-bell="all">Mark all as read</button>' : ''}
+      </div>
+      ${list.length ? `<div class="list-group list-group-flush" style="max-height: 360px; overflow-y: auto;">${list.map(n => `
+        <a href="#request/${n.requestId}" class="list-group-item list-group-item-action py-2 d-flex gap-2" data-bell="${n.id}">
+          <i class="bi bi-circle-fill text-primary mt-1 flex-shrink-0${n.read ? ' invisible' : ''}" style="font-size: 8px;" aria-hidden="true"></i>
+          <span class="small${n.read ? ' text-secondary' : ''}">${esc(n.text)}<span class="d-block text-secondary" style="font-size: 12px;">${esc(ago(n.at))}</span></span>
+        </a>`).join('')}</div>` : '<p class="small text-secondary px-3 py-3 mb-0">No notifications yet.</p>'}`;
+  }
+  qs('#bellBtn').addEventListener('show.bs.dropdown', renderBell);
+  qs('#bellMenu').addEventListener('click', e => {
+    const el = e.target.closest('[data-bell]');
+    if (!el) return;
+    const key = el.dataset.bell;
+    commit(() => store.data.notifications.forEach(n => { if (n.userId === me && (key === 'all' || String(n.id) === key)) n.read = true; }));
+    if (key === 'all') { renderBell(); renderChrome(); return; }
+    bootstrap.Dropdown.getOrCreateInstance(qs('#bellBtn')).hide();
+    renderChrome();
+  });
+  qs('#asUser').addEventListener('change', e => {
+    me = e.target.value;
+    try { sessionStorage.setItem('approvals-as', me); } catch { /* private mode */ }
+    toast(`Now viewing as ${nameOf(me)}`);
+    if (location.hash === '#inbox') route(); else location.hash = '#inbox';
+  });
+  function setNav(name) {
+    qsa('#nav [data-nav]').forEach(a => {
+      const on = a.dataset.nav === name;
+      a.classList.toggle('active', on);
+      if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+
+  /* ---------- Inbox: everything that needs this person ---------- */
+  function renderInbox() {
+    setNav('inbox');
+    const waiting = store.data.requests.map(r => ({ r, mine: actionable(me, r) })).filter(x => x.mine.length)
+      .sort((a, b) => a.r.steps[a.r.current].startedAt - b.r.steps[b.r.current].startedAt);
+    const returned = store.data.requests.filter(r => r.requesterId === me && r.status === 'returned').sort((a, b) => b.updated - a.updated);
+    const covering = delegatingToMe();
+    const away = activeDelegate(me);
+    const forWho = mine => { const ids = [...new Set(mine.map(m => m.behalf).filter(Boolean))]; return ids.length ? `<span class="badge text-bg-light border fw-normal ms-1">for ${esc(ids.map(nameOf).join(', '))}</span>` : ''; };
+    const notes = [
+      ...covering.map(p => `You're approving for <strong>${esc(p.name)}</strong> until ${esc(fmtDate(store.data.delegations[p.id].until))}.`),
+      away ? `You're out of office until ${esc(fmtDate(store.data.delegations[me].until))}. <strong>${esc(nameOf(away))}</strong> can approve for you.` : '',
+    ].filter(Boolean);
+    view.innerHTML = `
+      ${notes.map(n => `<div class="alert alert-light border small py-2 d-flex gap-2"><i class="bi bi-person-check text-secondary"></i><div>${n}</div></div>`).join('')}
+      <h2 class="h5 mb-3 text-dark">Waiting for your approval${waiting.length ? ` <span class="text-secondary fw-normal">(${waiting.length})</span>` : ''}</h2>
+      ${waiting.length ? `
+        ${onDesktop(table(['Request', 'Requested by', 'Step', 'Waiting'], waiting.map(({ r, mine }) => `
+          <tr data-href="#request/${r.id}" style="cursor: pointer;">
+            <td class="small ps-3">${requestCell(r)}</td>
+            <td class="small text-nowrap">${esc(nameOf(r.requesterId))}<div class="text-secondary" style="font-size: 12px;">${esc(PERSON.get(r.requesterId).dept)}</div></td>
+            <td class="small">${esc(r.steps[r.current].name)}${forWho(mine)}</td>
+            <td class="small pe-3">${waitedHtml(r.steps[r.current].startedAt)}</td>
+          </tr>`)))}
+        ${onPhone(waiting.map(({ r, mine }) => phoneCard(r, waitedHtml(r.steps[r.current].startedAt), [esc(nameOf(r.requesterId)), esc(r.steps[r.current].name) + forWho(mine)])).join(''))}`
+        : '<p class="small text-secondary">Nothing is waiting for your approval.</p>'}
+      ${returned.length ? `
+        <h2 class="h5 mb-3 mt-4 text-dark">Returned to you for changes <span class="text-secondary fw-normal">(${returned.length})</span></h2>
+        ${onDesktop(table(['Request', 'Returned by', 'What to change', 'Returned'], returned.map(r => {
+          const h = [...r.history].reverse().find(x => x.action === 'returned');
+          return `<tr data-href="#request/${r.id}" style="cursor: pointer;">
+            <td class="small ps-3">${requestCell(r)}</td>
+            <td class="small text-nowrap">${esc(nameOf(h.by))}</td>
+            <td class="small">${esc(h.comment)}</td>
+            <td class="small text-secondary text-nowrap pe-3">${when(h.at)}</td>
+          </tr>`;
+        })))}
+        ${onPhone(returned.map(r => { const h = [...r.history].reverse().find(x => x.action === 'returned'); return phoneCard(r, statusBadge('returned'), [`${esc(nameOf(h.by))}: ${esc(h.comment)}`]); }).join(''))}` : ''}
+      ${!waiting.length && !returned.length ? `<div class="mt-4">${empty('check2-circle', "You're all caught up", 'Nothing needs your action right now.', '<a href="#new" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>New request</a>')}</div>` : ''}`;
+  }
+
+  /* ---------- My requests ---------- */
+  function renderMine() {
+    setNav('mine');
+    const all = store.data.requests.filter(r => r.requesterId === me);
+    const open = r => ['pending', 'returned'].includes(r.status);
+    const counts = { all: all.length, open: all.filter(open).length, closed: all.filter(r => !open(r)).length };
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Show">
+          ${[['all', 'All'], ['open', 'Open'], ['closed', 'Closed']].map(([k, l]) => `<button type="button" class="btn btn-outline-secondary${ui.mine.tab === k ? ' active' : ''}" data-tab="${k}" aria-pressed="${ui.mine.tab === k}">${l} <span class="opacity-75">${counts[k]}</span></button>`).join('')}
+        </div>
+        <div class="input-group input-group-sm flex-grow-1 flex-md-grow-0 ms-md-auto" style="width: 260px;">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-secondary"></i></span>
+          <input type="search" class="form-control" id="mineQ" placeholder="Search your requests" aria-label="Search your requests" value="${esc(ui.mine.q)}">
+        </div>
+      </div>
+      <div id="mineList"></div>`;
+    qsa('[data-tab]').forEach(b => b.addEventListener('click', () => { ui.mine.tab = b.dataset.tab; renderMine(); }));
+    qs('#mineQ').addEventListener('input', e => { ui.mine.q = e.target.value; drawMine(); });
+    drawMine();
+  }
+  const matches = (r, q) => !q || [r.ref, typeOf(r).name, typeOf(r).summary(r.values), nameOf(r.requesterId)].some(v => low(v).includes(low(q)));
+  function drawMine() {
+    const box = qs('#mineList');
+    const open = r => ['pending', 'returned'].includes(r.status);
+    const list = store.data.requests.filter(r => r.requesterId === me)
+      .filter(r => ui.mine.tab === 'all' || (ui.mine.tab === 'open') === open(r))
+      .filter(r => matches(r, ui.mine.q))
+      .sort((a, b) => (open(b) - open(a)) || b.updated - a.updated);
+    if (!store.data.requests.some(r => r.requesterId === me)) {
+      box.innerHTML = empty('inbox', "You haven't made any requests yet", '', '<a href="#new" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>New request</a>');
+      return;
+    }
+    if (!list.length) { box.innerHTML = '<p class="small text-secondary">No requests match.</p>'; return; }
+    box.innerHTML = onDesktop(table(['Request', 'Status', 'Where it is', 'Updated'], list.map(r => `
+      <tr data-href="#request/${r.id}" style="cursor: pointer;">
+        <td class="small ps-3">${requestCell(r)}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="small">${whereHtml(r)}</td>
+        <td class="small text-secondary text-nowrap pe-3">${when(r.updated)}</td>
+      </tr>`))) + onPhone(list.map(r => phoneCard(r, statusBadge(r.status), [whereHtml(r), esc(ago(r.updated))])).join(''));
+  }
+
+  /* ---------- All requests: your reporting line and the types your team handles ---------- */
+  function renderAll() {
+    setNav('all');
+    if (!hasScope(me)) { location.hash = '#inbox'; return; }
+    const types = isAdmin(me) || reportsOf(me).length ? TYPES : overseenTypes(me);
+    const f = ui.all;
+    if (f.type && !types.some(t => t.id === f.type)) f.type = '';
+    view.innerHTML = `
+      <p class="small text-secondary mb-3">${esc(scopeText(me))}</p>
+      <div class="d-grid gap-3 mb-4" id="allTiles" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));"></div>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="input-group input-group-sm flex-grow-1 flex-md-grow-0" style="width: 240px;">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-secondary"></i></span>
+          <input type="search" class="form-control" id="allQ" placeholder="Reference, person or detail" aria-label="Search requests" value="${esc(f.q)}">
+        </div>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="allType" aria-label="Type"><option value="">All types</option>${types.map(t => `<option value="${t.id}"${f.type === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="allStatus" aria-label="Status"><option value="">All statuses</option>${Object.entries(STATUS).map(([k, s]) => `<option value="${k}"${f.status === k ? ' selected' : ''}>${s.label}</option>`).join('')}</select>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="allDept" aria-label="Department"><option value="">All departments</option>${DEPARTMENTS.map(d => `<option${f.dept === d ? ' selected' : ''}>${esc(d)}</option>`).join('')}</select>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-md-auto" id="allCsv"><i class="bi bi-download me-1"></i>Export CSV</button>
+      </div>
+      <div id="allList"></div>`;
+    const sync = () => { Object.assign(f, { q: qs('#allQ').value, type: qs('#allType').value, status: qs('#allStatus').value, dept: qs('#allDept').value }); drawAll(); };
+    qs('#allQ').addEventListener('input', sync);
+    qsa('#allType, #allStatus, #allDept').forEach(el => el.addEventListener('change', sync));
+    qs('#allCsv').addEventListener('click', exportCsv);
+    drawAll();
+  }
+  function allRows() {
+    const f = ui.all;
+    return store.data.requests.filter(r => inScope(me, r))
+      .filter(r => (!f.type || r.typeId === f.type) && (!f.status || r.status === f.status) && (!f.dept || PERSON.get(r.requesterId).dept === f.dept) && matches(r, f.q))
+      .sort((a, b) => b.updated - a.updated);
+  }
+  function drawAll() {
+    const rows = allRows();
+    const pending = rows.filter(r => r.status === 'pending');
+    const overdue = pending.filter(r => waitDays(r.steps[r.current].startedAt) >= CFG.overdueDays);
+    const recent = rows.filter(r => ['approved', 'rejected'].includes(r.status) && Date.now() - r.closedAt <= 30 * DAY);
+    const avgDays = recent.length ? recent.reduce((s, r) => s + (r.closedAt - r.created), 0) / recent.length / DAY : null;
+    const tile = (value, label, sub, icon, cls, dim) => `<div class="card h-100 bg-light border${dim ? ' opacity-75' : ''}"><div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-start"><span class="fs-2 fw-semibold lh-1">${esc(value)}</span><i class="bi bi-${icon} fs-4 ${cls}"></i></div>
+        <p class="small text-dark mb-0 mt-2">${esc(label)}</p><p class="text-secondary mb-0" style="font-size: 12px;">${esc(sub)}</p></div></div>`;
+    qs('#allTiles').innerHTML = [
+      tile(pending.length, 'Pending', 'Waiting for a decision', 'hourglass-split', 'text-warning', !pending.length),
+      tile(overdue.length, 'Overdue', `Waiting ${CFG.overdueDays}+ days at a step`, 'exclamation-circle', 'text-warning', !overdue.length),
+      tile(recent.filter(r => r.status === 'approved').length, 'Approved', 'In the last 30 days', 'check2-circle', 'text-success', !recent.some(r => r.status === 'approved')),
+      tile(avgDays == null ? '—' : avgDays < 1 ? plural(Math.max(1, Math.round(avgDays * 24)), 'hour') : `${Math.round(avgDays * 10) / 10} days`, 'Time to decision', 'Average, last 30 days', 'stopwatch', 'text-primary', avgDays == null),
+    ].join('');
+    const box = qs('#allList');
+    if (!rows.length) { box.innerHTML = '<p class="small text-secondary">No requests match these filters.</p>'; return; }
+    box.innerHTML = `<div class="small text-secondary mb-2">${plural(rows.length, 'request')}</div>` + onDesktop(table(['Request', 'Requested by', 'Status', 'Where it is', 'Submitted'], rows.map(r => `
+      <tr data-href="#request/${r.id}" style="cursor: pointer;">
+        <td class="small ps-3">${requestCell(r)}</td>
+        <td class="small text-nowrap">${esc(nameOf(r.requesterId))}<div class="text-secondary" style="font-size: 12px;">${esc(PERSON.get(r.requesterId).dept)}</div></td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="small">${whereHtml(r)}</td>
+        <td class="small text-secondary text-nowrap pe-3">${when(r.created)}</td>
+      </tr>`))) + onPhone(rows.map(r => phoneCard(r, statusBadge(r.status), [esc(nameOf(r.requesterId)), whereHtml(r)])).join(''));
+  }
+  function exportCsv() {
+    const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [['Reference', 'Type', 'Requested by', 'Department', 'Status', 'Current step', 'Submitted', 'Closed', 'Summary']];
+    allRows().forEach(r => lines.push([r.ref, typeOf(r).name, nameOf(r.requesterId), PERSON.get(r.requesterId).dept, STATUS[r.status].label,
+      r.status === 'pending' ? r.steps[r.current].name : '', fmtStamp(r.created), r.closedAt ? fmtStamp(r.closedAt) : '', typeOf(r).summary(r.values)]));
+    const blob = new Blob(['﻿' + lines.map(l => l.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `approvals-${todayYmd()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  /* ---------- New request: pick a type ---------- */
+  const chainText = type => type.steps.map(s => `${s.name}${s.slots.length > 1 ? ` (${s.slots.map(x => x.label).join(', ')})` : ''}${s.when && s.whenText ? ' <span class="text-secondary">if needed</span>' : ''}`).join(' → ');
+  function renderCatalog() {
+    setNav('');
+    const groups = [...new Set(TYPES.map(t => t.category))];
+    view.innerHTML = `
+      <h2 class="h5 mb-1 text-dark">New request</h2>
+      <p class="small text-secondary mb-4">Choose what you need. You'll see who approves it before you submit.</p>
+      ${groups.map(g => `
+        <h3 class="h6 text-secondary mb-2">${esc(g)}</h3>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3 mb-4">
+          ${TYPES.filter(t => t.category === g).map(t => `
+            <div class="col"><a href="#new/${t.id}" class="card h-100 bg-light border text-decoration-none text-reset">
+              <div class="card-body p-3">
+                <div class="d-flex align-items-center gap-2"><i class="bi bi-${t.icon} fs-5 text-primary"></i><span class="fw-semibold" style="font-size: 14px;">${esc(t.name)}</span></div>
+                <p class="text-muted mb-1 mt-1" style="font-size: 12px;">${esc(t.description)}</p>
+                <p class="mb-0" style="font-size: 12px;"><span class="text-secondary">Approval:</span> ${chainText(t)}</p>
+              </div></a></div>`).join('')}
+        </div>`).join('')}`;
+  }
+
+  /* ---------- Request form (new, or edit after it was returned) ---------- */
+  const isVisible = (f, v) => !f.showIf || f.showIf(v);
+  const isRequired = (f, v) => !!(f.required || (f.requiredIf && f.requiredIf(v)));
+  function peopleOptions(selected, excludeId) {
+    return `<option value="">Select a person…</option>` + DEPARTMENTS.map(d => {
+      const ppl = PEOPLE.filter(p => p.dept === d && p.id !== excludeId);
+      return ppl.length ? `<optgroup label="${esc(d)}">${ppl.map(p => `<option value="${p.id}"${p.id === selected ? ' selected' : ''}>${esc(p.name)} · ${esc(p.title)}</option>`).join('')}</optgroup>` : '';
+    }).join('');
+  }
+  function control(f, v) {
+    const id = `f_${f.id}`, attrs = `id="${id}" data-f="${f.id}"`;
+    const val = v ?? '';
+    switch (f.type) {
+      case 'text': return `<input type="text" class="form-control form-control-sm" ${attrs} maxlength="200" value="${esc(val)}">`;
+      case 'textarea': return `<textarea class="form-control form-control-sm" ${attrs} rows="3" maxlength="2000">${esc(val)}</textarea>`;
+      case 'number': return `<input type="number" inputmode="decimal" class="form-control form-control-sm" ${attrs}${f.min != null ? ` min="${f.min}"` : ''}${f.max != null ? ` max="${f.max}"` : ''} step="${f.step || 1}" value="${esc(val)}">`;
+      case 'money': return `<div class="input-group input-group-sm has-validation"><span class="input-group-text">${CFG.currency}</span><input type="number" inputmode="decimal" class="form-control" ${attrs} min="${f.min ?? 0}"${f.max != null ? ` max="${f.max}"` : ''} step="0.01" value="${esc(val)}"><div class="invalid-feedback" data-err="${f.id}"></div></div>`;
+      case 'date': return `<input type="date" class="form-control form-control-sm" ${attrs}${f.notPast ? ` min="${todayYmd()}"` : ''}${f.notFuture ? ` max="${todayYmd()}"` : ''} value="${esc(val)}">`;
+      case 'choice': return `<select class="form-select form-select-sm" ${attrs}><option value="">Select…</option>${f.options.map(o => `<option value="${esc(o)}"${o === val ? ' selected' : ''}>${esc(o)}${f.suffix ? ` ${esc(f.suffix)}` : ''}</option>`).join('')}</select>`;
+      case 'yesno': return `<div class="form-check form-switch mt-md-4 pt-md-1"><input class="form-check-input" type="checkbox" role="switch" ${attrs}${v ? ' checked' : ''}><label class="form-check-label small" for="${id}">${esc(f.label)}</label></div>`;
+      case 'person': return `<select class="form-select form-select-sm" ${attrs}>${peopleOptions(val, f.excludeSelf ? form.requesterId : null)}</select>`;
+      case 'file': return `<input type="file" class="form-control form-control-sm" ${attrs} multiple${f.accept ? ` accept="${esc(f.accept)}"` : ''}><div class="mt-1" data-files="${f.id}"></div>`;
+      case 'computed': return `<div class="form-control form-control-sm bg-light" ${attrs} aria-live="polite">—</div>`;
+      default: return '';
+    }
+  }
+  function renderForm(type, editReq) {
+    setNav(editReq ? 'mine' : '');
+    const files = {};
+    (editReq?.attachments || []).forEach(a => (files[a.field] = files[a.field] || []).push(a));
+    form = { type, editReq, requesterId: editReq ? editReq.requesterId : me, values: editReq ? clone(editReq.values) : {}, files };
+    const returnedBy = editReq && [...editReq.history].reverse().find(h => h.action === 'returned');
+    view.innerHTML = `
+      <a href="${editReq ? `#request/${editReq.id}` : '#new'}" class="small text-decoration-none d-inline-block mb-2"><i class="bi bi-arrow-left me-1"></i>${editReq ? `Back to ${esc(editReq.ref)}` : 'All request types'}</a>
+      <div class="d-flex align-items-center gap-2 mb-1"><i class="bi bi-${type.icon} fs-4 text-primary"></i><h2 class="h4 mb-0 text-dark">${editReq ? `Edit ${esc(editReq.ref)}` : esc(type.name)}</h2></div>
+      <p class="small text-secondary mb-3">${esc(type.description)}</p>
+      ${returnedBy ? `<div class="alert alert-primary small py-2 d-flex gap-2"><i class="bi bi-arrow-return-left"></i><div><strong>${esc(nameOf(returnedBy.by))}</strong> asked for changes: ${esc(returnedBy.comment)}<div class="text-secondary" style="font-size: 12px;">When you resubmit, approval starts again from the first step.</div></div></div>` : ''}
+      <form id="reqForm" novalidate autocomplete="off">
+        <div class="card border"><div class="card-body p-3 p-md-4">
+          <div class="row g-3">
+            ${type.fields.map(f => `<div class="col-12${f.half ? ' col-md-6' : ''}" data-wrap="${f.id}">
+              ${f.type === 'yesno' ? '' : `<label class="form-label small fw-semibold mb-1" for="f_${f.id}" data-label="${f.id}">${esc(f.label)}</label>`}
+              ${control(f, form.values[f.id])}
+              ${f.type === 'money' ? '' : `<div class="invalid-feedback" data-err="${f.id}"></div>`}
+              ${f.help ? `<div class="form-text mt-1" style="font-size: 12px;">${esc(f.help)}</div>` : ''}
+              ${f.restricted ? '<div class="form-text mt-1" style="font-size: 12px;"><i class="bi bi-lock me-1"></i>Only HR and the people approving it can see this.</div>' : ''}
+            </div>`).join('')}
+          </div>
+        </div></div>
+        <div class="card bg-light border mt-3"><div class="card-body p-3">
+          <div class="small fw-semibold mb-2"><i class="bi bi-diagram-3 me-1 text-secondary"></i>Who will approve</div>
+          <div id="chainPreview"></div>
+        </div></div>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <button type="submit" class="btn btn-primary" id="submitBtn">${editReq ? 'Resubmit' : 'Submit request'}</button>
+          <a href="${editReq ? `#request/${editReq.id}` : '#new'}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>`;
+    const el = qs('#reqForm');
+    const read = target => {
+      const input = target.closest('[data-f]');
+      if (!input) return;
+      const f = type.fields.find(x => x.id === input.dataset.f);
+      if (!f || f.type === 'file') return;
+      form.values[f.id] = f.type === 'yesno' ? input.checked : (f.type === 'number' || f.type === 'money') ? (input.value === '' ? '' : Number(input.value)) : input.value;
+      setError(f.id, '');
+      refreshForm();
+    };
+    el.addEventListener('input', e => read(e.target));
+    el.addEventListener('change', e => {
+      if (e.target.type === 'file') { addFiles(e.target.dataset.f, [...e.target.files]); e.target.value = ''; return; }
+      read(e.target);
+    });
+    el.addEventListener('click', e => {
+      const rm = e.target.closest('[data-rmfile]');
+      if (!rm) return;
+      const [fid, i] = rm.dataset.rmfile.split(':');
+      form.files[fid].splice(Number(i), 1);
+      refreshForm();
+    });
+    el.addEventListener('submit', onSubmit);
+    refreshForm();
+  }
+  function setError(fid, msg) {
+    const input = qs(`#f_${fid}`), box = qs(`[data-err="${fid}"]`);
+    if (input) input.classList.toggle('is-invalid', !!msg);
+    if (box) { box.textContent = msg; box.classList.toggle('d-block', !!msg && (input?.type === 'checkbox')); }
+  }
+  function refreshForm() {
+    const { type, values, files } = form;
+    for (const f of type.fields) {
+      qs(`[data-wrap="${f.id}"]`).classList.toggle('d-none', !isVisible(f, values));
+      const lab = qs(`[data-label="${f.id}"]`);
+      if (lab) lab.innerHTML = esc(f.label) + (f.type === 'computed' || isRequired(f, values) ? '' : ' <span class="fw-normal text-secondary">(optional)</span>');
+      if (f.type === 'computed') {
+        const val = f.compute(values);
+        values[f.id] = val;
+        qs(`#f_${f.id}`).textContent = val === '' || val == null ? '—' : f.format ? f.format(val) : val;
+      }
+      if (f.type === 'file') {
+        qs(`[data-files="${f.id}"]`).innerHTML = (files[f.id] || []).map((a, i) => `
+          <div class="d-flex align-items-center gap-2 small mt-1"><i class="bi bi-paperclip text-secondary"></i>
+            <a href="${esc(a.url)}" download="${esc(a.name)}" class="text-decoration-none text-truncate">${esc(a.name)}</a>
+            <span class="text-secondary text-nowrap" style="font-size: 12px;">${fmtSize(a.size)}</span>
+            <button type="button" class="btn btn-link btn-sm p-0 text-danger text-decoration-none" data-rmfile="${f.id}:${i}">Remove</button></div>`).join('');
+      }
+    }
+    qs('#chainPreview').innerHTML = chainPreview(type, values, form.requesterId);
+  }
+  function chainPreview(type, values, requesterId) {
+    const steps = buildSteps(type, prepareValues(type, values), requesterId);
+    return `<ol class="mb-0 ps-3 small">${steps.map(st => `<li class="mb-1">
+      <span class="fw-semibold">${esc(st.name)}</span>${st.reason ? ` <span class="text-secondary">(because ${esc(st.reason)})</span>` : ''}:
+      ${st.status === 'skipped' ? `<span class="text-secondary">${esc(st.slots.map(s => s.note).join('. '))}${st.slots.some(s => s.note === 'Not chosen yet') ? '' : ', so this step is skipped'}</span>`
+        : st.slots.map(s => {
+          const who = s.decision === 'skipped' ? `<span class="text-secondary">${esc(s.note)}</span>` : s.approverIds.length === 1 ? esc(nameOf(s.approverIds[0])) : `any one of ${esc(s.approverIds.map(nameOf).join(', '))}`;
+          return st.slots.length > 1 ? `${esc(s.label)}: ${who}` : who;
+        }).join('; ')}
+    </li>`).join('')}</ol>${steps.some(s => s.slots.length > 1) ? '<div class="text-secondary mt-1" style="font-size: 12px;">Steps with several teams run at the same time and need all of them.</div>' : ''}`;
+  }
+  async function addFiles(fid, list) {
+    for (const file of list) {
+      if (file.size > CFG.maxFileMB * 1048576) { setError(fid, `${file.name} is larger than ${CFG.maxFileMB} MB.`); continue; }
+      try {
+        const url = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = () => reject(r.error); r.readAsDataURL(file); });
+        (form.files[fid] = form.files[fid] || []).push({ id: uid(), field: fid, name: file.name, size: file.size, type: file.type || 'application/octet-stream', url });
+        setError(fid, '');
+      } catch { setError(fid, `Couldn't read ${file.name}.`); }
+    }
+    refreshForm();
+  }
+  function validateForm() {
+    const { type, values, files, requesterId } = form;
+    const errors = {};
+    const today = todayYmd();
+    for (const f of type.fields) {
+      if (!isVisible(f, values) || f.type === 'computed') continue;
+      const v = f.type === 'file' ? (files[f.id] || []) : values[f.id];
+      const isEmpty = f.type === 'file' ? !v.length : f.type === 'yesno' ? false : (v === '' || v == null || (typeof v === 'string' && !v.trim()));
+      if (isEmpty) { if (isRequired(f, values)) errors[f.id] = f.type === 'file' ? 'Attach at least one file.' : f.type === 'person' || f.type === 'choice' ? 'Choose one.' : 'This is required.'; continue; }
+      if (f.type === 'number' || f.type === 'money') {
+        const fmt = n => (f.type === 'money' ? money(n) : n.toLocaleString('en-US'));
+        if (!Number.isFinite(v)) errors[f.id] = 'Enter a number.';
+        else if (f.min != null && v < f.min) errors[f.id] = `Must be at least ${fmt(f.min)}.`;
+        else if (f.max != null && v > f.max) errors[f.id] = `Must be ${fmt(f.max)} or less.`;
+        else if (f.step && f.type === 'number' && Math.abs(v / f.step - Math.round(v / f.step)) > 1e-9) errors[f.id] = `Use steps of ${f.step}.`;
+      }
+      if (f.type === 'date') {
+        if (!parseYmd(v)) errors[f.id] = 'Enter a valid date.';
+        else if (f.notPast && v < today) errors[f.id] = "Can't be in the past.";
+        else if (f.notFuture && v > today) errors[f.id] = "Can't be in the future.";
+      }
+      if (f.type === 'person' && v === requesterId && f.excludeSelf) errors[f.id] = "You can't choose yourself.";
+    }
+    const extra = type.validate ? type.validate(prepareValues(type, values)) : null;
+    Object.entries(extra || {}).forEach(([k, msg]) => { if (!errors[k]) errors[k] = msg; });
+    return errors;
+  }
+  function onSubmit(e) {
+    e.preventDefault();
+    const { type, editReq, values, files } = form;
+    type.fields.forEach(f => setError(f.id, ''));
+    const errors = validateForm();
+    const keys = Object.keys(errors);
+    if (keys.length) {
+      keys.forEach(k => setError(k, errors[k]));
+      const first = qs(`#f_${keys[0]}`);
+      first?.scrollIntoView({ block: 'center' });
+      first?.focus({ preventScroll: true });
+      return;
+    }
+    const attachments = Object.values(files).flat();
+    try {
+      const req = commit(() => (editReq ? resubmit(me, editReq.id, values, attachments) : submit(me, type.id, values, attachments)));
+      form = null;
+      toast(`${editReq ? 'Resubmitted' : 'Submitted'} ${req.ref}`);
+      location.hash = `#request/${req.id}`;
+    } catch (err) {
+      showAlert(err.message);
+    }
+  }
+
+  /* ---------- One request ---------- */
+  function valueHtml(f, req) {
+    const v = req.values[f.id];
+    if (f.type === 'file') {
+      const list = req.attachments.filter(a => a.field === f.id);
+      return list.length ? list.map(a => `<div class="text-truncate"><i class="bi bi-paperclip text-secondary me-1"></i><a href="${esc(a.url)}" download="${esc(a.name)}" class="text-decoration-none">${esc(a.name)}</a> <span class="text-secondary" style="font-size: 12px;">${fmtSize(a.size)}</span></div>`).join('') : '';
+    }
+    if (v === '' || v == null) return '';
+    switch (f.type) {
+      case 'money': return esc(money(v));
+      case 'number': return esc(Number(v).toLocaleString('en-US'));
+      case 'date': return esc(fmtDate(v));
+      case 'yesno': return v ? 'Yes' : 'No';
+      case 'person': return esc(nameOf(v));
+      case 'choice': return esc(v) + (f.suffix ? ` ${esc(f.suffix)}` : '');
+      case 'computed': return esc(f.format ? f.format(v) : v);
+      case 'textarea': return `<span style="white-space: pre-line;">${esc(v)}</span>`;
+      default: return esc(v);
+    }
+  }
+  function stepState(st, req) {
+    if (st.status === 'approved') return 'Approved';
+    if (st.status === 'current') { const n = st.slots.filter(s => s.decision === 'approved').length, t = st.slots.filter(s => s.decision !== 'skipped').length; return `Waiting${t > 1 ? ` · ${n} of ${t} done` : ''}`; }
+    if (st.status === 'skipped') return 'Skipped';
+    if (st.status === 'rejected') return 'Rejected';
+    if (st.status === 'returned') return 'Returned for changes';
+    if (st.status === 'withdrawn') return 'Stopped: withdrawn';
+    return ['pending'].includes(req.status) ? 'Not started' : 'Not reached';
+  }
+  function chainHtml(req) {
+    return `<ol class="list-unstyled mb-0">${req.steps.map((st, i) => {
+      const [icon, cls] = STEP_ICON[st.status];
+      const slots = st.slots.map(s => {
+        const prefix = st.slots.length > 1 ? `<span class="text-secondary">${esc(s.label)}:</span> ` : '';
+        if (s.decision === 'skipped') return `<div style="font-size: 12px;" class="text-secondary">${prefix}${esc(s.note)}</div>`;
+        if (s.decision) {
+          const [di, dc] = { approved: ['check-lg', 'text-success'], rejected: ['x-lg', 'text-danger'], returned: ['arrow-return-left', 'text-primary'] }[s.decision];
+          return `<div style="font-size: 12px;">${prefix}<i class="bi bi-${di} ${dc} me-1"></i>${You(s.by)}${s.onBehalfOf ? ` for ${esc(nameOf(s.onBehalfOf))}` : ''} <span class="text-secondary">· ${esc(fmtStamp(s.at))}</span>${s.comment ? ' <i class="bi bi-chat-left-text text-secondary" title="Comment in the history"></i>' : ''}</div>`;
+        }
+        const who = s.approverIds.length === 1 ? You(s.approverIds[0]) : `${prefix ? 'any' : 'Any'} one of ${s.approverIds.map(You).join(', ')}`;
+        const delegates = s.approverIds.map(id => activeDelegate(id) && `${nameOf(activeDelegate(id))} for ${nameOf(id)}`).filter(Boolean);
+        return `<div style="font-size: 12px;">${prefix}${who}${st.status === 'current' ? ` <span class="text-secondary">· waiting ${esc(waitDays(st.startedAt) < 1 ? 'since today' : plural(waitDays(st.startedAt), 'day'))}</span>` : ''}
+          ${st.status === 'current' && delegates.length ? `<div class="text-secondary">Also: ${esc(delegates.join(', '))}</div>` : ''}</div>`;
+      }).join('');
+      return `<li class="d-flex gap-2${i < req.steps.length - 1 ? ' pb-3' : ''}">
+        <i class="bi bi-${icon} ${cls} flex-shrink-0" aria-hidden="true"></i>
+        <div class="flex-grow-1" style="min-width: 0;">
+          <div class="small"><span class="fw-semibold">${esc(st.name)}</span> <span class="text-secondary">· ${stepState(st, req)}</span></div>
+          ${st.reason ? `<div class="text-secondary" style="font-size: 12px;">Included because ${esc(st.reason)}</div>` : ''}
+          ${slots}
+        </div></li>`;
+    }).join('')}</ol>`;
+  }
+  const HIST = {
+    submitted: ['send', 'text-primary', h => `${You(h.by)} submitted the request`],
+    resubmitted: ['arrow-repeat', 'text-primary', h => `${You(h.by)} resubmitted it with changes`],
+    approved: ['check-circle-fill', 'text-success', h => `${You(h.by)}${h.onBehalfOf ? ` (for ${esc(nameOf(h.onBehalfOf))})` : ''} approved <span class="text-secondary">· ${esc(h.step)}</span>`],
+    rejected: ['x-circle-fill', 'text-danger', h => `${You(h.by)}${h.onBehalfOf ? ` (for ${esc(nameOf(h.onBehalfOf))})` : ''} rejected it <span class="text-secondary">· ${esc(h.step)}</span>`],
+    returned: ['arrow-return-left', 'text-primary', h => `${You(h.by)}${h.onBehalfOf ? ` (for ${esc(nameOf(h.onBehalfOf))})` : ''} returned it for changes <span class="text-secondary">· ${esc(h.step)}</span>`],
+    withdrawn: ['dash-circle', 'text-secondary', h => `${You(h.by)} withdrew the request`],
+    comment: ['chat-left-text', 'text-secondary', h => `${You(h.by)} commented`],
+    reminded: ['bell', 'text-secondary', h => `${You(h.by)} sent a reminder <span class="text-secondary">· ${esc(h.step)}</span>`],
+    skipped: ['skip-forward', 'text-secondary', h => `${esc(h.step)} skipped`],
+    completed: ['check2-all', 'text-success', () => 'Approved: all steps are complete'],
+  };
+  function renderRequest(id) {
+    const req = reqById(id);
+    if (!req) { view.innerHTML = empty('question-circle', 'Request not found', 'It may have been removed when the demo data was reset.', '<a href="#inbox" class="btn btn-outline-secondary btn-sm">Go to inbox</a>'); return; }
+    if (!canView(me, req)) {
+      setNav('');
+      view.innerHTML = empty('lock', "You don't have access to this request", 'Only the requester, the people approving it, the managers above the requester and the team that handles this type of request can see it.', '<a href="#inbox" class="btn btn-outline-secondary btn-sm">Go to inbox</a>');
+      return;
+    }
+    setNav(req.requesterId === me ? 'mine' : 'inbox');
+    const type = typeOf(req);
+    const p = PERSON.get(req.requesterId);
+    const mine = actionable(me, req);
+    const st = req.steps[req.current];
+    const returned = req.status === 'returned' && [...req.history].reverse().find(h => h.action === 'returned');
+    const lastReminder = st?.remindedAt;
+    const canRemind = req.status === 'pending' && req.requesterId === me && (!lastReminder || Date.now() - lastReminder >= CFG.reminderHours * 3600e3);
+
+    let panel = '';
+    if (mine.length) {
+      const behalf = [...new Set(mine.map(m => m.behalf).filter(Boolean))];
+      panel = `<div class="card border-warning-subtle bg-warning-subtle mb-3"><div class="card-body p-3">
+        <div class="small fw-semibold"><i class="bi bi-hourglass-split text-warning-emphasis me-1"></i>Waiting for your decision</div>
+        <div class="text-secondary mb-2" style="font-size: 12px;">Step ${req.current + 1} of ${req.steps.length} · ${esc(st.name)}${behalf.length ? ` · you're approving for ${esc(behalf.map(nameOf).join(', '))}` : ''}</div>
+        <label class="form-label small fw-semibold mb-1" for="decisionNote">Comment <span class="fw-normal text-secondary">(needed to return or reject)</span></label>
+        <textarea class="form-control form-control-sm" id="decisionNote" rows="2" maxlength="1000"></textarea>
+        <div class="invalid-feedback" id="decisionErr"></div>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          <button type="button" class="btn btn-sm btn-success" data-decide="approve"><i class="bi bi-check-lg me-1"></i>Approve</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-decide="return"><i class="bi bi-arrow-return-left me-1"></i>Return for changes</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-decide="reject"><i class="bi bi-x-lg me-1"></i>Reject</button>
+        </div>
+      </div></div>`;
+    } else if (returned && req.requesterId === me) {
+      panel = `<div class="card border-primary-subtle bg-primary-subtle mb-3"><div class="card-body p-3">
+        <div class="small fw-semibold"><i class="bi bi-arrow-return-left text-primary me-1"></i>${esc(nameOf(returned.by))} asked for changes</div>
+        <div class="small my-2" style="white-space: pre-line;">${esc(returned.comment)}</div>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="#edit/${req.id}" class="btn btn-sm btn-primary"><i class="bi bi-pencil me-1"></i>Edit and resubmit</a>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-req="withdraw">Withdraw</button>
+        </div>
+      </div></div>`;
+    } else if (req.status === 'pending' && req.requesterId === me) {
+      panel = `<div class="card bg-light border mb-3"><div class="card-body p-3">
+        <div class="small">${whereHtml(req)}</div>
+        <div class="text-secondary mb-2" style="font-size: 12px;">Waiting ${waitDays(st.startedAt) < 1 ? 'since today' : plural(waitDays(st.startedAt), 'day')}${lastReminder ? ` · reminder sent ${esc(ago(lastReminder).toLowerCase())}` : ''}</div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-req="remind"${canRemind ? '' : ' disabled'} title="${canRemind ? 'Send a notification to the approvers' : `You can send one reminder every ${CFG.reminderHours} hours`}"><i class="bi bi-bell me-1"></i>Send reminder</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-req="withdraw">Withdraw</button>
+        </div>
+      </div></div>`;
+    }
+
+    const seePrivate = canSeePrivate(me, req);
+    const shown = type.fields.filter(f => isVisible(f, req.values)).map(f => {
+      const v = valueHtml(f, req);
+      return [f, v && f.restricted && !seePrivate ? '<span class="text-secondary"><i class="bi bi-lock me-1"></i>Only HR and the people approving it can see this</span>' : v];
+    }).filter(([, v]) => v);
+    view.innerHTML = `
+      <a href="${esc(ui.back)}" class="small text-decoration-none d-inline-block mb-2"><i class="bi bi-arrow-left me-1"></i>Back</a>
+      <div class="mb-3">
+        <div class="small text-secondary">${esc(req.ref)}</div>
+        <div class="d-flex flex-wrap align-items-center gap-2"><h2 class="h4 mb-0 text-dark">${esc(type.name)}</h2>${statusBadge(req.status)}</div>
+        <div class="small text-secondary mt-1">Requested by <span class="text-body">${req.requesterId === me ? 'you' : esc(p.name)}</span> · ${esc(p.title)}, ${esc(p.dept)} · ${when(req.created)}${req.round > 1 ? ` · resubmitted ${plural(req.round - 1, 'time')}` : ''}</div>
+      </div>
+      <div class="row g-4">
+        <div class="col-12 col-lg-5 order-lg-2">
+          ${panel}
+          <div class="card border"><div class="card-body p-3">
+            <div class="small fw-semibold mb-3">Approval</div>
+            ${chainHtml(req)}
+            ${req.round > 1 ? '<div class="text-secondary mt-3" style="font-size: 12px;">Earlier decisions on this request are in the history.</div>' : ''}
+          </div></div>
+        </div>
+        <div class="col-12 col-lg-7 order-lg-1">
+          <div class="card border mb-4"><div class="card-body p-3">
+            <div class="small fw-semibold mb-3">Details</div>
+            <div class="row g-3">
+              ${shown.map(([f, v]) => `<div class="col-12${f.half ? ' col-sm-6' : ''}"><div class="text-secondary" style="font-size: 12px;">${esc(f.label)}</div><div class="small">${v}</div></div>`).join('')}
+            </div>
+          </div></div>
+          <div class="card border"><div class="card-body p-3">
+            <div class="small fw-semibold mb-2">History</div>
+            <ul class="list-unstyled mb-0">${req.history.map(h => {
+              const [icon, cls, text] = HIST[h.action];
+              return `<li class="d-flex gap-2 py-2 border-bottom"><i class="bi bi-${icon} ${cls} flex-shrink-0" aria-hidden="true"></i>
+                <div class="small flex-grow-1" style="min-width: 0;"><div>${text(h)}</div>
+                  ${h.comment ? `<div class="mt-1${h.action === 'skipped' ? ' text-secondary' : ''}" style="white-space: pre-line;">${esc(h.comment)}</div>` : ''}
+                  <div class="text-secondary" style="font-size: 12px;" title="${esc(fmtStamp(h.at))}">${esc(fmtStamp(h.at))}</div></div></li>`;
+            }).join('')}</ul>
+            <form class="mt-3" id="commentForm" novalidate>
+              <label class="form-label small fw-semibold mb-1" for="commentText">Add a comment</label>
+              <textarea class="form-control form-control-sm" id="commentText" rows="2" maxlength="1000" placeholder="Ask a question or add information"></textarea>
+              <div class="invalid-feedback">Write a comment first.</div>
+              <button type="submit" class="btn btn-sm btn-outline-primary mt-2">Comment</button>
+            </form>
+          </div></div>
+        </div>
+      </div>`;
+
+    qsa('[data-decide]').forEach(b => b.addEventListener('click', () => {
+      const action = b.dataset.decide, note = qs('#decisionNote');
+      try {
+        commit(() => decide(me, req.id, action, note.value));
+        toast({ approve: `Approved ${req.ref}`, reject: `Rejected ${req.ref}`, return: `Returned ${req.ref} to ${nameOf(req.requesterId)}` }[action]);
+        route();
+      } catch (err) {
+        note.classList.add('is-invalid');
+        qs('#decisionErr').textContent = err.message;
+        note.focus();
+      }
+    }));
+    qs('#decisionNote')?.addEventListener('input', e => e.target.classList.remove('is-invalid'));
+    qsa('[data-req]').forEach(b => b.addEventListener('click', () => {
+      try {
+        if (b.dataset.req === 'withdraw') {
+          if (!confirm(`Withdraw ${req.ref}? The approvers won't be able to act on it any more.`)) return;
+          commit(() => withdraw(me, req.id));
+          toast(`Withdrew ${req.ref}`);
+        } else {
+          commit(() => remind(me, req.id));
+          toast('Reminder sent');
+        }
+        route();
+      } catch (err) { showAlert(err.message); }
+    }));
+    qs('#commentForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const box = qs('#commentText');
+      if (!box.value.trim()) { box.classList.add('is-invalid'); return; }
+      try {
+        commit(() => addComment(me, req.id, box.value));
+        toast('Comment added');
+        route();
+      } catch (err) { showAlert(err.message); }
+    });
+  }
+
+  /* ---------- Out of office ---------- */
+  qs('#awayBtn').addEventListener('click', () => {
+    const d = store.data.delegations[me];
+    qs('#awayTo').innerHTML = peopleOptions(d?.to || '', me);
+    qs('#awayFrom').value = d?.from || todayYmd();
+    qs('#awayUntil').value = d?.until || addDays(todayYmd(), 7);
+    qsa('#awayModal .is-invalid').forEach(x => x.classList.remove('is-invalid'));
+    qs('#awayStop').classList.toggle('d-none', !d);
+    bootstrap.Modal.getOrCreateInstance(qs('#awayModal')).show();
+  });
+  qs('#awayModal form').addEventListener('submit', e => {
+    e.preventDefault();
+    const to = qs('#awayTo').value, from = qs('#awayFrom').value, until = qs('#awayUntil').value;
+    const back = to && activeDelegate(to) === me;
+    qs('#awayToErr').textContent = !to ? 'Choose someone.' : back ? `${nameOf(to)} has already handed their approvals to you.` : '';
+    qs('#awayTo').classList.toggle('is-invalid', !to || back);
+    qs('#awayFrom').classList.toggle('is-invalid', !from);
+    qs('#awayUntil').classList.toggle('is-invalid', !until || (from && until < from));
+    if (!to || back || !from || !until || until < from) return;
+    commit(() => { store.data.delegations[me] = { to, from, until }; });
+    bootstrap.Modal.getInstance(qs('#awayModal')).hide();
+    toast(`${nameOf(to)} can approve for you from ${fmtDate(from)} to ${fmtDate(until)}`);
+    route();
+  });
+  qs('#awayStop').addEventListener('click', () => {
+    commit(() => { delete store.data.delegations[me]; });
+    bootstrap.Modal.getInstance(qs('#awayModal')).hide();
+    toast('Stopped delegating your approvals');
+    route();
+  });
+  qs('#resetBtn').addEventListener('click', () => {
+    if (!confirm('Reset all demo data? Requests you created here will be removed.')) return;
+    store.reset();
+    form = null;
+    toast('Demo data reset');
+    if (location.hash === '#inbox') route(); else location.hash = '#inbox';
+  });
+
+  /* ---------- routing ---------- */
+  view.addEventListener('click', e => {
+    if (e.target.closest('a, button, input, select, textarea, label')) return;
+    const row = e.target.closest('[data-href]');
+    if (row) location.hash = row.dataset.href;
+  });
+  function route() {
+    store.read();
+    qs('#alertBox').innerHTML = '';
+    const [name, arg] = location.hash.replace(/^#\/?/, '').split('/');
+    const id = Number(arg);
+    if (['inbox', 'mine', 'all'].includes(name) || !name) ui.back = `#${name || 'inbox'}`;
+    if (name === 'mine') renderMine();
+    else if (name === 'all') renderAll();
+    else if (name === 'new' && arg && TYPE.has(arg)) renderForm(TYPE.get(arg));
+    else if (name === 'new') renderCatalog();
+    else if (name === 'request' && id) renderRequest(id);
+    else if (name === 'edit' && id) {
+      const req = reqById(id);
+      if (req && req.requesterId === me && req.status === 'returned') renderForm(typeOf(req), req);
+      else { location.hash = `#request/${id}`; return; }
+    } else renderInbox();
+    renderChrome();
+  }
+  window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
+  // Another tab changed the data: refresh, but never wipe a form being filled in.
+  window.addEventListener('storage', e => {
+    if (e.key !== CFG.storageKey) return;
+    if (form) { store.read(); renderChrome(); } else route();
+  });
+
+  if (!window.bootstrap) {
+    view.innerHTML = '<div class="alert alert-light border small">Bootstrap did not load. Check that cdn.jsdelivr.net is reachable from this network.</div>';
+    return;
+  }
+  if (!store.persist) qs('#demoNote').textContent = 'Demo: this browser blocks storage, so changes last until you reload the page.';
+  if (!store.read()) store.reset();
+  if (!location.hash) history.replaceState(null, '', '#inbox');
+  route();
+})();
+</script>
