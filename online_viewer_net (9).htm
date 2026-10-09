@@ -1,0 +1,2033 @@
+<!-- Project Management: Bootstrap front-end for SharePoint lists, through Microsoft Graph. Settings and setup notes are at the top of the script. -->
+<title>Project Management</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+
+<div class="container py-4" style="max-width: 1100px; font-family: 'Segoe UI', Arial, sans-serif;">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-3 mb-3">
+    <div class="d-flex align-items-center gap-3" style="min-width: 0;">
+      <img src="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png" alt="ESAD" style="height: 48px; width: auto;">
+      <h1 class="h4 mb-0 text-truncate"><a href="#home" class="text-dark text-decoration-none" id="appName">Project Management</a></h1>
+    </div>
+    <div class="d-flex align-items-center gap-3 small flex-shrink-0" id="userBox"></div>
+  </div>
+
+  <!-- Menu -->
+  <ul class="nav nav-underline flex-nowrap overflow-x-auto text-nowrap gap-2 gap-sm-3 border-bottom mb-4" id="nav">
+    <li class="nav-item"><a class="nav-link" href="#home" data-nav="home" aria-label="Home"><i class="bi bi-house-door d-sm-none"></i><span class="d-none d-sm-inline">Home</span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#projects" data-nav="projects">Projects</a></li>
+    <li class="nav-item"><a class="nav-link" href="#mywork" data-nav="mywork">My work<span class="badge rounded-pill text-bg-secondary fw-normal ms-1 d-none" data-count="mywork"></span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#approvals" data-nav="approvals">Approvals<span class="badge rounded-pill text-bg-danger fw-normal ms-1 d-none" data-count="approvals"></span></a></li>
+  </ul>
+
+  <div id="alertBox"></div>
+  <div id="view">
+    <div class="text-center text-secondary small py-5"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span><span id="bootMsg">Loading…</span></div>
+  </div>
+
+  <!-- Project form -->
+  <div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="pmHeading" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 mb-0" id="pmHeading">New project</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-light border small py-2 d-none" role="alert" data-err></div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="pmName">Name</label>
+            <input type="text" class="form-control form-control-sm" id="pmName" maxlength="255" required>
+            <div class="invalid-feedback">Enter a project name.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="pmDesc">Description <span class="fw-normal text-secondary">(optional)</span></label>
+            <textarea class="form-control form-control-sm" id="pmDesc" rows="3"></textarea>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold" for="pmStatus">Status</label>
+              <select class="form-select form-select-sm" id="pmStatus"></select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold" for="pmDept">Department</label>
+              <select class="form-select form-select-sm" id="pmDept"></select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label small fw-semibold" for="pmOwnerInput">Owner</label>
+            <div id="pmOwner"></div>
+          </div>
+          <div id="pmCustom"></div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-danger me-auto" data-act="delete-project" id="pmDelete"><i class="bi bi-trash me-1"></i>Delete</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary" id="pmSave">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Work item form -->
+  <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="imHeading" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <div class="me-2">
+            <h2 class="modal-title h6 mb-0" id="imHeading">Work item</h2>
+            <div class="small text-secondary" id="imProject"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-light border small py-2 d-none" role="alert" data-err></div>
+          <div id="imDecision"></div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="imName">Title</label>
+            <input type="text" class="form-control form-control-sm" id="imName" maxlength="255" required>
+            <div class="invalid-feedback">Enter a title.</div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-sm-4">
+              <label class="form-label small fw-semibold" for="imStatus">Status</label>
+              <select class="form-select form-select-sm" id="imStatus"></select>
+            </div>
+            <div class="col-12 col-sm-8">
+              <div class="d-flex align-items-baseline justify-content-between">
+                <label class="form-label small fw-semibold" for="imWhoInput">Assignees</label>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" style="font-size: 12px;" data-act="assign-me" id="imAssignMe">Assign to me</button>
+              </div>
+              <div id="imWho"></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="imDesc">Description <span class="fw-normal text-secondary">(optional)</span></label>
+            <textarea class="form-control form-control-sm" id="imDesc" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex align-items-baseline justify-content-between mb-1">
+              <label class="form-label small fw-semibold mb-0" for="imCheckNew">Checklist</label>
+              <span class="text-secondary" style="font-size: 12px;" id="imCheckCount"></span>
+            </div>
+            <div id="imChecklist"></div>
+            <div class="input-group input-group-sm mt-1">
+              <input type="text" class="form-control" id="imCheckNew" placeholder="Add an item" maxlength="255">
+              <button type="button" class="btn btn-outline-secondary" data-act="check-add" aria-label="Add checklist item"><i class="bi bi-plus-lg"></i></button>
+            </div>
+          </div>
+          <div id="imCustom"></div>
+          <div class="border-top pt-3" id="imApprovals"></div>
+          <div class="text-secondary border-top pt-2 mt-3" style="font-size: 12px;" id="imMeta"></div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-danger me-auto" data-act="delete-item" id="imDelete"><i class="bi bi-trash me-1"></i>Delete</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary" id="imSave">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom fields -->
+  <div class="modal fade" id="fieldsModal" tabindex="-1" aria-labelledby="fmHeading" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <div class="me-2">
+            <h2 class="modal-title h6 mb-0" id="fmHeading">Custom fields</h2>
+            <div class="small text-secondary" id="fmProject"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-light border small py-2 d-none" role="alert" data-err></div>
+          <p class="small text-secondary mb-3">Fields you add here only exist in this project.</p>
+          <div id="fmList"></div>
+          <div class="border rounded bg-light p-3 mt-3">
+            <div class="small fw-semibold mb-2">Add a field</div>
+            <div class="row g-2 align-items-end">
+              <div class="col-12 col-sm-4">
+                <label class="form-label small mb-1" for="fmName">Name</label>
+                <input type="text" class="form-control form-control-sm" id="fmName" maxlength="60">
+              </div>
+              <div class="col-6 col-sm-3">
+                <label class="form-label small mb-1" for="fmType">Type</label>
+                <select class="form-select form-select-sm" id="fmType">
+                  <option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="choice">Choice</option>
+                </select>
+              </div>
+              <div class="col-6 col-sm-3">
+                <label class="form-label small mb-1" for="fmTarget">Applies to</label>
+                <select class="form-select form-select-sm" id="fmTarget">
+                  <option value="workItem">Work items</option><option value="project">Project</option>
+                </select>
+              </div>
+              <div class="col-12 col-sm-2">
+                <button type="button" class="btn btn-outline-primary btn-sm w-100" data-act="field-add">Add</button>
+              </div>
+              <div class="col-12 d-none" id="fmOptsWrap">
+                <label class="form-label small mb-1" for="fmOpts">Options</label>
+                <input type="text" class="form-control form-control-sm" id="fmOpts" placeholder="Comma-separated, e.g. Design, Build, Test">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary" id="fmSave">Save fields</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast align-items-center text-bg-dark border-0" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body small" id="toastMsg"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+(async () => {
+  'use strict';
+
+  /*
+    SETUP FOR LIVE DATA (leave demo: true to try the app with sample data first)
+
+    1. SharePoint. On the site in sitePath, create three lists. Create each column with exactly
+       this name (no spaces) so its internal name matches; rename the display name afterwards if you like.
+
+       Projects
+         Title         built-in        Project name
+         Description   Multiple lines  Plain text
+         Status        Choice          Active, On Hold, Completed, Cancelled   (default Active)
+         Department    Choice          Your departments
+         Owner         Single line     Filled by the app
+         FieldSchema   Multiple lines  Plain text, filled by the app
+         CustomFields  Multiple lines  Plain text, filled by the app
+
+       Work Items
+         Title         built-in        Work item title
+         Description   Multiple lines  Plain text
+         Status        Choice          To Do, In Progress, Done   (default To Do)
+         Assignees     Multiple lines  Plain text, filled by the app
+         Checklist     Multiple lines  Plain text, filled by the app
+         Project       Lookup          Projects, show Title
+         CustomFields  Multiple lines  Plain text, filled by the app
+
+       Approvals
+         Title         built-in        Filled by the app (work item title)
+         WorkItem      Lookup          Work Items, show Title
+         Approver      Single line     Filled by the app
+         Decision      Choice          Pending, Approved, Rejected   (default Pending)
+         RequestNote   Multiple lines  Plain text
+         DecisionNote  Multiple lines  Plain text
+
+       Owner, Assignees and Approver hold people as text (JSON): Graph can only fill a Person column
+       for people already in the site's user list, and it can't add them.
+       "Requested by" and "decided by/when" come from SharePoint's own Created By and Modified By.
+       Approvals are kept when their work item is deleted, as a record of decisions.
+       Everyone who uses the app needs Edit (Contribute) on all three lists.
+
+    2. Entra ID > App registrations > New registration
+         Platform: Single-page application. Redirect URI: the exact URL of this page.
+         API permissions, Microsoft Graph, delegated: User.Read, User.ReadBasic.All, Sites.ReadWrite.All,
+         and Mail.Send if email is on. Grant admin consent so people aren't asked one by one.
+
+    3. Fill in the settings below, set demo: false, and host this file on a web server.
+       (A SharePoint document library downloads .html files instead of showing them.)
+  */
+
+  /* ============================== EDIT HERE ============================== */
+  const CFG = {
+    demo: true,                          // true: sample data, no sign-in. false: live SharePoint.
+
+    tenantId: 'YOUR-TENANT-ID',          // Entra ID > Overview > Tenant ID
+    clientId: 'YOUR-APP-CLIENT-ID',      // App registration > Application (client) ID
+    redirectUri: '',                     // blank = this page's URL
+
+    siteHost: 'esadtalents.sharepoint.com',
+    sitePath: '/sites/PMS',
+    lists: { projects: 'Projects', workItems: 'Work Items', approvals: 'Approvals' },
+
+    email: true,                         // email approvers and requesters (needs Mail.Send)
+
+    // Internal column names. Change one only if SharePoint gave that column a different internal name.
+    col: {
+      description: 'Description', status: 'Status', department: 'Department',
+      owner: 'Owner', fieldSchema: 'FieldSchema', customFields: 'CustomFields',
+      assignees: 'Assignees', checklist: 'Checklist', project: 'Project',
+      workItem: 'WorkItem', approver: 'Approver', decision: 'Decision', requestNote: 'RequestNote', decisionNote: 'DecisionNote',
+    },
+
+    // Choice values the app gives a meaning to. They must match your Choice columns.
+    status: {
+      projectActive: 'Active', projectOnHold: 'On Hold', projectDone: 'Completed', projectCancelled: 'Cancelled',
+      itemActive: 'In Progress', itemDone: 'Done',
+      pending: 'Pending', approved: 'Approved', rejected: 'Rejected',
+    },
+
+    // Choice lists for demo mode. Live mode reads them, and their defaults, from the SharePoint columns.
+    choices: {
+      projectStatus: { values: ['Active', 'On Hold', 'Completed', 'Cancelled'], default: 'Active' },
+      department: { values: ['Finance', 'HR', 'IT', 'Operations', 'Quality', 'Sales'], default: '' },
+      itemStatus: { values: ['To Do', 'In Progress', 'Done'], default: 'To Do' },
+    },
+
+    appName: 'Project Management',
+  };
+  /* ======================================================================= */
+
+  const COL = CFG.col;
+  const ST = CFG.status;
+  const SCOPES = ['User.Read', 'User.ReadBasic.All', 'Sites.ReadWrite.All', ...(CFG.email ? ['Mail.Send'] : [])];
+  const MSAL_CDN = 'https://cdn.jsdelivr.net/npm/@azure/msal-browser@5.25.0/lib/';
+  const MSAL_LIB = { src: MSAL_CDN + 'msal-browser.min.js', sri: 'sha384-WduI8Y09kjrqcyDKB2bdweKbSLOpiraEYXw8Jv/rLMEDjGoh3LIExPxCBO/xYQTW' };
+  const MSAL_BRIDGE = { src: MSAL_CDN + 'redirect-bridge/msal-redirect-bridge.min.js', sri: 'sha384-w9fOBp1mIMiUjLWLevTtEQ7BIOImohRn/c+DO2V3lhulf3jujgTN3l5Jik/f1AxK' };
+  const APP_URL = CFG.redirectUri || location.origin + location.pathname;
+  const FIELD_TYPES = { text: 'Text', number: 'Number', date: 'Date', choice: 'Choice' };
+  const TARGETS = { workItem: 'Work items', project: 'Project' };
+
+  /* ---------- helpers ---------- */
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  const low = v => String(v ?? '').trim().toLowerCase();
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const byId = (list, id) => list.find(x => x.id === id);
+  const upsert = (list, rec) => { const i = list.findIndex(x => x.id === rec.id); if (i >= 0) list[i] = rec; else list.push(rec); };
+  const time = iso => Date.parse(iso) || 0;
+  const modal = sel => bootstrap.Modal.getOrCreateInstance(qs(sel));
+  const readJson = (raw, fallback) => {
+    if (raw == null || raw === '') return fallback;
+    if (typeof raw !== 'string') return raw;
+    try { return JSON.parse(raw); } catch { return fallback; }
+  };
+  const asArray = raw => { const v = readJson(raw, []); return Array.isArray(v) ? v : []; };
+  const asObject = raw => { const v = readJson(raw, {}); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; };
+  const asChecklist = raw => asArray(raw).filter(c => c && typeof c.text === 'string').map(c => ({ text: c.text, done: !!c.done }));
+  const newFieldId = taken => { let id; do { id = 'f' + Math.random().toString(36).slice(2, 9); } while (taken.has(id)); return id; };
+  const splitOptions = s => [...new Set(String(s || '').split(',').map(x => x.trim()).filter(Boolean))];
+
+  function loadScript({ src, sri }) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src; s.integrity = sri; s.crossOrigin = 'anonymous';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('Could not load ' + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  // People are stored as [{ name, email }]. Plain emails typed straight into SharePoint also work.
+  function toPeople(raw) {
+    let v = raw;
+    if (v == null || v === '') return [];
+    if (typeof v === 'string') {
+      try { v = JSON.parse(v); } catch { v = v.split(/[;,]/).map(s => s.trim()).filter(Boolean).map(email => ({ email })); }
+    }
+    if (!Array.isArray(v)) v = [v];
+    return v.filter(p => p && typeof p === 'object' && (p.email || p.name)).map(p => ({ name: String(p.name || p.email), email: String(p.email || '') }));
+  }
+  const samePerson = (a, b) => !!(a && b && a.email && low(a.email) === low(b.email));
+  const isMe = p => samePerson(p, state.me);
+  const nameOf = (p, fallback = 'unknown') => !p ? fallback : isMe(p) ? 'you' : esc(p.name);   // for sentences: "Requested by you"
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  function peopleText(list, max = 2) {
+    if (!list.length) return '<span class="text-muted">Unassigned</span>';
+    const shown = list.slice(0, max).map(p => esc(p.name)).join(', ');
+    return list.length > max ? `<span title="${esc(list.map(p => p.name).join(', '))}">${shown} +${list.length - max}</span>` : shown;
+  }
+
+  // Dates
+  const fmtDate = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const fmtStamp = d => d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const fromYmd = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '')); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  function ago(iso) {
+    const d = new Date(iso), now = new Date();
+    if (isNaN(d)) return '';
+    const mins = Math.round((now - d) / 6e4);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins} min ago`;
+    const midnight = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const days = Math.round((midnight(now) - midnight(d)) / 864e5);
+    if (days <= 0) return plural(Math.round(mins / 60), 'hour') + ' ago';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    return fmtDate(d);
+  }
+  const when = iso => (iso && !isNaN(new Date(iso))) ? `<span title="${esc(fmtStamp(new Date(iso)))}">${esc(ago(iso))}</span>` : '';
+
+  // Custom field values
+  function showValue(field, value) {
+    if (value == null || value === '') return '';
+    if (field.type === 'number') return Number(value).toLocaleString('en-US');
+    if (field.type === 'date') { const d = fromYmd(value); return d ? fmtDate(d) : String(value); }
+    return String(value);
+  }
+  const fieldsFor = (project, target) => (project?.schema || []).filter(f => f && f.id && f.name && !f.archived && (f.target || 'workItem') === target);
+
+  // Colours carry meaning: blue = in progress, green = done/approved, amber = on hold/waiting, red = rejected/high, grey = not started/inactive
+  function statusLook(kind, s) {
+    if (kind === 'item') {
+      if (s === ST.itemActive) return { cls: 'text-bg-primary' };
+      if (s === ST.itemDone) return { cls: 'text-bg-success', icon: 'check2' };
+      return { cls: 'text-bg-secondary' };
+    }
+    if (s === ST.projectActive) return { cls: 'text-bg-primary' };
+    if (s === ST.projectOnHold) return { cls: 'text-bg-warning', icon: 'pause-fill' };
+    if (s === ST.projectDone) return { cls: 'text-bg-success', icon: 'check2' };
+    if (s === ST.projectCancelled) return { cls: 'text-bg-light border text-secondary', icon: 'x' };
+    return { cls: 'text-bg-secondary' };
+  }
+  const statusInner = look => `${look.icon ? `<i class="bi bi-${look.icon} me-1"></i>` : ''}`;
+  function badge(kind, s) {
+    if (!s) return '';
+    const look = statusLook(kind, s);
+    return `<span class="badge fw-normal ${look.cls}">${statusInner(look)}${esc(s)}</span>`;
+  }
+  function decisionText(decision, extra = '') {
+    if (decision === ST.approved) return `<span class="text-nowrap"><i class="bi bi-check-circle-fill text-success me-1"></i>${esc(decision)}${extra}</span>`;
+    if (decision === ST.rejected) return `<span class="text-nowrap"><i class="bi bi-x-circle-fill text-danger me-1"></i>${esc(decision)}${extra}</span>`;
+    return `<span class="text-nowrap"><i class="bi bi-hourglass-split text-warning me-1"></i>${esc(decision || ST.pending)}${extra}</span>`;
+  }
+  // Part-to-whole bar: done (green), in progress (blue), to do (grey track); 2px gaps between segments
+  function stackedBar(done, active, todo) {
+    const total = done + active + todo;
+    if (!total) return '<span class="text-muted" style="font-size: 12px;">No work items</span>';
+    const label = `${done} done, ${active} in progress, ${todo} to do`;
+    const segs = [[done, 'bg-success'], [active, 'bg-primary'], [todo, 'bg-body-secondary']].filter(s => s[0] > 0);
+    return `<div class="d-flex align-items-center gap-2" title="${esc(label)}">
+      <div class="d-flex flex-grow-1" style="gap: 2px; height: 8px; min-width: 80px;" role="img" aria-label="${esc(label)}">
+        ${segs.map(([n, cls], i) => `<div class="${cls}" style="flex: ${n} 1 0;${i === segs.length - 1 ? ' border-radius: 0 4px 4px 0;' : ''}"></div>`).join('')}
+      </div>
+      <span class="text-secondary text-nowrap" style="font-size: 12px; min-width: 2.6em;">${Math.round(done * 100 / total)}%</span>
+    </div>`;
+  }
+  const legendKey = (cls, label) => `<span class="text-secondary d-inline-flex align-items-center gap-1" style="font-size: 12px;"><span class="d-inline-block ${cls}" style="width: 10px; height: 10px; border-radius: 2px;"></span>${label}</span>`;
+  const itemOrder = i => i.status === ST.itemActive ? 0 : i.status === ST.itemDone ? 2 : 1;
+  const checkInfo = i => i.checklist?.length
+    ? `<span class="text-secondary text-nowrap ms-2" style="font-size: 12px;" title="Checklist: ${i.checklist.filter(c => c.done).length} of ${i.checklist.length} done"><i class="bi bi-check2-square me-1"></i>${i.checklist.filter(c => c.done).length}/${i.checklist.length}</span>`
+    : '';
+
+  function options(values, selected = '', blank = null) {
+    const list = selected && !values.includes(selected) ? [...values, selected] : values;
+    return (blank != null ? `<option value="">${esc(blank)}</option>` : '') +
+      list.map(v => `<option value="${esc(v)}"${v === selected ? ' selected' : ''}>${esc(v)}</option>`).join('');
+  }
+  const empty = (icon, title, text = '', action = '') => `
+    <div class="card bg-light border"><div class="card-body text-center py-5">
+      <i class="bi bi-${icon} fs-3 text-secondary"></i>
+      <p class="fw-semibold mb-1 mt-2" style="font-size: 14px;">${esc(title)}</p>
+      ${text ? `<p class="text-muted mb-3" style="font-size: 12px;">${esc(text)}</p>` : '<div class="mb-3"></div>'}
+      ${action}
+    </div></div>`;
+
+  /* ---------- state ---------- */
+  const state = {
+    me: null, choices: CFG.choices, projects: [], items: [], approvals: [], loadedAt: 0,
+    hf: { dept: '' },                                    // home page filter
+    pf: { q: '', scope: 'all', status: '', dept: '' },   // projects page filters
+    wf: { pid: 0, status: '', q: '', who: '' },          // work item filters on a project page
+    showDone: false,
+    backHash: '#home',                                   // page under an open work item
+  };
+  const view = qs('#view');
+  const projectOf = it => byId(state.projects, it.projectId);
+  const itemOf = a => byId(state.items, a.itemId);
+  const myItems = includeDone => state.items.filter(i => i.assignees.some(isMe) && (includeDone || i.status !== ST.itemDone) && projectOf(i));
+  const waitingForMe = () => state.approvals.filter(a => isMe(a.approver) && a.decision === ST.pending && itemOf(a) && projectOf(itemOf(a)));
+
+  function projectStats() {
+    const map = new Map(state.projects.map(p => [p.id, { total: 0, done: 0, last: time(p.modified) }]));
+    for (const it of state.items) {
+      const s = map.get(it.projectId);
+      if (!s) continue;
+      s.total++;
+      if (it.status === ST.itemDone) s.done++;
+      s.last = Math.max(s.last, time(it.modified));
+    }
+    return map;
+  }
+
+  // One line per approver: their latest request decides the item's approval state.
+  function approvalSummary(itemId) {
+    const latest = new Map();
+    state.approvals.filter(a => a.itemId === itemId).sort((a, b) => time(a.created) - time(b.created))
+      .forEach(a => latest.set(low(a.approver?.email) || 'id' + a.id, a));
+    const list = [...latest.values()];
+    if (!list.length) return '';
+    if (list.some(a => a.decision === ST.rejected)) return decisionText(ST.rejected);
+    const pending = list.filter(a => a.decision === ST.pending).length;
+    if (pending) return `<span title="${list.length - pending} of ${list.length} approved">${decisionText(ST.pending, list.length > 1 ? ` · ${list.length - pending}/${list.length}` : '')}</span>`;
+    return decisionText(ST.approved);
+  }
+
+  /* ---------- data: demo ---------- */
+  function demoSource() {
+    const people = [
+      ['Omar Haddad', 'omar.haddad', 'Project Coordinator'], ['Sara Al-Harbi', 'sara.alharbi', 'HR Manager'],
+      ['Faisal Al-Qahtani', 'faisal.alqahtani', 'Finance Manager'], ['Aisha Rahman', 'aisha.rahman', 'Talent Acquisition Specialist'],
+      ['Bilal Siddiqui', 'bilal.siddiqui', 'Account Manager'], ['Hana Al-Zahrani', 'hana.alzahrani', 'IT Support Lead'],
+      ['Yousef Al-Otaibi', 'yousef.alotaibi', 'Operations Manager'], ['Maryam Khan', 'maryam.khan', 'Fleet Coordinator'],
+      ['Khalid Al-Dossary', 'khalid.aldossary', 'Systems Engineer'], ['Nadia Farouk', 'nadia.farouk', 'Quality Officer'],
+    ].map(([name, user, title]) => ({ name, email: `${user}@contoso.com`, title }));
+    const [omar, sara, faisal, aisha, bilal, hana, yousef, maryam, khalid, nadia] = people;
+    const person = p => ({ name: p.name, email: p.email });
+    const me = person(omar);
+    const now = Date.now();
+    const at = (days, hours = 0) => new Date(now - days * 864e5 - hours * 36e5).toISOString();
+    const ymd = days => { const d = new Date(now + days * 864e5); return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-'); };
+    const check = (...lines) => lines.map(l => ({ text: l.replace(/^\+ /, ''), done: l.startsWith('+ ') }));
+    let version = 1, nextProject = 1, nextItem = 1, nextApproval = 1;
+    const projects = [], items = [], approvals = [];
+
+    const addProject = (days, o) => {
+      const p = { id: nextProject++, eTag: `"${version++}"`, description: '', schema: [], custom: {}, ...o, owner: person(o.owner),
+        created: at(days), createdBy: person(o.owner), modified: at(Math.max(days - 2, 0), 3), modifiedBy: person(o.owner) };
+      projects.push(p);
+      return p;
+    };
+    const addItem = (p, title, status, who, days, extra = {}) => {
+      const it = { id: nextItem++, eTag: `"${version++}"`, projectId: p.id, title, status, description: extra.description || '',
+        assignees: who.map(person), checklist: extra.checklist || [], custom: extra.custom || {},
+        created: at(days + 4), createdBy: p.owner, modified: at(days, 2), modifiedBy: who.length ? person(who[0]) : p.owner };
+      items.push(it);
+      return it;
+    };
+    const addApproval = (it, from, to, decision, days, note = '', comment = '') => approvals.push({
+      id: nextApproval++, eTag: `"${version++}"`, itemId: it.id, title: it.title, approver: person(to), decision, note, comment,
+      created: at(days + 1), createdBy: person(from),
+      modified: decision === ST.pending ? at(days + 1) : at(days), modifiedBy: decision === ST.pending ? person(from) : person(to),
+    });
+
+    const onboarding = addProject(40, {
+      title: 'Employee onboarding portal', status: 'Active', department: 'HR', owner: sara,
+      description: 'Self-service portal for new hires: documents, IT accounts and a first-week checklist.',
+      schema: [
+        { id: 'fphase', name: 'Phase', type: 'choice', options: ['Design', 'Build', 'Test'], target: 'workItem' },
+        { id: 'feffort', name: 'Effort (days)', type: 'number', target: 'workItem' },
+        { id: 'fgolive', name: 'Go-live', type: 'date', target: 'project' },
+      ],
+      custom: { fgolive: ymd(45) },
+    });
+    const steps = addItem(onboarding, 'Map onboarding steps with HR', 'Done', [sara], 30, { custom: { fphase: 'Design', feffort: 3 } });
+    addItem(onboarding, 'Design the welcome page', 'Done', [aisha], 21, { custom: { fphase: 'Design', feffort: 2 } });
+    const upload = addItem(onboarding, 'Build the document upload step', 'In Progress', [omar], 1, {
+      custom: { fphase: 'Build', feffort: 5 }, description: 'Accept ID, passport and certificates as PDF or image.',
+      checklist: check('+ Accept PDF and images', '+ Limit files to 10 MB', 'Scan uploads for viruses', 'Show upload progress'),
+    });
+    addItem(onboarding, 'Create accounts in Entra ID automatically', 'In Progress', [omar, khalid], 0, {
+      custom: { fphase: 'Build', feffort: 4 }, checklist: check('+ Service account for the flow', 'Map job titles to groups'),
+    });
+    addItem(onboarding, 'Write the day-one IT checklist', 'To Do', [hana], 3, { custom: { fphase: 'Build', feffort: 1 } });
+    addItem(onboarding, 'User acceptance testing', 'To Do', [], 5, { custom: { fphase: 'Test' } });
+
+    const audit = addProject(20, {
+      title: 'ISO 9001 surveillance audit', status: 'Active', department: 'Quality', owner: omar,
+      description: 'Prepare evidence for the external surveillance audit.',
+      schema: [
+        { id: 'fclause', name: 'Clause', type: 'text', target: 'workItem' },
+        { id: 'fdue', name: 'Due', type: 'date', target: 'workItem' },
+      ],
+    });
+    addItem(audit, 'Update the document control procedure', 'Done', [omar], 6, { custom: { fclause: '7.5', fdue: ymd(-4) } });
+    const reports = addItem(audit, 'Collect internal audit reports', 'In Progress', [nadia], 0, {
+      custom: { fclause: '9.2', fdue: ymd(6) }, checklist: check('+ HR', '+ Finance', 'Operations', 'IT'),
+    });
+    addItem(audit, 'Close open corrective actions', 'To Do', [omar, faisal], 2, { custom: { fclause: '10.2', fdue: ymd(12) } });
+    addItem(audit, 'Management review minutes', 'To Do', [sara], 4, { custom: { fclause: '9.3', fdue: ymd(14) } });
+    addItem(audit, 'Book the auditor visit', 'Done', [nadia], 9);
+
+    const fleet = addProject(35, {
+      title: 'Fleet GPS rollout', status: 'Active', department: 'Operations', owner: yousef,
+      description: 'Track company vehicles in real time to cut idle time and fuel cost.',
+    });
+    const vendors = addItem(fleet, 'Shortlist GPS vendors', 'Done', [yousef], 25);
+    addItem(fleet, 'Pilot on 10 vehicles', 'In Progress', [yousef, maryam], 2, { checklist: check('+ Pick pilot vehicles', 'Install devices', 'Two-week review') });
+    addItem(fleet, 'Driver briefing sessions', 'To Do', [maryam], 6);
+    addItem(fleet, 'Install on the remaining fleet', 'To Do', [], 6);
+
+    const payroll = addProject(60, {
+      title: 'Payroll system migration', status: 'On Hold', department: 'Finance', owner: faisal,
+      description: "On hold until next year's budget is approved.",
+    });
+    addItem(payroll, 'Export employee master data', 'Done', [faisal], 33);
+    const mapping = addItem(payroll, 'Map pay components to the new system', 'In Progress', [faisal], 12);
+    addItem(payroll, 'Parallel payroll run', 'To Do', [], 30);
+
+    const renewals = addProject(15, {
+      title: 'Client contract renewals 2027', status: 'Active', department: 'Sales', owner: bilal,
+      description: 'Renew outsourcing contracts that expire in Q1 2027.',
+      schema: [
+        { id: 'fclient', name: 'Client', type: 'text', target: 'workItem' },
+        { id: 'fstage', name: 'Stage', type: 'choice', options: ['Draft', 'Sent', 'Signed'], target: 'workItem' },
+      ],
+    });
+    const gulf = addItem(renewals, 'Renewal proposal', 'In Progress', [bilal], 1, { custom: { fclient: 'Gulf Star Logistics', fstage: 'Draft' } });
+    addItem(renewals, 'Renewal proposal', 'Done', [bilal], 4, { custom: { fclient: 'Nadeem Facilities', fstage: 'Signed' } });
+    addItem(renewals, 'Renewal proposal', 'To Do', [bilal, faisal], 7, { custom: { fclient: 'Red Sea Hospitality' } });
+
+    const website = addProject(90, { title: 'Website redesign', status: 'Completed', department: 'IT', owner: omar, description: 'New company website with a careers section.' });
+    addItem(website, 'Agree the site map', 'Done', [omar], 80);
+    addItem(website, 'Build the careers section', 'Done', [khalid], 52);
+    addItem(website, 'Launch', 'Done', [omar, hana], 47);
+
+    const network = addProject(30, { title: 'Office network upgrade', status: 'Active', department: 'IT', owner: hana });
+    addItem(network, 'Survey the Khobar office', 'Done', [hana], 20);
+    const coreSwitch = addItem(network, 'Replace the core switch', 'To Do', [khalid], 17);
+    addItem(network, 'Add Wi-Fi access points', 'To Do', [hana, omar], 17);
+
+    const crm = addProject(70, { title: 'Recruitment CRM evaluation', status: 'Cancelled', department: 'HR', owner: aisha, description: 'Stopped: the current ATS will be extended instead.' });
+    addItem(crm, 'Compare three vendors', 'Done', [aisha], 62);
+    addItem(crm, 'Demo with recruiters', 'To Do', [], 64);
+
+    addApproval(upload, omar, sara, ST.pending, 0, 'Please confirm the accepted file types before I finish this step.');
+    addApproval(reports, nadia, omar, ST.pending, 0, 'All Q3 reports are in the DMS. Please approve so I can file them.');
+    addApproval(mapping, faisal, omar, ST.pending, 1, 'The mapping sheet is ready for your review.');
+    addApproval(steps, sara, omar, ST.approved, 28, 'Steps agreed with the HR team.', 'Matches the HR checklist.');
+    addApproval(vendors, yousef, faisal, ST.approved, 22, 'Vendor B is cheapest and has a 3-year warranty.', 'Approved within budget.');
+    addApproval(gulf, bilal, faisal, ST.rejected, 1, 'Proposing a 12% discount to keep the client.', 'Anything above 10% needs CEO sign-off. Please revise.');
+    addApproval(coreSwitch, hana, faisal, ST.pending, 4, 'The vendor quote is in the DMS. OK to order?');
+
+    const copy = v => JSON.parse(JSON.stringify(v));
+    const pause = () => sleep(150);
+    const save = (list, rec, nextId) => {
+      let row = rec.id ? byId(list, rec.id) : null;
+      if (rec.id && !row) throw Object.assign(new Error('It was deleted by someone else.'), { status: 404 });
+      if (!row) { row = { ...copy(rec), id: nextId(), created: new Date().toISOString(), createdBy: me }; list.push(row); }
+      else Object.assign(row, copy(rec));
+      Object.assign(row, { modified: new Date().toISOString(), modifiedBy: me, eTag: `"${version++}"` });
+      return copy(row);
+    };
+    const remove = (list, id) => { const i = list.findIndex(x => x.id === id); if (i >= 0) list.splice(i, 1); };
+    return {
+      async init() { return { me }; },
+      async choices() { return copy(CFG.choices); },
+      async load() { await pause(); return copy({ projects, items, approvals }); },
+      async getProject(id) { return copy(byId(projects, id) || null); },
+      async getItem(id) { return copy(byId(items, id) || null); },
+      async getApproval(id) { return copy(byId(approvals, id) || null); },
+      async saveProject(rec) { await pause(); return save(projects, rec, () => nextProject++); },
+      async saveItem(rec) { await pause(); return save(items, rec, () => nextItem++); },
+      async saveApproval(rec) { await pause(); return save(approvals, rec, () => nextApproval++); },
+      async deleteProject(id) { await pause(); remove(projects, id); },
+      async deleteItem(id) { await pause(); remove(items, id); },
+      async deleteApproval(id) { await pause(); remove(approvals, id); },
+      async searchPeople(q) {
+        await sleep(150);
+        const terms = low(q).split(/\s+/).filter(Boolean);
+        return people.filter(p => terms.every(t => low(p.name).split(/[\s-]+/).some(w => w.startsWith(t)) || low(p.email).startsWith(t))).slice(0, 8);
+      },
+      async sendMail() { return false; },   // demo mode sends no email
+      signOut: null,
+    };
+  }
+
+  /* ---------- data: SharePoint through Microsoft Graph ---------- */
+  function graphSource() {
+    let pca, siteId;
+    const listId = {};
+    const account = () => pca.getActiveAccount();
+
+    async function token() {
+      try {
+        return (await pca.acquireTokenSilent({ scopes: SCOPES, account: account() })).accessToken;
+      } catch (err) {
+        const code = err?.errorCode || '';
+        const interactive = err instanceof window.msal.InteractionRequiredAuthError ||
+          ['interaction_required', 'login_required', 'consent_required', 'no_account_error', 'no_tokens_found', 'timed_out', 'monitor_window_timeout'].includes(code);
+        if (!interactive) throw err;
+        await pca.acquireTokenRedirect({ scopes: SCOPES, account: account() });
+        return new Promise(() => {});   // the page is on its way to sign-in
+      }
+    }
+
+    async function call(path, { method = 'GET', body, headers = {} } = {}) {
+      const url = path.startsWith('https://') ? path : 'https://graph.microsoft.com/v1.0' + path;
+      for (let attempt = 0; ; attempt++) {
+        const res = await fetch(url, {
+          method,
+          headers: { Authorization: 'Bearer ' + await token(), ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const retry = res.status === 429 || (method === 'GET' && (res.status === 503 || res.status === 504));
+        if (retry && attempt < 3) { await sleep(1000 * (Number(res.headers.get('Retry-After')) || 2 ** attempt)); continue; }
+        const text = await res.text();
+        let data = null;
+        if (text) { try { data = JSON.parse(text); } catch { data = null; } }
+        if (!res.ok) throw Object.assign(new Error(data?.error?.message || `${res.status} ${res.statusText}`), { status: res.status });
+        return data;
+      }
+    }
+    async function all(path) {
+      let out = [], next = path;
+      while (next) { const page = await call(next); out = out.concat(page?.value || []); next = page?.['@odata.nextLink']; }
+      return out;
+    }
+
+    const itemsUrl = key => `/sites/${siteId}/lists/${listId[key]}/items`;
+    const who = set => set?.user ? { name: set.user.displayName || set.user.email || '', email: set.user.email || '' } : null;
+    const meta = it => ({ id: Number(it.id), eTag: it.eTag, created: it.createdDateTime, createdBy: who(it.createdBy), modified: it.lastModifiedDateTime, modifiedBy: who(it.lastModifiedBy) });
+    const read = {
+      projects: it => { const f = it.fields || {}; return { ...meta(it), title: f.Title || '', description: f[COL.description] || '', status: f[COL.status] || '', department: f[COL.department] || '', owner: toPeople(f[COL.owner])[0] || null, schema: asArray(f[COL.fieldSchema]), custom: asObject(f[COL.customFields]) }; },
+      workItems: it => { const f = it.fields || {}; return { ...meta(it), projectId: Number(f[COL.project + 'LookupId']), title: f.Title || '', description: f[COL.description] || '', status: f[COL.status] || '', assignees: toPeople(f[COL.assignees]), checklist: asChecklist(f[COL.checklist]), custom: asObject(f[COL.customFields]) }; },
+      approvals: it => { const f = it.fields || {}; return { ...meta(it), itemId: Number(f[COL.workItem + 'LookupId']), title: f.Title || '', approver: toPeople(f[COL.approver])[0] || null, decision: f[COL.decision] || ST.pending, note: f[COL.requestNote] || '', comment: f[COL.decisionNote] || '' }; },
+    };
+    const write = {
+      projects: p => ({ Title: p.title, [COL.description]: p.description || null, [COL.status]: p.status || null, [COL.department]: p.department || null, [COL.owner]: p.owner ? JSON.stringify(p.owner) : null, [COL.fieldSchema]: JSON.stringify(p.schema || []), [COL.customFields]: JSON.stringify(p.custom || {}) }),
+      workItems: i => ({ Title: i.title, [COL.description]: i.description || null, [COL.status]: i.status || null, [COL.assignees]: JSON.stringify(i.assignees || []), [COL.checklist]: JSON.stringify(i.checklist || []), [COL.project + 'LookupId']: i.projectId, [COL.customFields]: JSON.stringify(i.custom || {}) }),
+      approvals: a => ({ Title: a.title, [COL.workItem + 'LookupId']: a.itemId, [COL.approver]: JSON.stringify(a.approver), [COL.decision]: a.decision, [COL.requestNote]: a.note || null, [COL.decisionNote]: a.comment || null }),
+    };
+    const getOne = async (key, id) => read[key](await call(`${itemsUrl(key)}/${id}?$expand=fields`));
+    async function save(key, rec) {
+      if (rec.id) {
+        // If-Match: fail with 412 instead of overwriting someone else's newer change
+        await call(`${itemsUrl(key)}/${rec.id}/fields`, { method: 'PATCH', body: write[key](rec), headers: rec.eTag ? { 'If-Match': rec.eTag } : {} });
+        return getOne(key, rec.id);
+      }
+      const created = await call(itemsUrl(key), { method: 'POST', body: { fields: write[key](rec) } });
+      return getOne(key, created.id);
+    }
+    const listAll = async key => (await all(`${itemsUrl(key)}?$expand=fields&$top=999`)).map(read[key]);
+    const remove = (key, id) => call(`${itemsUrl(key)}/${id}`, { method: 'DELETE' });
+
+    return {
+      async init() {
+        // Inside MSAL's hidden frame or popup: hand the sign-in response back to the main window and stop.
+        const reply = /(^|[#?&])(code|error)=/.test(location.hash + location.search) && /(^|[#?&])state=/.test(location.hash + location.search);
+        if (reply && (window.self !== window.top || window.opener)) {
+          await loadScript(MSAL_BRIDGE);
+          await window.msalRedirectBridge.broadcastResponseToMainFrame();
+          return null;
+        }
+        await loadScript(MSAL_LIB);
+        pca = new window.msal.PublicClientApplication({
+          auth: { clientId: CFG.clientId, authority: 'https://login.microsoftonline.com/' + CFG.tenantId, redirectUri: APP_URL, postLogoutRedirectUri: APP_URL },
+          cache: { cacheLocation: 'localStorage' },
+        });
+        await pca.initialize();
+        const result = await pca.handleRedirectPromise();
+        const acct = result?.account || pca.getActiveAccount() || pca.getAllAccounts()[0];
+        if (!acct) {
+          qs('#bootMsg').textContent = 'Signing in…';
+          await pca.loginRedirect({ scopes: SCOPES });
+          return null;
+        }
+        pca.setActiveAccount(acct);
+        const [me, site] = await Promise.all([
+          call('/me?$select=displayName,mail,userPrincipalName'),
+          call(`/sites/${CFG.siteHost}:${CFG.sitePath}`),
+        ]);
+        siteId = site.id;
+        const lists = await all(`/sites/${siteId}/lists?$select=id,name,displayName`);
+        for (const [key, name] of Object.entries(CFG.lists)) {
+          const hit = lists.find(l => low(l.displayName) === low(name) || low(l.name) === low(name));
+          if (!hit) throw Object.assign(new Error(`The list "${name}" wasn't found on ${CFG.siteHost}${CFG.sitePath}.`), { setup: true });
+          listId[key] = hit.id;
+        }
+        return { me: { name: me.displayName, email: me.mail || me.userPrincipalName } };
+      },
+      async choices() {
+        const [pc, ic] = await Promise.all([all(`/sites/${siteId}/lists/${listId.projects}/columns`), all(`/sites/${siteId}/lists/${listId.workItems}/columns`)]);
+        const pick = (cols, name, fallback) => {
+          const c = cols.find(x => x.name === name);
+          const values = c?.choice?.choices;
+          return values?.length ? { values, default: c.defaultValue?.value || '' } : fallback;
+        };
+        return {
+          projectStatus: pick(pc, COL.status, CFG.choices.projectStatus),
+          department: pick(pc, COL.department, CFG.choices.department),
+          itemStatus: pick(ic, COL.status, CFG.choices.itemStatus),
+        };
+      },
+      async load() {
+        const [projects, items, approvals] = await Promise.all([listAll('projects'), listAll('workItems'), listAll('approvals')]);
+        return { projects, items, approvals };
+      },
+      getProject: id => getOne('projects', id),
+      getItem: id => getOne('workItems', id),
+      getApproval: id => getOne('approvals', id),
+      saveProject: rec => save('projects', rec),
+      saveItem: rec => save('workItems', rec),
+      saveApproval: rec => save('approvals', rec),
+      deleteProject: id => remove('projects', id),
+      deleteItem: id => remove('workItems', id),
+      deleteApproval: id => remove('approvals', id),
+      async searchPeople(q) {
+        const s = q.replace(/'/g, "''");
+        const filter = ['displayName', 'givenName', 'surname', 'mail', 'userPrincipalName'].map(p => `startswith(${p},'${s}')`).join(' or ');
+        const res = await call(`/users?$filter=${encodeURIComponent(filter)}&$select=displayName,mail,userPrincipalName,jobTitle&$top=10`);
+        return (res?.value || []).filter(u => u.mail).map(u => ({ name: u.displayName || u.mail, email: u.mail, title: u.jobTitle || '' }));
+      },
+      async sendMail(to, subject, html) {
+        if (!CFG.email || !to.length) return false;
+        await call('/me/sendMail', { method: 'POST', body: {
+          message: { subject, body: { contentType: 'HTML', content: html }, toRecipients: to.map(p => ({ emailAddress: { address: p.email, name: p.name } })) },
+          saveToSentItems: true,
+        } });
+        return true;
+      },
+      signOut: () => pca.logoutRedirect({ account: account() }),
+    };
+  }
+
+  const api = CFG.demo ? demoSource() : graphSource();
+
+  /* ---------- feedback ---------- */
+  function toast(msg) {
+    qs('#toastMsg').textContent = msg;
+    bootstrap.Toast.getOrCreateInstance(qs('#toast'), { delay: 3000 }).show();
+  }
+  function showAlert(msg) {
+    qs('#alertBox').innerHTML = `<div class="alert alert-light border d-flex align-items-start gap-2 small py-2" role="alert">
+      <i class="bi bi-exclamation-circle text-danger"></i><div class="flex-grow-1">${esc(msg)}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+  }
+  function showErr(modalEl, msg) { const box = qs('[data-err]', modalEl); box.textContent = msg; box.classList.remove('d-none'); box.scrollIntoView({ block: 'nearest' }); }
+  function hideErr(modalEl) { qs('[data-err]', modalEl).classList.add('d-none'); }
+  function busy(btn, on, label = 'Saving…') {
+    if (!btn) return;
+    if (on) {
+      btn.dataset.html = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>${esc(label)}`;
+    } else {
+      btn.disabled = false;
+      if (btn.dataset.html != null) { btn.innerHTML = btn.dataset.html; delete btn.dataset.html; }
+    }
+  }
+  function fatal(err) {
+    console.error(err);
+    const s = err?.status;
+    const hint = s === 401 || s === 403 ? 'Check that you can open the SharePoint site and that the app registration has admin consent.'
+      : s === 404 || err?.setup ? 'Check siteHost, sitePath and the list names in the settings at the top of this file.' : '';
+    view.innerHTML = `<div class="card bg-light border"><div class="card-body p-4">
+      <p class="fw-semibold mb-1"><i class="bi bi-exclamation-circle text-danger me-2"></i>The app couldn't load</p>
+      <p class="small text-secondary mb-1">${esc(err?.message || err)}</p>
+      ${hint ? `<p class="small text-secondary mb-1">${esc(hint)}</p>` : ''}
+      <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="retry">Try again</button>
+    </div></div>`;
+    qs('#retry').addEventListener('click', () => location.reload());
+  }
+
+  // After a failed save: reload the record when someone else changed or deleted it.
+  async function handleSaveError(err, kind, rec, modalEl) {
+    const list = kind === 'project' ? 'projects' : kind === 'item' ? 'items' : 'approvals';
+    if (err.status === 412 && rec?.id) {
+      const fresh = await (kind === 'project' ? api.getProject(rec.id) : kind === 'item' ? api.getItem(rec.id) : api.getApproval(rec.id)).catch(() => null);
+      if (fresh) upsert(state[list], fresh);
+      refresh();
+      showErr(modalEl, 'Someone else changed this while you had it open. Close this window and open it again to see their changes, then redo yours.');
+    } else if (err.status === 404 && rec?.id) {
+      state[list] = state[list].filter(x => x.id !== rec.id);
+      refresh();
+      showErr(modalEl, 'This was deleted by someone else.');
+    } else {
+      showErr(modalEl, `Couldn't save: ${err.message}`);
+    }
+  }
+
+  /* ---------- people picker ---------- */
+  function makePicker(host, { multi = true, value = [], inputId, placeholder = 'Search people', exclude = () => false, invalidText = '' }) {
+    let sel = value.filter(Boolean).map(p => ({ ...p }));
+    let results = [], active = -1, timer = 0, req = 0;
+    host.innerHTML = `
+      <div class="d-flex flex-wrap gap-1" data-chips></div>
+      <div class="position-relative">
+        <input type="text" class="form-control form-control-sm" id="${esc(inputId)}" placeholder="${esc(placeholder)}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false">
+        <div class="list-group position-absolute start-0 end-0 shadow-sm d-none" role="listbox" style="z-index: 1080; top: 100%; max-height: 240px; overflow-y: auto;"></div>
+        <div class="invalid-feedback">${esc(invalidText)}</div>
+      </div>`;
+    const chips = qs('[data-chips]', host), input = qs('input', host), menu = qs('[role=listbox]', host);
+    const changed = () => host.dispatchEvent(new CustomEvent('picker-change'));
+    const drawChips = () => {
+      chips.innerHTML = sel.map((p, i) => `<span class="badge rounded-pill text-bg-light border fw-normal d-inline-flex align-items-center gap-1 py-1" style="font-size: 12px;" title="${esc(p.email)}">${esc(p.name)}<button type="button" class="btn-close" style="font-size: 8px;" data-rm="${i}" aria-label="Remove ${esc(p.name)}"></button></span>`).join('');
+      chips.classList.toggle('mb-1', sel.length > 0);
+    };
+    const close = () => { menu.classList.add('d-none'); input.setAttribute('aria-expanded', 'false'); active = -1; };
+    const open = html => { menu.innerHTML = html; menu.classList.remove('d-none'); input.setAttribute('aria-expanded', 'true'); };
+    const highlight = () => qsa('[data-i]', menu).forEach((b, i) => { b.classList.toggle('active', i === active); if (i === active) b.scrollIntoView({ block: 'nearest' }); });
+    const choose = i => {
+      const p = results[i];
+      if (!p) return;
+      sel = multi ? [...sel, { name: p.name, email: p.email }] : [{ name: p.name, email: p.email }];
+      input.value = ''; input.classList.remove('is-invalid');
+      close(); drawChips(); changed();
+    };
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      const q = input.value.trim();
+      if (q.length < 2) { close(); return; }
+      open('<div class="list-group-item small text-secondary">Searching…</div>');
+      timer = setTimeout(async () => {
+        const n = ++req;
+        try {
+          const found = await api.searchPeople(q);
+          if (n !== req) return;
+          results = found.filter(p => !sel.some(s => samePerson(s, p)) && !exclude(p));
+          active = results.length ? 0 : -1;
+          open(results.length
+            ? results.map((p, i) => `<button type="button" class="list-group-item list-group-item-action py-1${i === 0 ? ' active' : ''}" data-i="${i}" role="option"><div class="small">${esc(p.name)}</div><div class="opacity-75" style="font-size: 11px;">${esc(p.email)}${p.title ? ' · ' + esc(p.title) : ''}</div></button>`).join('')
+            : '<div class="list-group-item small text-secondary">No one found</div>');
+        } catch (err) {
+          if (n === req) open(`<div class="list-group-item small text-secondary">Search failed: ${esc(err.message)}</div>`);
+        }
+      }, 250);
+    });
+    input.addEventListener('keydown', e => {
+      const isOpen = !menu.classList.contains('d-none') && results.length > 0;
+      if (e.key === 'ArrowDown' && isOpen) { e.preventDefault(); active = (active + 1) % results.length; highlight(); }
+      else if (e.key === 'ArrowUp' && isOpen) { e.preventDefault(); active = (active - 1 + results.length) % results.length; highlight(); }
+      else if (e.key === 'Enter') { if (input.value.trim()) e.preventDefault(); if (isOpen && active >= 0) choose(active); }
+      else if (e.key === 'Escape' && !menu.classList.contains('d-none')) { e.preventDefault(); e.stopPropagation(); close(); }
+      else if (e.key === 'Backspace' && !input.value && sel.length) { sel.pop(); drawChips(); changed(); }
+    });
+    input.addEventListener('blur', () => setTimeout(close, 150));
+    menu.addEventListener('mousedown', e => { e.preventDefault(); const b = e.target.closest('[data-i]'); if (b) choose(Number(b.dataset.i)); });
+    chips.addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { sel.splice(Number(b.dataset.rm), 1); drawChips(); changed(); input.focus(); } });
+    drawChips();
+    return {
+      get: () => sel.map(p => ({ ...p })),
+      add: p => { if (!sel.some(s => samePerson(s, p))) { sel = multi ? [...sel, { ...p }] : [{ ...p }]; drawChips(); changed(); } },
+      invalid: on => input.classList.toggle('is-invalid', on),
+      pending: () => input.value.trim(),
+      focus: () => input.focus(),
+    };
+  }
+
+  /* ---------- custom field inputs ---------- */
+  function customInputs(fields, values) {
+    return `<div class="row g-3">${fields.map(f => {
+      const v = values[f.id] ?? '';
+      const id = 'cf_' + esc(f.id);
+      let input;
+      if (f.type === 'choice') {
+        const opts = [...(f.options || [])];
+        if (v !== '' && !opts.includes(v)) opts.push(String(v));
+        input = `<select class="form-select form-select-sm" id="${id}" data-cf="${esc(f.id)}">${options(opts, String(v), '—')}</select>`;
+      } else {
+        const type = f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text';
+        input = `<input type="${type}"${type === 'number' ? ' step="any"' : ''} class="form-control form-control-sm" id="${id}" data-cf="${esc(f.id)}" value="${esc(v)}">`;
+      }
+      return `<div class="col-12 col-sm-6"><label class="form-label small fw-semibold mb-1" for="${id}">${esc(f.name)}</label>${input}</div>`;
+    }).join('')}</div>`;
+  }
+  function readCustom(container, base) {
+    const out = { ...base };
+    qsa('[data-cf]', container).forEach(el => {
+      const raw = el.value.trim();
+      if (raw === '') delete out[el.dataset.cf];
+      else out[el.dataset.cf] = el.type === 'number' ? Number(raw) : raw;
+    });
+    return out;
+  }
+
+  /* ---------- views ---------- */
+  function setNav(name) {
+    qsa('#nav [data-nav]').forEach(a => {
+      const on = a.dataset.nav === name;
+      a.classList.toggle('active', on);
+      if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+  function updateCounts() {
+    const counts = { mywork: myItems(false).length, approvals: waitingForMe().length };
+    qsa('#nav [data-count]').forEach(b => { const n = counts[b.dataset.count]; b.textContent = n; b.classList.toggle('d-none', !n); });
+  }
+  function renderUser() {
+    qs('#userBox').innerHTML = `<span class="text-secondary text-nowrap" title="${esc(state.me.name)}"><i class="bi bi-person-circle"></i><span class="d-none d-sm-inline ms-1">${esc(state.me.name)}</span></span>` +
+      (api.signOut ? '<button type="button" class="btn btn-link btn-sm p-0 text-secondary text-decoration-none" id="signOut" title="Sign out" aria-label="Sign out"><i class="bi bi-box-arrow-right d-sm-none"></i><span class="d-none d-sm-inline">Sign out</span></button>' : '');
+    qs('#signOut')?.addEventListener('click', () => api.signOut());
+  }
+
+  // Phones (< 768px) get stacked cards; tablets and up get tables.
+  const onDesktop = html => `<div class="d-none d-md-block">${html}</div>`;
+  const onPhone = (html, extra = '') => `<div class="list-group d-md-none ${extra}">${html}</div>`;
+  const metaLine = parts => `<div class="text-secondary mt-1" style="font-size: 12px;">${parts.filter(Boolean).join(' · ')}</div>`;
+  const cardTop = (left, right) => `<div class="d-flex justify-content-between align-items-start gap-2"><div class="small" style="min-width: 0;">${left}</div><div class="flex-shrink-0">${right}</div></div>`;
+  function doneBar(s) {
+    if (!s.total) return '<span class="text-muted" style="font-size: 12px;">No work items</span>';
+    const pct = Math.round(s.done * 100 / s.total);
+    return `<div class="d-flex align-items-center gap-2" title="${s.done} of ${s.total} work items done">
+      <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;" role="progressbar" aria-label="Progress" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width: ${pct}%"></div></div>
+      <span class="text-secondary text-nowrap" style="font-size: 12px;">${s.done}/${s.total}</span></div>`;
+  }
+  function itemCard(i, { cols = [], showProject = false } = {}) {
+    const custom = cols.map(f => { const v = showValue(f, i.custom[f.id]); return v ? `<span class="text-secondary">${esc(f.name)}:</span> ${esc(v)}` : ''; }).filter(Boolean);
+    return `<div class="list-group-item py-2" data-item="${i.id}" style="cursor: pointer;">
+      ${cardTop(`<a href="#item/${i.id}" class="text-decoration-none" data-open-item="${i.id}">${esc(i.title)}</a>${checkInfo(i)}`, statusMenu(i))}
+      ${metaLine([showProject ? esc(projectOf(i).title) : peopleText(i.assignees), approvalSummary(i.id), when(i.modified)])}
+      ${custom.length ? `<div class="mt-1" style="font-size: 12px;">${custom.join(' · ')}</div>` : ''}
+    </div>`;
+  }
+
+  // Home: where things stand across the company, filterable by department
+  function renderHome() {
+    setNav('home');
+    const dept = state.hf.dept, DAY = 864e5, now = Date.now();
+    const inDept = p => !!p && (!dept || p.department === dept);
+    const count = (list, s) => list.filter(i => i.status === s).length;
+    const daysSince = t => Math.floor((now - t) / DAY);
+    const stats = projectStats();
+    const open = state.projects.filter(p => inDept(p) && (p.status === ST.projectActive || p.status === ST.projectOnHold));
+    const active = open.filter(p => p.status === ST.projectActive);
+    const openIds = new Set(open.map(p => p.id));
+    const items = state.items.filter(i => openIds.has(i.projectId));
+    const done = count(items, ST.itemDone), moving = count(items, ST.itemActive);
+    const pending = state.approvals.filter(a => a.decision === ST.pending && itemOf(a) && inDept(projectOf(itemOf(a))));
+    const waitingLong = pending.filter(a => now - time(a.created) >= 3 * DAY).sort((a, b) => time(a.created) - time(b.created));
+    const quiet = active.filter(p => now - stats.get(p.id).last >= 14 * DAY).sort((a, b) => stats.get(a.id).last - stats.get(b.id).last);
+    const pendingBy = new Map();
+    pending.forEach(a => { const pid = itemOf(a).projectId; pendingBy.set(pid, (pendingBy.get(pid) || 0) + 1); });
+    const share = p => { const s = stats.get(p.id); return s.total ? s.done / s.total : 0; };
+    const sorted = open.slice().sort((a, b) => (a.status === ST.projectActive ? 0 : 1) - (b.status === ST.projectActive ? 0 : 1)
+      || share(a) - share(b) || a.title.localeCompare(b.title));
+
+    const tile = (value, label, sub, icon, iconCls, dim) => `
+      <div class="card h-100 bg-light border${dim ? ' opacity-75' : ''}"><div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-start"><span class="fs-2 fw-semibold lh-1">${esc(value)}</span><i class="bi bi-${icon} fs-4 ${iconCls}"></i></div>
+        <p class="small text-dark mb-0 mt-2">${esc(label)}</p>
+        <p class="text-secondary mb-0" style="font-size: 12px;">${esc(sub)}</p>
+      </div></div>`;
+
+    const attention = quiet.length || waitingLong.length ? `
+      <h2 class="h5 mb-3 text-dark">Needs attention</h2>
+      <div class="list-group mb-4">
+        ${quiet.map(p => `<a href="#project/${p.id}" class="list-group-item list-group-item-action bg-light d-flex flex-wrap align-items-center gap-2">
+          <i class="bi bi-pause-circle text-warning"></i>
+          <span class="small"><span class="fw-semibold">${esc(p.title)}</span> has had no activity for ${daysSince(stats.get(p.id).last)} days</span>
+          <span class="ms-auto text-secondary" style="font-size: 12px;">Owner: ${esc(p.owner?.name || '—')}</span></a>`).join('')}
+        ${waitingLong.map(a => `<a href="#item/${a.itemId}" data-open-item="${a.itemId}" class="list-group-item list-group-item-action bg-light d-flex flex-wrap align-items-center gap-2">
+          <i class="bi bi-hourglass-split text-warning"></i>
+          <span class="small">Approval of <span class="fw-semibold">${esc(itemOf(a).title)}</span> has waited ${daysSince(time(a.created))} days for ${nameOf(a.approver)}</span>
+          <span class="ms-auto text-secondary" style="font-size: 12px;">${esc(projectOf(itemOf(a)).title)}</span></a>`).join('')}
+      </div>` : '';
+
+    const progress = open.length ? `
+      <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+        <h2 class="h5 mb-0 text-dark me-auto">Project progress</h2>
+        ${legendKey('bg-success', 'Done')}${legendKey('bg-primary', 'In progress')}${legendKey('bg-body-secondary border', 'To do')}
+      </div>
+      ${onDesktop(`<div class="table-responsive border rounded mb-4">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr>
+            <th class="small ps-3">Project</th><th class="small">Status</th>${dept ? '' : '<th class="small">Department</th>'}<th class="small">Owner</th>
+            <th class="small" style="width: 220px;">Work items</th><th class="small">Approvals</th><th class="small pe-3">Last activity</th>
+          </tr></thead>
+          <tbody>${sorted.map(p => {
+            const list = state.items.filter(i => i.projectId === p.id);
+            const d = count(list, ST.itemDone), m = count(list, ST.itemActive), n = pendingBy.get(p.id) || 0, s = stats.get(p.id);
+            return `<tr data-href="#project/${p.id}" style="cursor: pointer;">
+              <td class="small ps-3"><a href="#project/${p.id}" class="fw-semibold text-decoration-none">${esc(p.title)}</a></td>
+              <td>${badge('project', p.status)}</td>
+              ${dept ? '' : `<td class="small">${esc(p.department)}</td>`}
+              <td class="small text-nowrap">${esc(p.owner?.name || '')}</td>
+              <td class="small">${stackedBar(d, m, list.length - d - m)}</td>
+              <td class="small text-nowrap">${n ? `<i class="bi bi-hourglass-split text-warning me-1"></i>${n} pending` : ''}</td>
+              <td class="small text-secondary text-nowrap pe-3">${s.last ? when(new Date(s.last).toISOString()) : ''}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`)}
+      ${onPhone(sorted.map(p => {
+        const list = state.items.filter(i => i.projectId === p.id);
+        const d = count(list, ST.itemDone), m = count(list, ST.itemActive), n = pendingBy.get(p.id) || 0, s = stats.get(p.id);
+        return `<a href="#project/${p.id}" class="list-group-item list-group-item-action py-2">
+          ${cardTop(`<span class="fw-semibold text-primary">${esc(p.title)}</span>`, badge('project', p.status))}
+          ${metaLine([dept ? '' : esc(p.department), esc(p.owner?.name || ''), n ? `<i class="bi bi-hourglass-split text-warning me-1"></i>${n} pending` : '', s.last ? esc(ago(new Date(s.last).toISOString())) : ''])}
+          <div class="mt-2">${stackedBar(d, m, list.length - d - m)}</div>
+        </a>`;
+      }).join(''), 'mb-4')}` : empty('kanban', dept ? `No active projects in ${dept}` : 'No active projects', '', '<a href="#projects" class="btn btn-outline-secondary btn-sm">See all projects</a>');
+
+    const byDept = new Map();
+    open.forEach(p => {
+      const key = p.department || '';
+      if (!byDept.has(key)) byDept.set(key, { active: 0, hold: 0, items: [] });
+      const r = byDept.get(key);
+      if (p.status === ST.projectActive) r.active++; else r.hold++;
+      r.items.push(...state.items.filter(i => i.projectId === p.id));
+    });
+    const order = state.choices.department.values;
+    const rank = name => { const i = order.indexOf(name); return i < 0 ? order.length : i; };
+    const deptRows = [...byDept.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
+    const departments = !dept && byDept.size > 1 ? `
+      <h2 class="h5 mb-2 text-dark">By department</h2>
+      ${onPhone(deptRows.map(([name, r]) => {
+        const d = count(r.items, ST.itemDone), m = count(r.items, ST.itemActive);
+        return `<button type="button" class="list-group-item list-group-item-action py-2" data-act="home-dept" data-value="${esc(name)}">
+          <div class="d-flex justify-content-between align-items-baseline gap-2"><span class="small fw-semibold">${esc(name || 'No department')}</span>
+          <span class="text-secondary" style="font-size: 12px;">${[`${r.active} active`, r.hold ? `${r.hold} on hold` : '', `${r.items.length - d} open`].filter(Boolean).join(' · ')}</span></div>
+          <div class="mt-2">${stackedBar(d, m, r.items.length - d - m)}</div>
+        </button>`;
+      }).join(''))}
+      ${onDesktop(`<div class="table-responsive border rounded">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th class="small ps-3">Department</th><th class="small">Active projects</th><th class="small">On hold</th><th class="small">Open work items</th><th class="small pe-3" style="width: 220px;">Work items</th></tr></thead>
+          <tbody>${deptRows.map(([name, r]) => {
+            const d = count(r.items, ST.itemDone), m = count(r.items, ST.itemActive);
+            return `<tr data-dept="${esc(name)}" style="cursor: pointer;" title="Show only ${esc(name || 'projects without a department')}">
+              <td class="small ps-3">${name ? `<button type="button" class="btn btn-link btn-sm p-0 border-0 align-baseline text-decoration-none" data-act="home-dept" data-value="${esc(name)}">${esc(name)}</button>` : '<span class="text-secondary">No department</span>'}</td>
+              <td class="small">${r.active}</td><td class="small">${r.hold || ''}</td><td class="small">${r.items.length - d}</td>
+              <td class="small pe-3">${stackedBar(d, m, r.items.length - d - m)}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`)}` : '';
+
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <select class="form-select form-select-sm w-auto" id="hDept" aria-label="Department">${options(state.choices.department.values, dept, 'All departments')}</select>
+        <span class="small text-secondary">Active and on-hold projects${dept ? ' in ' + esc(dept) : ''}</span>
+      </div>
+      <div class="d-grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+        ${tile(active.length, 'Active projects', open.length > active.length ? `${open.length - active.length} on hold` : 'None on hold', 'kanban', 'text-primary', !active.length)}
+        ${tile(items.length - done, 'Open work items', `${moving} in progress`, 'list-task', 'text-primary', items.length === done)}
+        ${tile(items.length ? Math.round(done * 100 / items.length) + '%' : '—', 'Work done', items.length ? `${done} of ${plural(items.length, 'work item')}` : 'No work items yet', 'check2-circle', 'text-success', !done)}
+        ${tile(pending.length, 'Pending approvals', waitingLong.length ? `${waitingLong.length} waiting 3+ days` : 'None waiting 3+ days', 'hourglass-split', 'text-warning', !pending.length)}
+      </div>
+      ${attention}${progress}${departments}`;
+    qs('#hDept').addEventListener('change', e => { state.hf.dept = e.target.value; renderHome(); });
+  }
+
+  // Projects
+  function renderProjects() {
+    setNav('projects');
+    const f = state.pf, ch = state.choices;
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="input-group input-group-sm flex-grow-1 flex-md-grow-0" style="width: 260px;">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-secondary"></i></span>
+          <input type="search" class="form-control" id="pfQ" placeholder="Search projects" aria-label="Search projects" value="${esc(f.q)}">
+        </div>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="pfScope" aria-label="Whose projects">
+          <option value="all"${f.scope === 'all' ? ' selected' : ''}>All projects</option>
+          <option value="mine"${f.scope === 'mine' ? ' selected' : ''}>My projects</option>
+        </select>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="pfStatus" aria-label="Status">${options(ch.projectStatus.values, f.status, 'All statuses')}</select>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="pfDept" aria-label="Department">${options(ch.department.values, f.dept, 'All departments')}</select>
+        <button type="button" class="btn btn-primary btn-sm ms-auto order-first order-md-last" data-act="new-project"><i class="bi bi-plus-lg me-1"></i>New project</button>
+      </div>
+      <div id="projectList"></div>`;
+    const sync = () => {
+      Object.assign(f, { q: qs('#pfQ').value, scope: qs('#pfScope').value, status: qs('#pfStatus').value, dept: qs('#pfDept').value });
+      renderProjectList();
+    };
+    qs('#pfQ').addEventListener('input', sync);
+    qsa('#pfScope, #pfStatus, #pfDept').forEach(el => el.addEventListener('change', sync));
+    renderProjectList();
+  }
+
+  function renderProjectList() {
+    const box = qs('#projectList');
+    if (!box) return;
+    const f = state.pf, q = low(f.q), stats = projectStats(), order = state.choices.projectStatus.values;
+    const rank = s => { const i = order.indexOf(s); return i < 0 ? order.length : i; };
+    const mine = p => isMe(p.owner) || state.items.some(i => i.projectId === p.id && i.assignees.some(isMe));
+    const list = state.projects.filter(p =>
+      (!q || [p.title, p.description, p.owner?.name, p.department].some(v => low(v).includes(q))) &&
+      (!f.status || p.status === f.status) &&
+      (!f.dept || p.department === f.dept) &&
+      (f.scope !== 'mine' || mine(p)))
+      .sort((a, b) => rank(a.status) - rank(b.status) || stats.get(b.id).last - stats.get(a.id).last);
+    const filtered = !!(f.q || f.status || f.dept || f.scope === 'mine');
+
+    if (!state.projects.length) {
+      box.innerHTML = empty('kanban', 'No projects yet', 'Create the first project to start tracking work.', '<button type="button" class="btn btn-primary btn-sm" data-act="new-project"><i class="bi bi-plus-lg me-1"></i>New project</button>');
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = empty('search', 'No projects match these filters', '', '<button type="button" class="btn btn-outline-secondary btn-sm" data-act="clear-project-filters">Clear filters</button>');
+      return;
+    }
+    box.innerHTML = `
+      <div class="small text-secondary mb-2">${filtered ? `${list.length} of ${plural(state.projects.length, 'project')}` : plural(list.length, 'project')}${f.scope === 'mine' ? ' · ones you own or have work in' : ''}</div>
+      ${onDesktop(`<div class="table-responsive border rounded">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr>
+            <th class="small ps-3">Project</th><th class="small">Status</th><th class="small">Department</th>
+            <th class="small">Owner</th><th class="small" style="width: 170px;">Progress</th><th class="small pe-3">Last activity</th>
+          </tr></thead>
+          <tbody>${list.map(p => {
+            const s = stats.get(p.id);
+            return `<tr data-href="#project/${p.id}" style="cursor: pointer;">
+              <td class="small ps-3"><a href="#project/${p.id}" class="fw-semibold text-decoration-none">${esc(p.title)}</a></td>
+              <td>${badge('project', p.status)}</td>
+              <td class="small">${esc(p.department)}</td>
+              <td class="small text-nowrap">${esc(p.owner?.name || '')}</td>
+              <td class="small">${doneBar(s)}</td>
+              <td class="small text-secondary text-nowrap pe-3">${s.last ? when(new Date(s.last).toISOString()) : ''}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`)}
+      ${onPhone(list.map(p => {
+        const s = stats.get(p.id);
+        return `<a href="#project/${p.id}" class="list-group-item list-group-item-action py-2">
+          ${cardTop(`<span class="fw-semibold text-primary">${esc(p.title)}</span>`, badge('project', p.status))}
+          ${metaLine([esc(p.department), esc(p.owner?.name || ''), s.last ? esc(ago(new Date(s.last).toISOString())) : ''])}
+          <div class="mt-2">${doneBar(s)}</div>
+        </a>`;
+      }).join(''))}`;
+  }
+
+  // One project
+  function renderProject(id) {
+    setNav('projects');
+    const p = byId(state.projects, id);
+    if (!p) {
+      view.innerHTML = empty('folder-x', 'Project not found', 'It may have been deleted.', '<a href="#projects" class="btn btn-outline-secondary btn-sm">Back to projects</a>');
+      return;
+    }
+    if (state.wf.pid !== id) state.wf = { pid: id, status: '', q: '', who: '' };
+    const s = projectStats().get(id);
+    const pct = s.total ? Math.round(s.done * 100 / s.total) : 0;
+    const created = p.created ? `<span title="${esc(fmtStamp(new Date(p.created)))}">${esc(fmtDate(new Date(p.created)))}</span>` : '';
+    const meta = [
+      ['Owner', esc(p.owner?.name || '')],
+      ['Department', esc(p.department)],
+      ['Created', created],
+      ...fieldsFor(p, 'project').map(f => [esc(f.name), esc(showValue(f, p.custom[f.id]))]),
+    ];
+    const projItems = state.items.filter(i => i.projectId === id);
+    const tabs = [['', 'All', projItems.length], ...state.choices.itemStatus.values.map(v => [v, v, projItems.filter(i => i.status === v).length])];
+    const people = new Map();
+    projItems.forEach(i => i.assignees.forEach(a => { if (a.email && !isMe(a)) people.set(low(a.email), a.name); }));
+
+    view.innerHTML = `
+      <a href="#projects" class="small text-decoration-none d-inline-block mb-2"><i class="bi bi-arrow-left me-1"></i>All projects</a>
+      <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <h2 class="h4 mb-0 text-dark">${esc(p.title)}</h2>${badge('project', p.status)}
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-act="fields" title="Add or change this project's custom fields"><i class="bi bi-sliders me-1"></i>Fields</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-act="edit-project"><i class="bi bi-pencil me-1"></i>Edit</button>
+        </div>
+      </div>
+      ${p.description ? `<p class="text-secondary small mb-3" style="white-space: pre-line;">${esc(p.description)}</p>` : '<div class="mb-3"></div>'}
+      <div class="card bg-light border mb-4"><div class="card-body p-3">
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+          ${meta.map(([label, value]) => `<div class="col"><div class="text-secondary" style="font-size: 12px;">${label}</div><div class="small">${value || '<span class="text-muted">—</span>'}</div></div>`).join('')}
+        </div>
+        <div class="d-flex align-items-center gap-3 border-top pt-3 mt-3">
+          <span class="text-secondary text-nowrap" style="font-size: 12px;">Progress</span>
+          ${s.total
+            ? `<div class="progress flex-grow-1" style="height: 6px;" role="progressbar" aria-label="Progress" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width: ${pct}%"></div></div>
+               <span class="small text-nowrap">${s.done} of ${s.total} done</span>`
+            : '<span class="small text-muted">No work items yet</span>'}
+        </div>
+      </div></div>
+
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <h3 class="h5 mb-0 text-dark me-auto">Work items</h3>
+        <button type="button" class="btn btn-primary btn-sm" data-act="new-item"><i class="bi bi-plus-lg me-1"></i>New work item</button>
+      </div>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="overflow-x-auto" style="max-width: 100%;">
+          <div class="btn-group btn-group-sm text-nowrap" role="group" aria-label="Filter by status" id="wfStatus">
+            ${tabs.map(([v, label, n]) => `<button type="button" class="btn btn-outline-secondary${state.wf.status === v ? ' active' : ''}" data-act="wf-status" data-value="${esc(v)}" aria-pressed="${state.wf.status === v}">${esc(label)} <span class="opacity-75">${n}</span></button>`).join('')}
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-grow-1 flex-md-grow-0 ms-md-auto" style="min-width: 0;">
+          <input type="search" class="form-control form-control-sm flex-grow-1" style="width: 190px; min-width: 0;" id="wfQ" placeholder="Search work items" aria-label="Search work items" value="${esc(state.wf.q)}">
+          <select class="form-select form-select-sm w-auto" id="wfWho" aria-label="Assignee">
+            <option value="">Anyone</option><option value="me">Assigned to me</option><option value="none">Unassigned</option>
+            ${[...people.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([email, name]) => `<option value="${esc(email)}">${esc(name)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div id="itemList"></div>`;
+
+    const who = qs('#wfWho');
+    who.value = state.wf.who;
+    if (who.value !== state.wf.who) { state.wf.who = ''; who.value = ''; }
+    qs('#wfQ').addEventListener('input', e => { state.wf.q = e.target.value; renderItemList(p); });
+    who.addEventListener('change', e => { state.wf.who = e.target.value; renderItemList(p); });
+    renderItemList(p);
+  }
+
+  function statusMenu(it) {
+    const look = statusLook('item', it.status);
+    const cls = look.cls.includes('border') ? look.cls : look.cls + ' border-0';
+    return `<div class="dropdown">
+      <button type="button" class="badge fw-normal dropdown-toggle ${cls}" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" title="Change status">${statusInner(look)}${esc(it.status || 'No status')}</button>
+      <ul class="dropdown-menu shadow-sm" style="font-size: 13px; min-width: 9rem;">
+        ${state.choices.itemStatus.values.map(v => `<li><button type="button" class="dropdown-item${v === it.status ? ' active' : ''}" data-set-status="${esc(v)}" data-id="${it.id}">${esc(v)}</button></li>`).join('')}
+      </ul>
+    </div>`;
+  }
+
+  function renderItemList(p) {
+    const box = qs('#itemList');
+    if (!box) return;
+    const wf = state.wf, q = low(wf.q), cols = fieldsFor(p, 'workItem');
+    const all = state.items.filter(i => i.projectId === p.id);
+    const list = all.filter(i =>
+      (!wf.status || i.status === wf.status) &&
+      (!q || [i.title, i.description, ...i.checklist.map(c => c.text), ...cols.map(f => showValue(f, i.custom[f.id]))].some(v => low(v).includes(q))) &&
+      (!wf.who || (wf.who === 'me' ? i.assignees.some(isMe) : wf.who === 'none' ? !i.assignees.length : i.assignees.some(a => low(a.email) === wf.who))))
+      .sort((a, b) => itemOrder(a) - itemOrder(b) || time(b.modified) - time(a.modified));
+
+    if (!all.length) {
+      box.innerHTML = empty('list-check', 'No work items yet', 'Break the project into work items and assign them to people.', '<button type="button" class="btn btn-primary btn-sm" data-act="new-item"><i class="bi bi-plus-lg me-1"></i>New work item</button>');
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = empty('search', 'No work items match these filters', '', '<button type="button" class="btn btn-outline-secondary btn-sm" data-act="clear-item-filters">Clear filters</button>');
+      return;
+    }
+    const showApproval = all.some(i => state.approvals.some(a => a.itemId === i.id));
+    box.innerHTML = `
+      ${onDesktop(`<div class="table-responsive border rounded">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr>
+            <th class="small ps-3">Title</th><th class="small">Status</th><th class="small">Assignees</th>
+            ${cols.map(f => `<th class="small text-nowrap">${esc(f.name)}</th>`).join('')}
+            ${showApproval ? '<th class="small">Approval</th>' : ''}
+            <th class="small pe-3">Updated</th>
+          </tr></thead>
+          <tbody>${list.map(i => `<tr data-item="${i.id}" style="cursor: pointer;">
+            <td class="small ps-3"><a href="#item/${i.id}" class="text-decoration-none" data-open-item="${i.id}">${esc(i.title)}</a>${checkInfo(i)}</td>
+            <td>${statusMenu(i)}</td>
+            <td class="small">${peopleText(i.assignees)}</td>
+            ${cols.map(f => `<td class="small">${esc(showValue(f, i.custom[f.id]))}</td>`).join('')}
+            ${showApproval ? `<td class="small">${approvalSummary(i.id)}</td>` : ''}
+            <td class="small text-secondary text-nowrap pe-3">${when(i.modified)}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`)}
+      ${onPhone(list.map(i => itemCard(i, { cols })).join(''))}`;
+  }
+
+  // My work
+  function renderMyWork() {
+    setNav('mywork');
+    const all = myItems(true);
+    const open = all.filter(i => i.status !== ST.itemDone);
+    const doneCount = all.length - open.length;
+    const list = (state.showDone ? all : open).slice().sort((a, b) => itemOrder(a) - itemOrder(b) || time(b.modified) - time(a.modified));
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <p class="small text-secondary mb-0">Work items assigned to you, across all projects.</p>
+        <div class="form-check form-switch ms-auto mb-0 small">
+          <input class="form-check-input" type="checkbox" role="switch" id="showDone"${state.showDone ? ' checked' : ''}>
+          <label class="form-check-label" for="showDone">Show done${doneCount ? ` (${doneCount})` : ''}</label>
+        </div>
+      </div>
+      ${list.length ? `
+      ${onDesktop(`<div class="table-responsive border rounded">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th class="small ps-3">Work item</th><th class="small">Project</th><th class="small">Status</th><th class="small pe-3">Updated</th></tr></thead>
+          <tbody>${list.map(i => `<tr data-item="${i.id}" style="cursor: pointer;">
+            <td class="small ps-3"><a href="#item/${i.id}" class="text-decoration-none" data-open-item="${i.id}">${esc(i.title)}</a>${checkInfo(i)}</td>
+            <td class="small"><a href="#project/${i.projectId}" class="text-reset text-decoration-none">${esc(projectOf(i).title)}</a></td>
+            <td>${statusMenu(i)}</td>
+            <td class="small text-secondary text-nowrap pe-3">${when(i.modified)}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`)}
+      ${onPhone(list.map(i => itemCard(i, { showProject: true })).join(''))}` : empty('check2-circle', all.length ? 'Nothing open is assigned to you' : 'Nothing is assigned to you', doneCount && !state.showDone ? `${plural(doneCount, 'done item')} hidden.` : '')}`;
+    qs('#showDone').addEventListener('change', e => { state.showDone = e.target.checked; renderMyWork(); });
+  }
+
+  // Approvals
+  function renderApprovals() {
+    setNav('approvals');
+    const waiting = waitingForMe().sort((a, b) => time(a.created) - time(b.created));
+    const mine = state.approvals.filter(a => isMe(a.createdBy) && itemOf(a) && projectOf(itemOf(a)))
+      .sort((a, b) => (a.decision === ST.pending ? 0 : 1) - (b.decision === ST.pending ? 0 : 1) || time(b.modified) - time(a.modified));
+    const itemCell = a => `<a href="#item/${a.itemId}" class="text-decoration-none" data-open-item="${a.itemId}">${esc(itemOf(a).title)}</a>`;
+    const projectCell = a => { const p = projectOf(itemOf(a)); return `<a href="#project/${p.id}" class="text-reset text-decoration-none">${esc(p.title)}</a>`; };
+    view.innerHTML = `
+      <h2 class="h5 mb-3 text-dark">Waiting for you</h2>
+      ${waiting.length ? `
+      ${onPhone(waiting.map(a => `<div class="list-group-item py-2" data-item="${a.itemId}" style="cursor: pointer;">
+        ${cardTop(itemCell(a), `<button type="button" class="btn btn-sm btn-outline-primary py-0" data-open-item="${a.itemId}">Review</button>`)}
+        ${metaLine([esc(projectOf(itemOf(a)).title), `Requested by ${nameOf(a.createdBy)}`, when(a.created)])}
+      </div>`).join(''), 'mb-4')}
+      ${onDesktop(`<div class="table-responsive border rounded mb-4">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th class="small ps-3">Work item</th><th class="small">Project</th><th class="small">Requested by</th><th class="small">Requested</th><th class="small pe-3"></th></tr></thead>
+          <tbody>${waiting.map(a => `<tr data-item="${a.itemId}" style="cursor: pointer;">
+            <td class="small ps-3">${itemCell(a)}</td>
+            <td class="small">${projectCell(a)}</td>
+            <td class="small text-nowrap">${esc(a.createdBy?.name || '')}</td>
+            <td class="small text-secondary text-nowrap">${when(a.created)}</td>
+            <td class="text-end pe-3"><button type="button" class="btn btn-sm btn-outline-primary py-0" data-open-item="${a.itemId}">Review</button></td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`)}` : '<p class="small text-secondary mb-4">Nothing is waiting for your approval.</p>'}
+      <h2 class="h5 mb-3 text-dark">Requested by you</h2>
+      ${mine.length ? `
+      ${onPhone(mine.map(a => `<div class="list-group-item py-2" data-item="${a.itemId}" style="cursor: pointer;">
+        ${cardTop(itemCell(a), `<span class="small">${decisionText(a.decision)}</span>`)}
+        ${metaLine([esc(projectOf(itemOf(a)).title), esc(a.approver?.name || ''), when(a.modified)])}
+      </div>`).join(''))}
+      ${onDesktop(`<div class="table-responsive border rounded">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th class="small ps-3">Work item</th><th class="small">Project</th><th class="small">Approver</th><th class="small">Decision</th><th class="small pe-3">Updated</th></tr></thead>
+          <tbody>${mine.map(a => `<tr data-item="${a.itemId}" style="cursor: pointer;">
+            <td class="small ps-3">${itemCell(a)}</td>
+            <td class="small">${projectCell(a)}</td>
+            <td class="small text-nowrap">${esc(a.approver?.name || '')}</td>
+            <td class="small">${decisionText(a.decision)}</td>
+            <td class="small text-secondary text-nowrap pe-3">${when(a.modified)}</td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`)}` : '<p class="small text-secondary mb-0">You haven\'t asked anyone for approval yet. Open a work item to request one.</p>'}`;
+  }
+
+  /* ---------- routing ---------- */
+  function parseHash(h = location.hash) {
+    const [name, arg] = String(h || '').replace(/^#\/?/, '').split('/');
+    return { name: name || 'home', id: /^\d+$/.test(arg || '') ? Number(arg) : null };
+  }
+  function renderView(hash) {
+    const r = parseHash(hash);
+    if (r.name === 'project' && r.id) renderProject(r.id);
+    else if (r.name === 'projects') renderProjects();
+    else if (r.name === 'mywork') renderMyWork();
+    else if (r.name === 'approvals') renderApprovals();
+    else renderHome();
+    updateCounts();
+  }
+  // Re-render the current page in place (keeps scroll position and filters).
+  function refresh() { renderView(parseHash().name === 'item' ? state.backHash : location.hash); }
+  function onHashChange() {
+    qs('#alertBox').innerHTML = '';
+    const r = parseHash();
+    qsa('.modal.show').forEach(m => { if (!(r.name === 'item' && m.id === 'itemModal')) bootstrap.Modal.getInstance(m)?.hide(); });
+    if (r.name === 'item') {
+      const it = r.id ? byId(state.items, r.id) : null;
+      if (!it || !projectOf(it)) {
+        history.replaceState(null, '', '#projects');
+        renderView('#projects');
+        showAlert("That work item doesn't exist anymore.");
+        return;
+      }
+      state.backHash = '#project/' + it.projectId;
+      renderView(state.backHash);
+      window.scrollTo(0, 0);
+      openItem(it);
+      return;
+    }
+    renderView(location.hash);
+    window.scrollTo(0, 0);
+  }
+  const currentProject = () => {
+    const r = parseHash(parseHash().name === 'item' ? state.backHash : location.hash);
+    return r.name === 'project' ? byId(state.projects, r.id) : null;
+  };
+
+  view.addEventListener('click', e => {
+    const t = e.target;
+    const act = t.closest('[data-act]');
+    if (act) {
+      const p = currentProject();
+      switch (act.dataset.act) {
+        case 'home-dept': state.hf.dept = act.dataset.value; renderHome(); window.scrollTo(0, 0); break;
+        case 'new-project': openProject(null); break;
+        case 'edit-project': if (p) openProject(p); break;
+        case 'fields': if (p) openFields(p); break;
+        case 'new-item': if (p) openItem(null, p); break;
+        case 'clear-project-filters': state.pf = { q: '', scope: 'all', status: '', dept: '' }; renderProjects(); break;
+        case 'clear-item-filters': if (p) { Object.assign(state.wf, { status: '', q: '', who: '' }); renderProject(p.id); } break;
+        case 'wf-status':
+          if (!p) break;
+          state.wf.status = act.dataset.value;
+          qsa('#wfStatus [data-act]').forEach(b => { const on = b.dataset.value === state.wf.status; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+          renderItemList(p);
+          break;
+      }
+      return;
+    }
+    const set = t.closest('[data-set-status]');
+    if (set) { setItemStatus(Number(set.dataset.id), set.dataset.setStatus); return; }
+    const openLink = t.closest('[data-open-item]');
+    if (openLink) { e.preventDefault(); const it = byId(state.items, Number(openLink.dataset.openItem)); if (it) openItem(it); return; }
+    if (t.closest('a, button, input, select, textarea, label, .dropdown')) return;
+    const deptRow = t.closest('tr[data-dept]');
+    if (deptRow) { state.hf.dept = deptRow.dataset.dept; renderHome(); window.scrollTo(0, 0); return; }
+    const row = t.closest('[data-href]');
+    if (row) { location.hash = row.dataset.href; return; }
+    const itemRow = t.closest('[data-item]');
+    if (itemRow) { const it = byId(state.items, Number(itemRow.dataset.item)); if (it) openItem(it); }
+  });
+
+  // Quick status change from a table row. Shows the change at once and rolls back on failure.
+  async function setItemStatus(id, status) {
+    const it = byId(state.items, id);
+    if (!it || it.status === status) return;
+    const before = it.status;
+    it.status = status;
+    refresh();
+    try {
+      const saved = await api.saveItem({ ...it });
+      upsert(state.items, saved);
+      refresh();
+      toast(`Moved to ${status}`);
+    } catch (err) {
+      it.status = before;
+      if (err.status === 412) {
+        const fresh = await api.getItem(id).catch(() => null);
+        if (fresh) upsert(state.items, fresh);
+        refresh();
+        showAlert(`Someone else changed "${it.title}" just now. You're seeing their version; change the status again if it's still needed.`);
+      } else {
+        refresh();
+        showAlert(`Couldn't change the status of "${it.title}": ${err.message}`);
+      }
+    }
+  }
+
+  /* ---------- project form ---------- */
+  let projectCtx = null;
+  const projectSnapshot = () => JSON.stringify([qs('#pmName').value, qs('#pmDesc').value, qs('#pmStatus').value, qs('#pmDept').value,
+    projectCtx.owner.get().map(p => low(p.email)), projectCtx.owner.pending(), qsa('[data-cf]', qs('#pmCustom')).map(el => el.value)]);
+
+  function openProject(p) {
+    const ch = state.choices;
+    projectCtx = { project: p, saved: false };
+    qs('#pmHeading').textContent = p ? 'Edit project' : 'New project';
+    qs('#pmName').value = p?.title || '';
+    qs('#pmName').classList.remove('is-invalid');
+    qs('#pmDesc').value = p?.description || '';
+    qs('#pmStatus').innerHTML = options(ch.projectStatus.values, p ? p.status : (ch.projectStatus.default || ch.projectStatus.values[0]));
+    qs('#pmDept').innerHTML = options(ch.department.values, p ? p.department : ch.department.default, '—');
+    projectCtx.owner = makePicker(qs('#pmOwner'), { multi: false, value: p ? [p.owner] : [state.me], inputId: 'pmOwnerInput', invalidText: 'Choose an owner.' });
+    const fields = p ? fieldsFor(p, 'project') : [];
+    qs('#pmCustom').innerHTML = fields.length ? `<div class="border-top pt-3 mt-3">${customInputs(fields, p.custom)}</div>` : '';
+    qs('#pmDelete').classList.toggle('d-none', !(p && (isMe(p.owner) || isMe(p.createdBy))));
+    qs('#pmSave').textContent = p ? 'Save' : 'Create project';
+    hideErr(qs('#projectModal'));
+    projectCtx.snapshot = projectSnapshot();
+    modal('#projectModal').show();
+  }
+
+  async function saveProject(e) {
+    e.preventDefault();
+    const p = projectCtx.project;
+    const title = qs('#pmName').value.trim();
+    const owner = projectCtx.owner.get()[0] || null;
+    qs('#pmName').classList.toggle('is-invalid', !title);
+    projectCtx.owner.invalid(!owner);
+    if (!title) { qs('#pmName').focus(); return; }
+    if (!owner) { projectCtx.owner.focus(); return; }
+    const rec = {
+      ...(p || { id: null, schema: [], custom: {} }),
+      title, owner,
+      description: qs('#pmDesc').value.trim(),
+      status: qs('#pmStatus').value, department: qs('#pmDept').value,
+      custom: p ? readCustom(qs('#pmCustom'), p.custom) : {},
+    };
+    const btn = qs('#pmSave');
+    busy(btn, true);
+    try {
+      const saved = await api.saveProject(rec);
+      upsert(state.projects, saved);
+      projectCtx.saved = true;
+      modal('#projectModal').hide();
+      toast(p ? 'Project saved' : 'Project created');
+      if (p) refresh(); else location.hash = '#project/' + saved.id;
+    } catch (err) {
+      await handleSaveError(err, 'project', p, qs('#projectModal'));
+    } finally {
+      busy(btn, false);
+    }
+  }
+
+  async function deleteProject(btn) {
+    const p = projectCtx.project;
+    const items = state.items.filter(i => i.projectId === p.id);
+    if (!confirm(`Delete "${p.title}"${items.length ? ` and its ${plural(items.length, 'work item')}` : ''}?`)) return;
+    busy(btn, true, 'Deleting…');
+    try {
+      for (let i = 0; i < items.length; i += 4) {
+        await Promise.all(items.slice(i, i + 4).map(it => api.deleteItem(it.id).catch(err => { if (err.status !== 404) throw err; })));
+      }
+      await api.deleteProject(p.id);
+      state.items = state.items.filter(i => i.projectId !== p.id);
+      state.projects = state.projects.filter(x => x.id !== p.id);
+      projectCtx.saved = true;
+      modal('#projectModal').hide();
+      toast('Project deleted');
+      location.hash = '#projects';
+    } catch (err) {
+      showErr(qs('#projectModal'), `Couldn't delete everything: ${err.message}`);
+      await reload().catch(() => {});
+      refresh();
+    } finally {
+      busy(btn, false);
+    }
+  }
+
+  /* ---------- work item form ---------- */
+  let itemCtx = null;
+  const itemSnapshot = () => JSON.stringify([qs('#imName').value, qs('#imStatus').value, qs('#imDesc').value, itemCtx.who.get().map(p => low(p.email)), itemCtx.who.pending(),
+    itemCtx.checklist, qs('#imCheckNew').value.trim(), qsa('[data-cf]', qs('#imCustom')).map(el => el.value)]);
+
+  function openItem(it, project = it ? projectOf(it) : null) {
+    if (!project) return;
+    const ch = state.choices;
+    itemCtx = { item: it, project, saved: false, checklist: (it?.checklist || []).map(c => ({ ...c })) };
+    if (it && parseHash().name !== 'item') {
+      state.backHash = location.hash || '#home';
+      history.replaceState(null, '', '#item/' + it.id);   // shareable link while the item is open
+    }
+    qs('#imHeading').textContent = it ? 'Edit work item' : 'New work item';
+    qs('#imProject').innerHTML = `in <a href="#project/${project.id}" class="text-decoration-none" data-act="go-project">${esc(project.title)}</a>`;
+    qs('#imName').value = it?.title || '';
+    qs('#imName').classList.remove('is-invalid');
+    qs('#imStatus').innerHTML = options(ch.itemStatus.values, it ? it.status : (ch.itemStatus.default || ch.itemStatus.values[0]));
+    itemCtx.who = makePicker(qs('#imWho'), { multi: true, value: it?.assignees || [], inputId: 'imWhoInput' });
+    qs('#imDesc').value = it?.description || '';
+    qs('#imCheckNew').value = '';
+    drawChecklist();
+    const cols = fieldsFor(project, 'workItem');
+    qs('#imCustom').innerHTML = cols.length ? `<div class="mb-3">${customInputs(cols, it?.custom || {})}</div>` : '';
+    qs('#imMeta').innerHTML = it ? `Created by ${nameOf(it.createdBy)} · ${when(it.created)}&nbsp;&nbsp;·&nbsp;&nbsp;Updated by ${nameOf(it.modifiedBy)} · ${when(it.modified)}` : '';
+    qs('#imMeta').classList.toggle('d-none', !it);
+    qs('#imDelete').classList.toggle('d-none', !it);
+    qs('#imSave').textContent = it ? 'Save' : 'Create work item';
+    hideErr(qs('#itemModal'));
+    drawItemApprovals();
+    updateAssignMe();
+    itemCtx.snapshot = itemSnapshot();
+    modal('#itemModal').show();
+  }
+  const updateAssignMe = () => { if (itemCtx) qs('#imAssignMe').classList.toggle('d-none', itemCtx.who.get().some(isMe)); };
+  qs('#imWho').addEventListener('picker-change', updateAssignMe);
+
+  function drawChecklist() {
+    const list = itemCtx.checklist;
+    qs('#imChecklist').innerHTML = list.length ? `<div class="list-group">${list.map((c, i) => `
+      <div class="list-group-item bg-light d-flex align-items-center gap-2 py-1">
+        <input class="form-check-input mt-0 flex-shrink-0" type="checkbox" data-check="${i}"${c.done ? ' checked' : ''} aria-label="Done">
+        <input type="text" class="form-control form-control-sm border-0 bg-transparent px-1${c.done ? ' text-decoration-line-through text-secondary' : ''}" data-check-text="${i}" value="${esc(c.text)}" maxlength="255" aria-label="Checklist item">
+        <button type="button" class="btn btn-link btn-sm text-secondary p-0" data-act="check-remove" data-i="${i}" aria-label="Remove item"><i class="bi bi-x-lg"></i></button>
+      </div>`).join('')}</div>` : '';
+    countChecklist();
+  }
+  function countChecklist() {
+    const list = itemCtx.checklist;
+    qs('#imCheckCount').textContent = list.length ? `${list.filter(c => c.done).length} of ${list.length} done` : '';
+  }
+  function addCheckItem() {
+    const input = qs('#imCheckNew');
+    const text = input.value.trim();
+    if (!text) return;
+    itemCtx.checklist.push({ text, done: false });
+    input.value = '';
+    drawChecklist();
+    input.focus();
+  }
+  qs('#imChecklist').addEventListener('input', e => {
+    const box = e.target.closest('[data-check]'), txt = e.target.closest('[data-check-text]');
+    if (box) {
+      itemCtx.checklist[Number(box.dataset.check)].done = box.checked;
+      const field = qs(`[data-check-text="${box.dataset.check}"]`);
+      field.classList.toggle('text-decoration-line-through', box.checked);
+      field.classList.toggle('text-secondary', box.checked);
+      countChecklist();
+    } else if (txt) {
+      itemCtx.checklist[Number(txt.dataset.checkText)].text = txt.value;
+    }
+  });
+  qs('#imChecklist').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-check-text]')) { e.preventDefault(); qs('#imCheckNew').focus(); } });
+  qs('#imCheckNew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCheckItem(); } });
+
+  // Approvals inside the work item
+  function drawItemApprovals() {
+    const it = itemCtx.item;
+    const decisionBox = qs('#imDecision'), box = qs('#imApprovals');
+    if (!it) {
+      decisionBox.innerHTML = '';
+      box.innerHTML = '<div class="small fw-semibold mb-1">Approvals</div><p class="small text-secondary mb-0">You can ask for approval once the work item is created.</p>';
+      return;
+    }
+    const all = state.approvals.filter(a => a.itemId === it.id).sort((a, b) => time(a.created) - time(b.created));
+    const mine = all.find(a => isMe(a.approver) && a.decision === ST.pending);
+    const list = all.filter(a => a !== mine);   // your own pending request is shown in the box above instead
+    decisionBox.innerHTML = mine ? `
+      <div class="border border-warning-subtle bg-warning-subtle rounded p-3 mb-3">
+        <div class="small mb-2"><i class="bi bi-hourglass-split text-warning-emphasis me-1"></i><strong>${esc(mine.createdBy?.name || 'Someone')}</strong> asked for your approval <span class="text-secondary">· ${when(mine.created)}</span></div>
+        ${mine.note ? `<div class="small mb-2" style="white-space: pre-line;">${esc(mine.note)}</div>` : ''}
+        <label class="form-label small fw-semibold mb-1" for="imDecisionNote">Comment <span class="fw-normal text-secondary">(optional)</span></label>
+        <textarea class="form-control form-control-sm mb-2" id="imDecisionNote" rows="2"></textarea>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-success" data-act="decide" data-id="${mine.id}" data-decision="${esc(ST.approved)}"><i class="bi bi-check-lg me-1"></i>Approve</button>
+          <button type="button" class="btn btn-sm btn-outline-danger bg-white" data-act="decide" data-id="${mine.id}" data-decision="${esc(ST.rejected)}"><i class="bi bi-x-lg me-1"></i>Reject</button>
+        </div>
+      </div>` : '';
+    box.innerHTML = `
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="small fw-semibold">Approvals</div>
+        <button type="button" class="btn btn-sm btn-outline-primary" data-act="ask-open"><i class="bi bi-send me-1"></i>Request approval</button>
+      </div>
+      <div class="border rounded bg-light p-3 mb-2 d-none" id="imAsk">
+        <label class="form-label small fw-semibold mb-1" for="imAskInput">Approvers</label>
+        <div id="imAskWho" class="mb-2"></div>
+        <label class="form-label small fw-semibold mb-1" for="imAskNote">Message <span class="fw-normal text-secondary">(optional)</span></label>
+        <textarea class="form-control form-control-sm mb-2" id="imAskNote" rows="2" placeholder="What should they check?"></textarea>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-primary" data-act="ask-send">Send request</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-act="ask-cancel">Cancel</button>
+          ${CFG.email && !CFG.demo ? '<span class="text-secondary ms-auto" style="font-size: 12px;"><i class="bi bi-envelope me-1"></i>Approvers get an email</span>' : ''}
+        </div>
+      </div>
+      ${list.length ? `<div class="list-group">${list.map(approvalRow).join('')}</div>` : mine ? '' : '<p class="small text-secondary mb-0">No approvals requested yet.</p>'}`;
+  }
+  function approvalRow(a) {
+    const decided = a.decision !== ST.pending;
+    // Modified By is set by SharePoint, so it shows who really made the decision.
+    const by = decided && a.modifiedBy && !samePerson(a.modifiedBy, a.approver) ? ` by ${nameOf(a.modifiedBy)}` : '';
+    const right = decided ? `<span class="text-secondary ms-auto" style="font-size: 12px;">${when(a.modified)}</span>`
+      : isMe(a.createdBy) ? `<button type="button" class="btn btn-link btn-sm p-0 text-decoration-none ms-auto" style="font-size: 12px;" data-act="ask-withdraw" data-id="${a.id}">Cancel request</button>` : '';
+    return `<div class="list-group-item bg-light">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="small fw-semibold">${cap(nameOf(a.approver, 'Unknown'))}</span>
+        <span class="small">${decisionText(a.decision, by)}</span>
+        ${right}
+      </div>
+      <div class="text-secondary mt-1" style="font-size: 12px;">Requested by ${nameOf(a.createdBy)} · ${when(a.created)}${a.note ? `<div style="white-space: pre-line;">${esc(a.note)}</div>` : ''}</div>
+      ${a.comment ? `<div class="mt-1" style="font-size: 12px; white-space: pre-line;"><i class="bi bi-reply text-secondary me-1"></i>${esc(a.comment)}</div>` : ''}
+    </div>`;
+  }
+
+  function mailHtml(lines, itemId) {
+    return `<div style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #212529;">${lines.filter(Boolean).map(l => `<p style="margin: 0 0 12px;">${l}</p>`).join('')}` +
+      `<p style="margin: 0;"><a href="${esc(APP_URL + '#item/' + itemId)}" style="color: #0d6efd;">Open the work item</a></p></div>`;
+  }
+  const mailText = s => esc(s).replace(/\n/g, '<br>');
+
+  async function sendApprovalRequest(btn) {
+    const { item, project } = itemCtx;
+    const approvers = itemCtx.ask.get();
+    if (!approvers.length) {
+      itemCtx.ask.invalid(true);
+      itemCtx.ask.focus();
+      return;
+    }
+    const note = qs('#imAskNote').value.trim();
+    busy(btn, true, 'Sending…');
+    try {
+      for (const person of approvers) {
+        upsert(state.approvals, await api.saveApproval({ id: null, itemId: item.id, title: item.title, approver: person, decision: ST.pending, note, comment: '' }));
+      }
+      drawItemApprovals();
+      refresh();
+      let mailed = false, mailError = '';
+      try {
+        mailed = await api.sendMail(approvers, `Approval needed: ${item.title}`, mailHtml([
+          `${esc(state.me.name)} asked you to approve <strong>${esc(item.title)}</strong> in ${esc(project.title)}.`,
+          note ? mailText(note) : '',
+        ], item.id));
+      } catch (err) { mailError = err.message; }
+      if (mailError) showErr(qs('#itemModal'), `The request was saved, but the email couldn't be sent (${mailError}). Let ${approvers.map(p => p.name).join(', ')} know directly.`);
+      toast(`Approval requested from ${approvers.map(p => p.name).join(', ')}${mailed ? '. Email sent.' : '.'}`);
+    } catch (err) {
+      showErr(qs('#itemModal'), `Couldn't send the request: ${err.message}`);
+      busy(btn, false);
+    }
+  }
+
+  async function decide(btn) {
+    const a = byId(state.approvals, Number(btn.dataset.id));
+    if (!a) return;
+    const decision = btn.dataset.decision;
+    const comment = qs('#imDecisionNote')?.value.trim() || '';
+    busy(btn, true, decision === ST.approved ? 'Approving…' : 'Rejecting…');
+    try {
+      const saved = await api.saveApproval({ ...a, decision, comment });
+      upsert(state.approvals, saved);
+      drawItemApprovals();
+      refresh();
+      let mailed = false;
+      if (a.createdBy?.email && !isMe(a.createdBy)) {
+        mailed = await api.sendMail([a.createdBy], `${decision}: ${itemCtx.item.title}`, mailHtml([
+          `${esc(state.me.name)} ${esc(low(decision))} <strong>${esc(itemCtx.item.title)}</strong> in ${esc(itemCtx.project.title)}.`,
+          comment ? mailText(comment) : '',
+        ], a.itemId)).catch(() => false);
+      }
+      toast(`${decision}${mailed ? `. ${a.createdBy.name} was emailed.` : '.'}`);
+    } catch (err) {
+      busy(btn, false);
+      await handleSaveError(err, 'approval', a, qs('#itemModal'));
+      drawItemApprovals();
+    }
+  }
+
+  async function withdrawApproval(btn) {
+    const a = byId(state.approvals, Number(btn.dataset.id));
+    if (!a || !confirm(`Cancel the approval request to ${a.approver?.name || 'this person'}?`)) return;
+    busy(btn, true, 'Cancelling…');
+    try {
+      await api.deleteApproval(a.id);
+      state.approvals = state.approvals.filter(x => x.id !== a.id);
+      drawItemApprovals();
+      refresh();
+      toast('Request cancelled');
+    } catch (err) {
+      busy(btn, false);
+      showErr(qs('#itemModal'), `Couldn't cancel the request: ${err.message}`);
+    }
+  }
+
+  async function saveItem(e) {
+    e.preventDefault();
+    const { item, project } = itemCtx;
+    const title = qs('#imName').value.trim();
+    qs('#imName').classList.toggle('is-invalid', !title);
+    if (!title) { qs('#imName').focus(); return; }
+    addCheckItem();   // keep an item typed into "Add an item" but not added yet
+    const rec = {
+      ...(item || { id: null, projectId: project.id }),
+      title,
+      status: qs('#imStatus').value,
+      assignees: itemCtx.who.get(),
+      description: qs('#imDesc').value.trim(),
+      checklist: itemCtx.checklist.map(c => ({ text: c.text.trim(), done: c.done })).filter(c => c.text),
+      custom: readCustom(qs('#imCustom'), item?.custom || {}),
+    };
+    const btn = qs('#imSave');
+    busy(btn, true);
+    try {
+      const saved = await api.saveItem(rec);
+      upsert(state.items, saved);
+      itemCtx.saved = true;
+      modal('#itemModal').hide();
+      toast(item ? 'Work item saved' : 'Work item created');
+      refresh();
+    } catch (err) {
+      await handleSaveError(err, 'item', item, qs('#itemModal'));
+    } finally {
+      busy(btn, false);
+    }
+  }
+
+  async function deleteItem(btn) {
+    const it = itemCtx.item;
+    if (!confirm(`Delete "${it.title}"?`)) return;
+    busy(btn, true, 'Deleting…');
+    try {
+      await api.deleteItem(it.id);
+      state.items = state.items.filter(x => x.id !== it.id);
+      itemCtx.saved = true;
+      modal('#itemModal').hide();
+      toast('Work item deleted');
+      refresh();
+    } catch (err) {
+      showErr(qs('#itemModal'), `Couldn't delete: ${err.message}`);
+    } finally {
+      busy(btn, false);
+    }
+  }
+
+  qs('#itemModal').addEventListener('click', e => {
+    const act = e.target.closest('[data-act]');
+    if (!act || !itemCtx) return;
+    switch (act.dataset.act) {
+      case 'go-project': {
+        e.preventDefault();
+        if (!itemCtx.saved && itemSnapshot() !== itemCtx.snapshot && !confirm('Discard your unsaved changes?')) break;
+        itemCtx.saved = true;
+        const target = '#project/' + itemCtx.project.id;
+        if (parseHash().name === 'item') history.replaceState(null, '', state.backHash);
+        modal('#itemModal').hide();
+        if (location.hash !== target) location.hash = target;
+        break;
+      }
+      case 'assign-me': itemCtx.who.add(state.me); break;
+      case 'check-add': addCheckItem(); break;
+      case 'check-remove': itemCtx.checklist.splice(Number(act.dataset.i), 1); drawChecklist(); break;
+      case 'ask-open': {
+        const pendingFor = state.approvals.filter(a => a.itemId === itemCtx.item.id && a.decision === ST.pending).map(a => a.approver);
+        qs('#imAsk').classList.remove('d-none');
+        act.classList.add('d-none');
+        itemCtx.ask = makePicker(qs('#imAskWho'), { multi: true, inputId: 'imAskInput', invalidText: 'Choose at least one approver.',
+          exclude: p => isMe(p) || pendingFor.some(x => samePerson(x, p)) });
+        itemCtx.ask.focus();
+        break;
+      }
+      case 'ask-cancel': drawItemApprovals(); break;
+      case 'ask-send': sendApprovalRequest(act); break;
+      case 'ask-withdraw': withdrawApproval(act); break;
+      case 'decide': decide(act); break;
+      case 'delete-item': deleteItem(act); break;
+    }
+  });
+
+  /* ---------- custom fields ---------- */
+  let fieldsCtx = null;
+  const fieldsSnapshot = () => JSON.stringify(fieldsCtx.schema);
+
+  function openFields(p) {
+    const schema = JSON.parse(JSON.stringify((p.schema || []).filter(f => f && f.id)));
+    fieldsCtx = { project: p, schema, savedIds: new Set(schema.map(f => f.id)), saved: false };
+    fieldsCtx.snapshot = fieldsSnapshot();
+    qs('#fmProject').textContent = p.title;
+    qs('#fmName').value = '';
+    qs('#fmType').value = 'text';
+    qs('#fmTarget').value = 'workItem';
+    qs('#fmOpts').value = '';
+    qs('#fmOptsWrap').classList.add('d-none');
+    hideErr(qs('#fieldsModal'));
+    drawFields();
+    modal('#fieldsModal').show();
+  }
+
+  function drawFields() {
+    const active = fieldsCtx.schema.filter(f => !f.archived);
+    const removed = fieldsCtx.schema.filter(f => f.archived);
+    qs('#fmList').innerHTML = (active.length ? `<div class="list-group">${active.map(f => `
+      <div class="list-group-item bg-light">
+        <div class="row g-2 align-items-center">
+          <div class="col-12 col-md-4"><input type="text" class="form-control form-control-sm" data-fname="${esc(f.id)}" value="${esc(f.name)}" maxlength="60" aria-label="Field name"></div>
+          <div class="col-12 col-md-3 small text-secondary">${FIELD_TYPES[f.type] || 'Text'} · ${TARGETS[f.target] || TARGETS.workItem}</div>
+          <div class="col-10 col-md-4">${f.type === 'choice' ? `<input type="text" class="form-control form-control-sm" data-fopts="${esc(f.id)}" value="${esc((f.options || []).join(', '))}" placeholder="Options, comma-separated" aria-label="Options for ${esc(f.name)}">` : ''}</div>
+          <div class="col-2 col-md-1 text-end"><button type="button" class="btn btn-sm btn-outline-secondary" data-act="field-remove" data-id="${esc(f.id)}" title="Remove field" aria-label="Remove ${esc(f.name)}"><i class="bi bi-trash"></i></button></div>
+        </div>
+      </div>`).join('')}</div>` : '<p class="small text-secondary mb-0">No custom fields yet.</p>') +
+      (removed.length ? `<div class="small text-secondary mt-3">Removed: ${removed.map(f => `${esc(f.name)} <button type="button" class="btn btn-link btn-sm p-0 align-baseline text-decoration-none" data-act="field-restore" data-id="${esc(f.id)}">Restore</button>`).join(', ')}
+        <div style="font-size: 12px;">Removed fields keep their values, so restoring one brings everything back.</div></div>` : '');
+  }
+
+  function syncFieldInputs() {
+    qsa('[data-fname]').forEach(el => { const f = fieldsCtx.schema.find(x => x.id === el.dataset.fname); if (f) f.name = el.value.trim(); });
+    qsa('[data-fopts]').forEach(el => { const f = fieldsCtx.schema.find(x => x.id === el.dataset.fopts); if (f) f.options = splitOptions(el.value); });
+  }
+  const nameTaken = (name, exceptId) => fieldsCtx.schema.some(f => !f.archived && f.id !== exceptId && low(f.name) === low(name));
+
+  function addField() {
+    syncFieldInputs();
+    const name = qs('#fmName').value.trim(), type = qs('#fmType').value, target = qs('#fmTarget').value;
+    const opts = splitOptions(qs('#fmOpts').value);
+    const problem = !name ? 'Give the new field a name.'
+      : nameTaken(name) ? `There's already a field named "${name}".`
+      : type === 'choice' && !opts.length ? 'Add at least one option, separated by commas.' : '';
+    if (problem) { showErr(qs('#fieldsModal'), problem); return; }
+    hideErr(qs('#fieldsModal'));
+    fieldsCtx.schema.push({ id: newFieldId(new Set(fieldsCtx.schema.map(f => f.id))), name, type, target, ...(type === 'choice' ? { options: opts } : {}) });
+    qs('#fmName').value = '';
+    qs('#fmOpts').value = '';
+    drawFields();
+    qs('#fmName').focus();
+  }
+
+  async function saveFields(e) {
+    e.preventDefault();
+    syncFieldInputs();
+    let problem = '';
+    const seen = new Set();
+    for (const f of fieldsCtx.schema.filter(x => !x.archived)) {
+      if (!f.name) { problem = 'Every field needs a name.'; break; }
+      if (seen.has(low(f.name))) { problem = `Two fields are named "${f.name}". Rename one of them.`; break; }
+      seen.add(low(f.name));
+      if (f.type === 'choice' && !(f.options || []).length) { problem = `Add at least one option for "${f.name}".`; break; }
+    }
+    if (!problem && qs('#fmName').value.trim()) problem = 'You typed a new field name but haven\'t added it. Click Add, or clear the name.';
+    if (problem) { showErr(qs('#fieldsModal'), problem); return; }
+    const p = fieldsCtx.project;
+    const btn = qs('#fmSave');
+    busy(btn, true);
+    try {
+      const saved = await api.saveProject({ ...p, schema: fieldsCtx.schema });
+      upsert(state.projects, saved);
+      fieldsCtx.saved = true;
+      modal('#fieldsModal').hide();
+      toast('Fields saved');
+      refresh();
+    } catch (err) {
+      await handleSaveError(err, 'project', p, qs('#fieldsModal'));
+    } finally {
+      busy(btn, false);
+    }
+  }
+
+  qs('#fieldsModal').addEventListener('click', e => {
+    const act = e.target.closest('[data-act]');
+    if (!act || !fieldsCtx) return;
+    syncFieldInputs();
+    const f = fieldsCtx.schema.find(x => x.id === act.dataset.id);
+    if (act.dataset.act === 'field-add') addField();
+    else if (act.dataset.act === 'field-remove' && f) {
+      if (fieldsCtx.savedIds.has(f.id)) f.archived = true;               // saved before: hide it, keep its values
+      else fieldsCtx.schema = fieldsCtx.schema.filter(x => x.id !== f.id); // added just now: drop it
+      drawFields();
+    } else if (act.dataset.act === 'field-restore' && f) {
+      if (nameTaken(f.name, f.id)) { showErr(qs('#fieldsModal'), `Rename the other "${f.name}" field before restoring this one.`); return; }
+      delete f.archived;
+      drawFields();
+    }
+  });
+  qs('#fmType').addEventListener('change', e => qs('#fmOptsWrap').classList.toggle('d-none', e.target.value !== 'choice'));
+  qsa('#fmName, #fmOpts').forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addField(); } }));
+
+  /* ---------- modal wiring ---------- */
+  qs('#projectModal form').addEventListener('submit', saveProject);
+  qs('#itemModal form').addEventListener('submit', saveItem);
+  qs('#fieldsModal form').addEventListener('submit', saveFields);
+  qs('#pmDelete').addEventListener('click', e => deleteProject(e.currentTarget));
+
+  // Ask before closing a form with unsaved changes.
+  const guard = (sel, ctx, snapshot) => qs(sel).addEventListener('hide.bs.modal', e => {
+    const c = ctx();
+    if (!c || c.saved) return;
+    if (snapshot() !== c.snapshot && !confirm('Discard your unsaved changes?')) e.preventDefault();
+  });
+  guard('#projectModal', () => projectCtx, projectSnapshot);
+  guard('#itemModal', () => itemCtx, itemSnapshot);
+  guard('#fieldsModal', () => fieldsCtx, () => { syncFieldInputs(); return fieldsSnapshot() + (qs('#fmName').value.trim() ? '+' : ''); });
+
+  qs('#itemModal').addEventListener('shown.bs.modal', () => { if (!itemCtx?.item) qs('#imName').focus(); });
+  qs('#projectModal').addEventListener('shown.bs.modal', () => { if (!projectCtx?.project) qs('#pmName').focus(); });
+  qs('#itemModal').addEventListener('hidden.bs.modal', () => {
+    if (parseHash().name === 'item') history.replaceState(null, '', state.backHash || '#home');
+    itemCtx = null;
+  });
+
+  /* ---------- start ---------- */
+  async function reload() {
+    const data = await api.load();
+    Object.assign(state, data, { loadedAt: Date.now() });
+  }
+
+  if (!window.bootstrap) {
+    fatal(new Error('Bootstrap did not load. Check that cdn.jsdelivr.net is reachable from this network.'));
+    return;
+  }
+  qs('#appName').textContent = CFG.appName;
+  document.title = CFG.appName;
+  try {
+    const session = await api.init();
+    if (!session) return;   // signing in, or this copy of the page is MSAL's sign-in helper
+    state.me = session.me;
+    renderUser();
+    state.choices = await api.choices();
+    await reload();
+    window.addEventListener('hashchange', onHashChange);
+    onHashChange();
+  } catch (err) {
+    fatal(err);
+  }
+
+  // Pick up other people's changes when someone comes back to the tab.
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible' || !state.me || Date.now() - state.loadedAt < 60000 || qs('.modal.show')) return;
+    try { await reload(); refresh(); } catch { /* keep what's on screen */ }
+  });
+})();
+</script>
