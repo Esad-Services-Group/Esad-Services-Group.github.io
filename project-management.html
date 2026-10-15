@@ -30,7 +30,7 @@
   <!-- Menu -->
   <ul class="nav nav-underline flex-nowrap overflow-x-auto text-nowrap gap-2 gap-sm-3 border-bottom mb-4" id="nav">
     <li class="nav-item"><a class="nav-link" href="#home" data-nav="home">Home</a></li>
-    <li class="nav-item"><a class="nav-link" href="#projects" data-nav="projects">All Projects</a></li>
+    <li class="nav-item"><a class="nav-link" href="#projects" data-nav="projects">All projects</a></li>
     <li class="nav-item"><a class="nav-link" href="#overdue" data-nav="overdue">Overdue<span class="badge rounded-pill text-bg-danger fw-normal ms-1 d-none" data-count="overdue"></span></a></li>
     <li class="nav-item"><a class="nav-link" href="#mywork" data-nav="mywork">My work<span class="badge rounded-pill text-bg-secondary fw-normal ms-1 d-none" data-count="mywork"></span></a></li>
   </ul>
@@ -348,6 +348,7 @@
     hf: { dept: '' },                                    // home page filter
     pf: { q: '', scope: 'all', status: '', dept: '' },   // projects page filters
     wf: { pid: 0, status: '', q: '', who: '' },          // work item filters on a project page
+    of: { dept: '' },                                    // overdue page filter
     showDone: false,
     backHash: '#home',                                   // page under an open work item
   };
@@ -534,17 +535,23 @@
     const items = state.items.filter(i => openIds.has(i.projectId));
     const done = count(items, ST.itemDone), moving = count(items, ST.itemActive);
     const late = items.filter(isOverdue);
+    const onHold = open.filter(p => p.status === ST.projectOnHold);
+    const completed = state.projects.filter(p => inDept(p) && p.status === ST.projectDone);
+    const activeIds = new Set(active.map(p => p.id));
+    const activeOpen = state.items.filter(i => activeIds.has(i.projectId) && i.status !== ST.itemDone).length;
+    const withDept = hash => hash + (dept ? `${hash.includes('?') ? '&' : '?'}dept=${encodeURIComponent(dept)}` : '');
+    const byStatus = status => withDept(`#projects?status=${encodeURIComponent(status)}`);
     const quiet = active.filter(p => now - stats.get(p.id).last >= QUIET_DAYS * DAY).sort((a, b) => stats.get(a.id).last - stats.get(b.id).last);
     const share = p => { const s = stats.get(p.id); return s.total ? s.done / s.total : 0; };
     const sorted = open.slice().sort((a, b) => (a.status === ST.projectActive ? 0 : 1) - (b.status === ST.projectActive ? 0 : 1)
       || share(a) - share(b) || a.title.localeCompare(b.title));
 
-    const tile = (value, label, sub, icon, iconCls, dim) => `
-      <div class="card h-100 bg-light border${dim ? ' opacity-75' : ''}"><div class="card-body p-3">
+    const tile = (value, label, sub, icon, iconCls, dim, href) => `
+      <a href="${href}" class="card h-100 bg-light border text-decoration-none text-reset${dim ? ' opacity-75' : ''}"><div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-start"><span class="fs-2 fw-semibold lh-1">${esc(value)}</span><i class="bi bi-${icon} fs-4 ${iconCls}"></i></div>
         <p class="small text-dark mb-0 mt-2">${esc(label)}</p>
         <p class="text-secondary mb-0" style="font-size: 12px;">${esc(sub)}</p>
-      </div></div>`;
+      </div></a>`;
 
     const attention = quiet.length ? `
       <h2 class="h5 mb-3 text-dark">Needs attention</h2>
@@ -561,6 +568,7 @@
         <h2 class="h5 mb-0 text-dark me-auto">Project progress</h2>
         ${legendKey('bg-success', 'Done')}${legendKey('bg-primary', 'In progress')}${legendKey('bg-body-secondary border', 'To do')}
       </div>
+      <p class="small text-secondary mb-2">${items.length ? `${Math.round(done * 100 / items.length)}% of work items done (${done} of ${items.length}) · ${moving} in progress` : 'No work items yet'}</p>
       ${onDesktop(`<div class="mb-4">${table(['Project', 'Status', ...(dept ? [] : ['Department']), 'Owner', 'Work items', 'Overdue', 'Last activity'], sorted.map(p => {
         const list = state.items.filter(i => i.projectId === p.id);
         const d = count(list, ST.itemDone), m = count(list, ST.itemActive), s = stats.get(p.id);
@@ -617,21 +625,24 @@
     view.innerHTML = `
       <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
         <select class="form-select form-select-sm w-auto" id="hDept" aria-label="Department">${options(CHOICES.department, dept, 'All departments')}</select>
-        <span class="small text-secondary">Active and on-hold projects${dept ? ' in ' + esc(dept) : ''}</span>
       </div>
       <div class="d-grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
-        ${tile(active.length, 'Active projects', open.length > active.length ? `${open.length - active.length} on hold` : 'None on hold', 'kanban', 'text-primary', !active.length)}
-        ${tile(items.length - done, 'Open work items', `${moving} in progress`, 'list-task', 'text-primary', items.length === done)}
-        ${tile(items.length ? Math.round(done * 100 / items.length) + '%' : '—', 'Work done', items.length ? `${done} of ${plural(items.length, 'work item')}` : 'No work items yet', 'check2-circle', 'text-success', !done)}
-        ${tile(late.length, 'Overdue', late.length ? `In ${plural(new Set(late.map(i => i.projectId)).size, 'project')}` : 'Everything is on time', 'exclamation-circle', 'text-danger', !late.length)}
+        ${tile(active.length, 'Active projects', plural(activeOpen, 'open work item'), 'kanban', 'text-primary', !active.length, byStatus(ST.projectActive))}
+        ${tile(onHold.length, 'On hold', onHold.length ? 'Paused for now' : 'None on hold', 'pause-circle', 'text-warning', !onHold.length, byStatus(ST.projectOnHold))}
+        ${tile(late.length, 'Overdue', late.length ? `Work items in ${plural(new Set(late.map(i => i.projectId)).size, 'project')}` : 'Everything is on time', 'exclamation-circle', 'text-danger', !late.length, withDept('#overdue'))}
+        ${tile(completed.length, 'Completed', 'Finished projects', 'check2-circle', 'text-success', !completed.length, byStatus(ST.projectDone))}
       </div>
       ${attention}${progress}${departments}`;
     qs('#hDept').addEventListener('change', e => { state.hf.dept = e.target.value; renderHome(); });
   }
 
   // Projects
-  function renderProjects() {
+  function renderProjects(params = new URLSearchParams()) {
     setNav('projects');
+    if (params.toString()) {   // opened from a Home tile: start from its filter only
+      state.pf = { q: '', scope: 'all', status: params.get('status') || '', dept: params.get('dept') || '' };
+      history.replaceState(null, '', '#projects');
+    }
     const f = state.pf;
     view.innerHTML = `
       <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -819,12 +830,17 @@
   }
 
   // Overdue: every late work item, across projects
-  function renderOverdue() {
+  function renderOverdue(params = new URLSearchParams()) {
     setNav('overdue');
-    const list = overdueItems();
-    view.innerHTML = list.length ? `
-      <p class="small text-secondary mb-3">Work items past their due date in active and on-hold projects, most overdue first.</p>
-      ${onDesktop(table(['Work item', 'Project', 'Assignees', 'Due', 'Status'], list.map(i => `
+    if (params.toString()) { state.of = { dept: params.get('dept') || '' }; history.replaceState(null, '', '#overdue'); }
+    const dept = state.of.dept;
+    const list = overdueItems().filter(i => !dept || projectOf(i).department === dept);
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <select class="form-select form-select-sm w-auto" id="oDept" aria-label="Department">${options(CHOICES.department, dept, 'All departments')}</select>
+        <span class="small text-secondary">Past their due date in active and on-hold projects, most overdue first.</span>
+      </div>
+      ${list.length ? `${onDesktop(table(['Work item', 'Project', 'Assignees', 'Due', 'Status'], list.map(i => `
         <tr data-item="${i.id}" style="cursor: pointer;">
           <td class="small ps-3">${itemLink(i)}</td>
           <td class="small">${projectLink(i)}</td>
@@ -833,7 +849,8 @@
           <td class="pe-3">${statusMenu(i)}</td>
         </tr>`)))}
       ${onPhone(list.map(i => itemCard(i, { showProject: true })).join(''))}`
-      : empty('check2-circle', 'Nothing is overdue', 'Every open work item is on time.');
+      : empty('check2-circle', `Nothing is overdue${dept ? ` in ${dept}` : ''}`, 'Every open work item is on time.')}`;
+    qs('#oDept').addEventListener('change', e => { state.of.dept = e.target.value; renderOverdue(); });
   }
 
   // My work
@@ -865,14 +882,15 @@
 
   /* ---------- routing ---------- */
   function parseHash(h = location.hash) {
-    const [name, arg] = String(h || '').replace(/^#\/?/, '').split('/');
-    return { name: name || 'home', id: /^\d+$/.test(arg || '') ? Number(arg) : null };
+    const [path, query = ''] = String(h || '').replace(/^#\/?/, '').split('?');
+    const [name, arg] = path.split('/');
+    return { name: name || 'home', id: /^\d+$/.test(arg || '') ? Number(arg) : null, params: new URLSearchParams(query) };
   }
   function renderView(hash) {
     const r = parseHash(hash);
     if (r.name === 'project' && r.id) renderProject(r.id);
-    else if (r.name === 'projects') renderProjects();
-    else if (r.name === 'overdue') renderOverdue();
+    else if (r.name === 'projects') renderProjects(r.params);
+    else if (r.name === 'overdue') renderOverdue(r.params);
     else if (r.name === 'mywork') renderMyWork();
     else renderHome();
     updateCounts();
