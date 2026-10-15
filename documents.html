@@ -1,618 +1,320 @@
-<!-- HTML for ESAD Document Center (DMS): homepage + all documents, one file -->
+<!doctype html>
+<!-- Documents (demo): ESAD's controlled documents. Sample data comes from demo.js and is kept in this browser. Changes are requested and approved in Approvals. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Documents</title>
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="icon" type="image/png" href="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
 
-<div class="container py-4" style="max-width: 1100px; font-family: 'Segoe UI', Arial, sans-serif;">
+<div class="container py-3 py-md-4" style="max-width: 1100px; font-family: 'Segoe UI', Arial, sans-serif;">
+
+  <!-- All apps + who you are -->
+  <div class="d-flex justify-content-between align-items-center gap-2 mb-2 small text-secondary">
+    <a href="index.html" class="text-secondary text-decoration-none text-nowrap"><i class="bi bi-grid-3x3-gap me-1"></i>All apps</a>
+    <span class="text-nowrap"><i class="bi bi-person-circle me-1"></i><span id="who"></span></span>
+  </div>
 
   <!-- Header -->
-  <div class="d-flex align-items-center justify-content-between pb-3 gap-3 flex-wrap">
-    <div class="d-flex align-items-center gap-3">
-      <img src="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png" alt="ESAD Services Group" style="height: 48px; width: auto;">
-      <h1 class="h4 mb-0 text-dark">Documents</h1>
+  <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-3 mb-3">
+    <div class="d-flex align-items-center gap-3" style="min-width: 0;">
+      <a href="index.html" class="flex-shrink-0"><img src="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png" alt="ESAD" style="height: 48px; width: auto;"></a>
+      <h1 class="h4 mb-0 text-truncate"><a href="#" class="text-dark text-decoration-none">Documents</a></h1>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <span class="small text-secondary" id="who"></span>
-      <button class="btn btn-sm btn-outline-secondary d-none" id="signinBtn"><i class="bi bi-microsoft me-1"></i>Sign in</button>
-    </div>
+    <a href="approvals.html#new/document" class="btn btn-sm btn-primary flex-shrink-0" title="New document or change request"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">New request</span></a>
   </div>
 
   <!-- Menu + search -->
-  <div class="d-flex align-items-center justify-content-between border-bottom mb-4 gap-3 flex-wrap">
-    <ul class="nav nav-underline">
-      <li class="nav-item"><a class="nav-link" id="tabHome" href="#"><i class="bi bi-house me-1"></i>Home</a></li>
-      <li class="nav-item"><a class="nav-link" id="tabAll" href="#all"><i class="bi bi-table me-1"></i>All documents</a></li>
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-2 border-bottom mb-4">
+    <ul class="nav nav-underline gap-3" id="nav">
+      <li class="nav-item"><a class="nav-link" href="#" data-nav="home">Home</a></li>
+      <li class="nav-item"><a class="nav-link" href="#all" data-nav="all">All documents</a></li>
     </ul>
-    <form id="searchForm" class="d-flex gap-2 pb-2 ms-auto" style="min-width: 280px;">
-      <input type="search" id="q" class="form-control form-control-sm" placeholder="Search documents by title or ID…">
-      <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i></button>
+    <form id="searchForm" class="pb-2 flex-grow-1 flex-md-grow-0" style="min-width: 240px;" role="search">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-secondary"></i></span>
+        <input type="search" id="q" class="form-control" placeholder="Search by title or ID" aria-label="Search documents">
+      </div>
     </form>
   </div>
 
-  <div id="error" class="alert alert-danger small d-none"></div>
+  <div id="view"></div>
 
-  <!-- ================= HOME ================= -->
-  <div id="viewHome">
+  <div class="border-top mt-5 pt-3 d-flex flex-wrap justify-content-between gap-2 text-secondary" style="font-size: 12px;">
+    <span>Demo with sample data. Changes are saved in this browser only.</span>
+    <button type="button" class="btn btn-link btn-sm p-0 text-secondary text-decoration-none" style="font-size: 12px;" id="resetBtn">Reset demo data</button>
+  </div>
 
-    <h2 class="h5 mb-3 text-dark">My tasks</h2>
-    <div class="d-grid gap-3 mb-4" id="counters" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));"></div>
-
-    <h2 class="h5 mb-3 text-dark">Start something</h2>
-    <div class="row row-cols-1 row-cols-md-3 g-3 mb-4" id="actions"></div>
-
-    <hr class="mb-4">
-
-    <h2 class="h5 mb-3 text-dark">Browse by department</h2>
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3 mb-4" id="depts"></div>
-
-    <h2 class="h5 mb-3 text-dark">Browse by document type</h2>
-    <div class="row row-cols-2 row-cols-md-4 g-3 mb-4" id="types"></div>
-
-    <hr class="mb-4">
-
-    <div class="row g-4">
-      <div class="col-12 col-md-7">
-        <h2 class="h5 mb-3 text-dark">Recently published</h2>
-        <div class="list-group" id="recent">
-          <div class="list-group-item bg-light small text-secondary">Sign in to see recent documents</div>
-        </div>
-      </div>
-
-      <div class="col-12 col-md-5">
-        <h2 class="h5 mb-3 text-dark">Guidance &amp; templates</h2>
-        <div class="list-group mb-4" id="guides"></div>
-
-        <h2 class="h5 mb-3 text-dark">Document control</h2>
-        <div class="list-group mb-4" id="admin"></div>
-
-        <h2 class="h5 mb-3 text-dark">Need help?</h2>
-        <div class="card bg-light border">
-          <div class="card-body small">
-            <p class="mb-1"><i class="bi bi-envelope me-2 text-secondary"></i>Document Control: <a id="dcMail" href="#"></a></p>
-            <p class="mb-0"><i class="bi bi-headset me-2 text-secondary"></i>IT Helpdesk: <a href="mailto:itsupport@esadservices.com">itsupport@esadservices.com</a></p>
-          </div>
-        </div>
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast align-items-center text-bg-dark border-0" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body small" id="toastMsg"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
     </div>
   </div>
-
-  <!-- ================= ALL DOCUMENTS ================= -->
-  <div id="viewAll" class="d-none">
-
-    <div id="allSignin" class="text-center border rounded bg-light py-5 d-none">
-      <i class="bi bi-microsoft fs-1 text-secondary"></i>
-      <p class="mt-2 mb-3">Sign in with your ESAD account to view documents</p>
-      <button class="btn btn-primary" id="signinBtn2">Sign in</button>
-    </div>
-
-    <div id="allLoading" class="text-center text-secondary py-5 d-none">
-      <div class="spinner-border spinner-border-sm me-2"></div>Loading documents…
-    </div>
-
-    <div id="allApp" class="d-none">
-      <div class="row g-2 mb-3">
-        <div class="col-6 col-md-3"><select id="fDept" class="form-select form-select-sm"></select></div>
-        <div class="col-6 col-md-3"><select id="fType" class="form-select form-select-sm"></select></div>
-        <div class="col-12 col-md-6 d-flex align-items-center justify-content-md-end">
-          <div class="form-check form-switch small mb-0">
-            <input class="form-check-input" type="checkbox" id="showAll">
-            <label class="form-check-label" for="showAll">Include superseded / obsolete</label>
-          </div>
-        </div>
-      </div>
-
-      <div class="table-responsive border rounded">
-        <table class="table table-hover table-sm align-middle mb-0">
-          <thead class="table-light"><tr id="head"></tr></thead>
-          <tbody id="rows"></tbody>
-        </table>
-      </div>
-      <p class="small text-muted mt-2 mb-0" id="count"></p>
-    </div>
-  </div>
-
-  <div id="viewPage" class="d-none"></div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@4.30.0/lib/msal-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="demo.js"></script>
 <script>
-(function () {
-/* ============ CONFIG ============ */
-const STUB = true;   // true = non-document links go to "#" (except the DCR form); false = restore real links
+(() => {
+  'use strict';
+  const { DOC_DEPARTMENTS, DOC_TYPES, docLabel, docId } = DEMO;
+  const me = DEMO.ME;
+  const REVIEW_WINDOW = 30;   // days: your documents due for review within this window show on Home
 
-const CFG = {
-  demo: true,                                              // true = sample data, no sign-in; false = live data from SharePoint via Graph
-  clientId: "7192a73f-f473-403f-b202-87c5990a36be",
-  tenantId: "5a492918-ec4e-4b36-9884-30d8d1a1b668",
-  redirectUri: location.origin + location.pathname,        // must match the SPA redirect URI in Entra
-  host: "esadtalents.sharepoint.com",
-  sitePath: "/sites/QHSE",
-  docControlEmail: "documentcontrol@esadservices.com",     // TODO
-  dcrForm: "https://esadtalents.sharepoint.com/sites/QHSE/_layouts/15/listforms.aspx?cid=MDMyNjQxNzYtNjliYi00NDBiLWE3ZWYtOTNkMGYyNWE0Y2Vj&nav=NWQzODkzY2EtYzYxNy00MzU0LTg3NTMtNmVlYjI1MGNjNTMw",
-  lists: {                                                  // title = Graph list name, url = SharePoint URL name
-    controlled:   { title: "Controlled Documents",   url: "Controlled Documents" },
-    uncontrolled: { title: "Uncontrolled Documents", url: "Uncontrolled Documents" },
-    ncr:          { title: "Non-Conformance",        url: "Lists/Non-Conformance" },
-    log:          { title: "Document Decision Log",  url: "Lists/Document Decision Log" },
-  },
-  // INTERNAL column names (Graph returns fields keyed by internal name)
-  f: {
-    dept: "Division", type: "DocumentType", docStatus: "DocumentStatus",
-    docId: "DocumentID", revision: "Revision", effective: "EffectiveDate",
-    nextReview: "NextReviewDate", owner: "DocumentOwner",
-    status: "Status", reviewers: "Reviewers", approvers: "Approvers", requestor: "Requestor",
-  },
-  activeStatus: "Active",
-  // Request types (used by the demo)
-  dcr: {
-    changeTypes: ["New document", "Revision to existing document", "Retire / obsolete document"],
-    newType: "New document",
-  },
-  links: {
-    guidelines: "SitePages/Guidelines-for-Writing-Controlled-Documents.aspx",
-    templates: "Document Templates",
-    docControlProc: "SitePages/Document-Control-Procedure.aspx",
-    idGuide: "SitePages/Document-ID-Numbering.aspx",
-    userGuide: "SitePages/DMS-User-Guide.aspx",
-    faq: "SitePages/FAQ.aspx",
-  },
-};
+  // Guidance pages: [title, icon, content]
+  const INFO = {
+    guidelines: ['Guidelines for writing controlled documents', 'bi-pencil-square', `<ul class="small">
+      <li>Start from the approved template for the document type.</li>
+      <li>Give the document a clear purpose, scope and owner.</li>
+      <li>Use short, numbered steps and plain language.</li>
+      <li>Refer to related documents by their Document ID.</li>
+      <li>Don't edit the Document ID or revision. They are set when the change is approved.</li></ul>`],
+    templates: ['Document templates', 'bi-file-earmark-ruled', `<div class="list-group">${DOC_TYPES.map(t => `
+      <div class="list-group-item bg-light d-flex align-items-center gap-2"><i class="bi bi-file-earmark-word text-secondary"></i>
+        <span class="small flex-grow-1">${t.name} template.docx</span><button type="button" class="btn btn-sm btn-outline-secondary" data-demo>Download</button></div>`).join('')}</div>`],
+    ids: ['Document ID numbering', 'bi-hash', `<p class="small">Format: <code>ESAD-[Department]-[Type]-[Serial]-[Revision]</code>, for example <code>ESAD-HR-PR-01-V1.0</code>.</p>
+      <div class="row g-3">
+        <div class="col-12 col-md-6">${codeTable('Department', DOC_DEPARTMENTS)}</div>
+        <div class="col-12 col-md-4">${codeTable('Type', DOC_TYPES)}</div>
+      </div>`],
+    process: ['How a document gets approved', 'bi-journal-text', `<ol class="small">
+      <li><b>Request</b> a new document or a change, with the draft attached. Requests go to Approvals.</li>
+      <li><b>Review</b> by your line manager.</li>
+      <li><b>CEO approval</b> for policies.</li>
+      <li><b>Published</b> here with a new revision once it's approved.</li></ol>`],
+  };
+  function codeTable(label, rows) {
+    return `<div class="table-responsive border rounded"><table class="table table-sm mb-0">
+      <thead class="table-light"><tr><th class="small ps-3">${label}</th><th class="small pe-3">Code</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td class="small ps-3">${r.name}</td><td class="small pe-3"><code>${r.code}</code></td></tr>`).join('')}</tbody></table></div>`;
+  }
 
-const DEPARTMENTS = [
-  ["Compliance", "bi-shield-check"], ["Legal Affairs", "bi-hammer"], ["Support Services", "bi-life-preserver"],
-  ["Human Resources", "bi-people"], ["Procurement", "bi-cart-check"], ["QHSE", "bi-clipboard2-pulse"],
-  ["IT", "bi-pc-display"], ["B2B Operations", "bi-building"], ["MARCOM", "bi-megaphone"],
-  ["B2C Sales and Operations", "bi-bag"], ["Financial Control", "bi-calculator"], ["Treasury", "bi-cash-coin"],
-  ["Company-wide", "bi-buildings"],
-];
-const TYPES = [
-  ["Policy", "bi-journal-check", "Rules and principles", "Policies"], ["Procedure", "bi-list-ol", "How we do things", "Procedures"],
-  ["Form", "bi-ui-checks", "Records and templates", "Forms"], ["Plan", "bi-map", "Programmes and plans", "Plans"],
-];
-const COLS = [
-  { key: "docId", label: "Document ID" }, { key: "title", label: "Title" }, { key: "dept", label: "Department" },
-  { key: "type", label: "Type" }, { key: "revision", label: "Revision" }, { key: "status", label: "Status" },
-  { key: "effective", label: "Effective date" },
-];
-/* ================================ */
+  /* ---------- helpers ---------- */
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  const low = v => String(v ?? '').toLowerCase();
+  const fmtDate = s => { const d = new Date(`${s}T00:00`); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+  const inDays = n => DEMO.ymd(new Date(Date.now() + n * 864e5));
+  const isActive = d => d.status === 'Active';
+  const badge = d => `<span class="badge fw-normal ${isActive(d) ? 'text-bg-success' : 'text-bg-secondary'}">${esc(d.status)}</span>`;
+  const docLink = d => `#doc/${encodeURIComponent(d.code)}`;
+  const changeUrl = d => `approvals.html#new/document?change=Revision&document=${encodeURIComponent(docLabel(d))}`;
+  const view = qs('#view');
+  let data = DEMO.documents();
+  const ui = { dept: '', type: '', archive: false, sort: { key: 'effective', dir: -1 } };
 
-const $ = id => document.getElementById(id);
-const enc = encodeURIComponent;
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const spUrl = p => /^https?:/.test(p) ? p : `https://${CFG.host}${CFG.sitePath}/${p.split("/").map(enc).join("/")}`;
-const url = p => STUB ? "#" : spUrl(p);
-const listUrl = l => STUB ? "#" : `${spUrl(l.url)}/AllItems.aspx`;
-const C = CFG.lists, F = CFG.f;
+  function toast(msg) {
+    qs('#toastMsg').textContent = msg;
+    bootstrap.Toast.getOrCreateInstance(qs('#toast'), { delay: 3000 }).show();
+  }
+  function setNav(name) {
+    qsa('#nav [data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === name));
+  }
+  const dueDocs = () => data.docs.filter(d => isActive(d) && d.owner === me && d.nextReview <= inDays(REVIEW_WINDOW))
+    .sort((a, b) => a.nextReview.localeCompare(b.nextReview));
 
-/* ---------- State ---------- */
-let account = null, uid = null, docs = [], docsLoaded = false, sort = { key: "effective", dir: -1 };
-const SCOPES = ["Sites.Read.All"];
-const msalApp = typeof msal === "undefined" ? null : new msal.PublicClientApplication({
-  auth: { clientId: CFG.clientId, authority: `https://login.microsoftonline.com/${CFG.tenantId}`, redirectUri: CFG.redirectUri },
-  cache: { cacheLocation: "sessionStorage" },
-});
-const fail = e => { $("error").textContent = "Couldn't load data: " + (e.message || e); $("error").classList.remove("d-none"); };
+  /* ---------- Home ---------- */
+  function renderHome() {
+    setNav('home');
+    const due = dueDocs();
+    const recent = data.docs.filter(isActive).sort((a, b) => b.effective.localeCompare(a.effective)).slice(0, 6);
+    view.innerHTML = `
+      ${due.length ? `
+      <h2 class="h5 mb-1 text-dark">Due for review <span class="text-secondary fw-normal">(${due.length})</span></h2>
+      <p class="small text-secondary mb-3">You own these. Confirm they're still correct, or request a change.</p>
+      <div class="list-group mb-4">${due.map(d => `
+        <div class="list-group-item bg-light d-flex flex-wrap align-items-center gap-2">
+          <div class="small me-auto" style="min-width: 0;">
+            <a href="${docLink(d)}" class="text-decoration-none">${esc(d.title)}</a>
+            <div class="text-secondary" style="font-size: 12px;">${esc(docId(d))} · review by ${esc(fmtDate(d.nextReview))}</div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-ok="${esc(d.code)}">No change needed</button>
+            <a href="${esc(changeUrl(d))}" class="btn btn-sm btn-outline-primary">Request a change</a>
+          </div>
+        </div>`).join('')}</div>` : ''}
 
-/* ---------- Static home sections ---------- */
-const COUNTERS = [
-  { id: "approve", label: "Awaiting my approval", icon: "bi-patch-check", hot: true },
-  { id: "review", label: "Awaiting my review", icon: "bi-eye", hot: true },
-  // { id: "qhse", label: "Awaiting QHSE validation", icon: "bi-clipboard-check", hot: true },
-  { id: "mine", label: "My open requests", icon: "bi-hourglass-split" },
-  { id: "due", label: "My documents due for review (30 days)", icon: "bi-calendar-check" },
-];
-$("counters").innerHTML = COUNTERS.map(c => `
-  <a href="#" class="card h-100 bg-light border text-decoration-none text-reset" id="card-${c.id}">
-    <div class="card-body p-3">
-      <div class="d-flex justify-content-between align-items-start">
-        <span class="fs-2 fw-semibold lh-1" id="n-${c.id}">–</span>
-        <i class="bi ${c.icon} fs-4 text-secondary"></i>
-      </div>
-      <p class="small text-muted mb-0 mt-2">${esc(c.label)}</p>
-    </div>
-  </a>`).join("");
+      <h2 class="h5 mb-3 text-dark">Browse by department</h2>
+      <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 g-3 mb-4">${DOC_DEPARTMENTS.map(d => `
+        <div class="col"><a href="#all?dept=${encodeURIComponent(d.name)}" class="card h-100 bg-light border text-decoration-none text-reset">
+          <div class="card-body p-3 text-center"><i class="bi ${d.icon} fs-2 text-primary"></i><p class="fw-semibold mb-0 mt-2" style="font-size: 13px;">${esc(d.name)}</p></div>
+        </a></div>`).join('')}</div>
 
-const ACTIONS = [
-  { t: "Submit a document or change request", d: "New document, or a change to an existing one", i: "bi-file-earmark-plus", href: CFG.dcrForm, primary: true },
-  { t: "File a non-conformance report", d: "Report a process, product or service issue", i: "bi-exclamation-triangle", href: null },
-  { t: "Track my requests", d: "Status of everything I've submitted", i: "bi-signpost-split", href: CFG.demo ? "#tasks?v=mine" : listUrl(C.uncontrolled) },
-];
+      <h2 class="h5 mb-3 text-dark">Browse by type</h2>
+      <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">${DOC_TYPES.map(t => `
+        <div class="col"><a href="#all?type=${t.name}" class="card h-100 bg-light border text-decoration-none text-reset">
+          <div class="card-body p-3"><i class="bi ${t.icon} fs-4 text-secondary"></i>
+            <p class="fw-semibold mb-0 mt-2" style="font-size: 14px;">${t.plural}</p><p class="text-muted mb-0" style="font-size: 12px;">${t.desc}</p></div>
+        </a></div>`).join('')}</div>
 
-$("actions").innerHTML = ACTIONS.map(a => {
-  const tag = a.href ? "a" : "div";
-  return `
-  <div class="col">
-    <${tag} ${a.href ? `href="${a.href}"` : ""} class="card h-100 ${a.primary ? "text-bg-primary border-primary" : "bg-light border"} text-decoration-none">
-      <div class="card-body p-3 d-flex gap-3 align-items-center">
-        <i class="bi ${a.i} fs-3 ${a.primary ? "" : "text-secondary"}"></i>
-        <div>
-          <p class="fw-semibold mb-0" style="font-size: 14px;">${a.t}</p>
-          <p class="mb-0 ${a.primary ? "opacity-75" : "text-muted"}" style="font-size: 12px;">${a.d}</p>
+      <hr class="mb-4">
+      <div class="row g-4">
+        <div class="col-12 col-md-7">
+          <h2 class="h5 mb-3 text-dark">Recently published</h2>
+          <div class="list-group">${recent.map(d => `
+            <a href="${docLink(d)}" class="list-group-item list-group-item-action bg-light d-flex align-items-center gap-2">
+              <i class="bi bi-file-earmark-text text-secondary"></i>
+              <span class="small flex-grow-1" style="min-width: 0;">${esc(d.title)}<span class="d-block text-muted" style="font-size: 12px;">${esc(docId(d))}</span></span>
+              <span class="text-muted text-nowrap" style="font-size: 12px;">${esc(fmtDate(d.effective))}</span>
+            </a>`).join('')}</div>
+        </div>
+        <div class="col-12 col-md-5">
+          <h2 class="h5 mb-3 text-dark">Guidance and templates</h2>
+          <div class="list-group mb-4">${Object.entries(INFO).map(([k, [title, icon]]) => `
+            <a href="#info/${k}" class="list-group-item list-group-item-action bg-light d-flex align-items-center gap-2"><i class="bi ${icon} text-secondary"></i><span class="small">${esc(title)}</span></a>`).join('')}</div>
+          <h2 class="h5 mb-3 text-dark">Need help?</h2>
+          <div class="card bg-light border"><div class="card-body small">
+            <p class="mb-1"><i class="bi bi-envelope me-2 text-secondary"></i>Document Control: <a href="mailto:documentcontrol@esadservices.com">documentcontrol@esadservices.com</a></p>
+            <p class="mb-0"><i class="bi bi-headset me-2 text-secondary"></i>IT Helpdesk: <a href="mailto:itsupport@esadservices.com">itsupport@esadservices.com</a></p>
+          </div></div>
+        </div>
+      </div>`;
+  }
+
+  /* ---------- All documents ---------- */
+  const COLS = [['code', 'Document ID'], ['title', 'Title'], ['dept', 'Department'], ['type', 'Type'], ['status', 'Status'], ['effective', 'Effective']];
+  function renderAll(params) {
+    setNav('all');
+    Object.assign(ui, { dept: params.get('dept') || '', type: params.get('type') || '', archive: params.get('obsolete') === '1' });
+    if (params.has('q')) qs('#q').value = params.get('q');
+    const select = (id, label, list, value) => `<select id="${id}" class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" aria-label="${label}">
+      <option value="">All ${label.toLowerCase()}s</option>${list.map(x => `<option${x.name === value ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select>`;
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        ${select('fDept', 'Department', DOC_DEPARTMENTS, ui.dept)}
+        ${select('fType', 'Type', DOC_TYPES, ui.type)}
+        <div class="form-check form-switch small mb-0 ms-md-auto">
+          <input class="form-check-input" type="checkbox" role="switch" id="fArchive"${ui.archive ? ' checked' : ''}>
+          <label class="form-check-label" for="fArchive">Include superseded and obsolete</label>
         </div>
       </div>
-    </${tag}>
-  </div>`;
-}).join("");
-  
-$("depts").innerHTML = DEPARTMENTS.map(([n, i]) => `
-  <div class="col">
-    <a href="#all?dept=${enc(n)}" class="card h-100 bg-light border text-decoration-none text-reset">
-      <div class="card-body p-3 text-center">
-        <i class="bi ${i} fs-2 text-primary"></i>
-        <p class="fw-semibold mb-0 mt-2" style="font-size: 13px;">${esc(n)}</p>
+      <div id="list"></div>`;
+    qs('#fDept').addEventListener('change', e => { ui.dept = e.target.value; drawAll(); });
+    qs('#fType').addEventListener('change', e => { ui.type = e.target.value; drawAll(); });
+    qs('#fArchive').addEventListener('change', e => { ui.archive = e.target.checked; drawAll(); });
+    drawAll();
+  }
+  function drawAll() {
+    const q = low(qs('#q').value.trim()), { key, dir } = ui.sort;
+    const shown = data.docs.filter(d => ui.archive || isActive(d));
+    const list = shown.filter(d => (!ui.dept || d.dept === ui.dept) && (!ui.type || d.type === ui.type) && (!q || low(d.title).includes(q) || low(docId(d)).includes(q)))
+      .sort((a, b) => String(a[key]).localeCompare(String(b[key]), undefined, { numeric: true }) * dir);
+    qs('#list').innerHTML = !list.length ? '<p class="small text-secondary">No documents match.</p>' : `
+      <div class="d-none d-md-block table-responsive border rounded">
+        <table class="table table-hover table-sm align-middle mb-0">
+          <thead class="table-light"><tr>${COLS.map(([k, label], i) => `<th class="small text-nowrap${i === 0 ? ' ps-3' : ''}${i === COLS.length - 1 ? ' pe-3' : ''}" role="button" data-sort="${k}">${label}${key === k ? (dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead>
+          <tbody>${list.map(d => `
+            <tr data-href="${docLink(d)}" style="cursor: pointer;">
+              <td class="small text-nowrap ps-3">${esc(docId(d))}</td>
+              <td class="small"><a href="${docLink(d)}" class="text-decoration-none">${esc(d.title)}</a></td>
+              <td class="small">${esc(d.dept)}</td>
+              <td class="small">${esc(d.type)}</td>
+              <td>${badge(d)}</td>
+              <td class="small text-nowrap pe-3">${esc(fmtDate(d.effective))}</td>
+            </tr>`).join('')}</tbody>
+        </table>
       </div>
-    </a>
-  </div>`).join("");
+      <div class="list-group d-md-none">${list.map(d => `
+        <a href="${docLink(d)}" class="list-group-item list-group-item-action py-2">
+          <div class="d-flex justify-content-between align-items-start gap-2"><span class="small fw-semibold text-primary" style="min-width: 0;">${esc(d.title)}</span>${badge(d)}</div>
+          <div class="text-secondary mt-1" style="font-size: 12px;">${esc(docId(d))} · ${esc(d.dept)} · ${esc(fmtDate(d.effective))}</div>
+        </a>`).join('')}</div>
+      <p class="small text-secondary mt-2 mb-0">${list.length} of ${shown.length} documents</p>`;
+  }
 
-$("types").innerHTML = TYPES.map(([n, i, d, pl]) => `
-  <div class="col">
-    <a href="#all?type=${enc(n)}" class="card h-100 bg-light border text-decoration-none text-reset">
-      <div class="card-body p-3">
-        <i class="bi ${i} fs-4 text-secondary"></i>
-        <p class="fw-semibold mb-0 mt-2" style="font-size: 14px;">${pl}</p>
-        <p class="text-muted mb-0" style="font-size: 12px;">${d}</p>
+  /* ---------- One document ---------- */
+  function renderDoc(code) {
+    setNav('all');
+    const d = data.docs.find(x => x.code === code);
+    const back = '<a href="#all" class="small text-decoration-none d-inline-block mb-2"><i class="bi bi-arrow-left me-1"></i>All documents</a>';
+    if (!d) { view.innerHTML = `${back}<p class="small text-secondary">This document doesn't exist.</p>`; return; }
+    const field = (label, value) => `<div class="col"><div class="text-secondary" style="font-size: 12px;">${label}</div><div class="small">${esc(value) || '—'}</div></div>`;
+    view.innerHTML = `${back}
+      <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+        <div style="min-width: 0;">
+          <div class="small text-secondary">${esc(docId(d))}</div>
+          <div class="d-flex flex-wrap align-items-center gap-2"><h2 class="h4 mb-0 text-dark">${esc(d.title)}</h2>${badge(d)}</div>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-primary" data-demo><i class="bi bi-box-arrow-up-right me-1"></i>Open</button>
+          ${isActive(d) ? `<a href="${esc(changeUrl(d))}" class="btn btn-sm btn-outline-secondary">Request a change</a>` : ''}
+        </div>
       </div>
-    </a>
-  </div>`).join("");
+      <div class="card bg-light border"><div class="card-body p-3">
+        <div class="row row-cols-2 row-cols-md-3 g-3">
+          ${field('Department', d.dept)}${field('Type', d.type)}${field('Revision', d.revision)}
+          ${field('Effective', fmtDate(d.effective))}${field('Next review', fmtDate(d.nextReview))}${field('Owner', d.owner === me ? 'You' : DEMO.person(d.owner).name)}
+        </div>
+      </div></div>`;
+  }
 
-const L = CFG.links;
-const rows = items => items.map(([t, i, h]) => `
-  <a href="${h}" class="list-group-item list-group-item-action bg-light d-flex align-items-center gap-2">
-    <i class="bi ${i} text-secondary"></i><span class="small">${t}</span>
-  </a>`).join("");
-$("guides").innerHTML = rows([
-  ["Guidelines for writing controlled documents", "bi-pencil-square", CFG.demo ? "#info?k=guidelines" : url(L.guidelines)],
-  ["Document templates", "bi-file-earmark-ruled", CFG.demo ? "#info?k=templates" : url(L.templates)],
-  ["Document ID numbering guide", "bi-hash", CFG.demo ? "#info?k=ids" : url(L.idGuide)],
-  ["Document control procedure", "bi-journal-text", CFG.demo ? "#info?k=process" : url(L.docControlProc)],
-  // ["DMS user guide", "bi-book", url(L.userGuide)],
-  // ["FAQ", "bi-question-circle", url(L.faq)],
-]);
-$("admin").innerHTML = rows([
-  ["Decision log (approval audit trail)", "bi-clock-history", CFG.demo ? "#log" : listUrl(C.log)],
-  ["Archive: superseded & obsolete documents", "bi-archive", "#all?obsolete=1"],
-]);
-$("dcMail").href = "mailto:" + CFG.docControlEmail;
-$("dcMail").textContent = CFG.docControlEmail;
+  function renderInfo(key) {
+    setNav('home');
+    const [title, , html] = INFO[key];
+    view.innerHTML = `<a href="#" class="small text-decoration-none d-inline-block mb-2"><i class="bi bi-arrow-left me-1"></i>Home</a>
+      <h2 class="h5 mb-3 text-dark">${esc(title)}</h2><div style="max-width: 760px;">${html}</div>`;
+  }
 
-/* ---------- Auth + Graph ---------- */
-async function token() {
-  try { return (await msalApp.acquireTokenSilent({ scopes: SCOPES, account })).accessToken; }
-  catch { await msalApp.acquireTokenRedirect({ scopes: SCOPES, account }); }
-}
-async function graph(path, tok, headers = {}) {
-  const r = await fetch(path.startsWith("http") ? path : "https://graph.microsoft.com/v1.0" + path,
-    { headers: { Authorization: "Bearer " + tok, ...headers } });
-  if (!r.ok) throw new Error(`Graph ${r.status}`);
-  return r.json();
-}
-async function allItems(siteId, list, tok) {
-  let next = `/sites/${siteId}/lists/${enc(list)}/items?$expand=fields&$top=500`, out = [];
-  while (next) { const p = await graph(next, tok); out = out.concat(p.value); next = p["@odata.nextLink"]; }
-  return out;
-}
-const ids = v => [].concat(v ?? []).map(String);
+  /* ---------- routing and events ---------- */
+  function route() {
+    const [path, query = ''] = location.hash.replace(/^#\/?/, '').split('?');
+    const [name, arg = ''] = path.split('/');
+    if (name === 'all') renderAll(new URLSearchParams(query));
+    else if (name === 'doc') renderDoc(decodeURIComponent(arg));
+    else if (name === 'info' && INFO[arg]) renderInfo(arg);
+    else renderHome();
+  }
+  window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
 
-async function loadData() {
-  $("allSignin").classList.add("d-none");
-  $("allLoading").classList.remove("d-none");
-  try {
-    const tok = await token();
-    const site = await graph(`/sites/${CFG.host}:${CFG.sitePath}`, tok);
+  view.addEventListener('click', e => {
+    const t = e.target;
+    const sort = t.closest('[data-sort]');
+    if (sort) { const k = sort.dataset.sort; ui.sort = { key: k, dir: ui.sort.key === k ? -ui.sort.dir : 1 }; drawAll(); return; }
+    const ok = t.closest('[data-ok]');
+    if (ok) {
+      const d = data.docs.find(x => x.code === ok.dataset.ok);
+      d.nextReview = inDays(365);
+      DEMO.saveDocuments(data);
+      toast(`${d.title}: next review ${fmtDate(d.nextReview)}`);
+      renderHome();
+      return;
+    }
+    if (t.closest('[data-demo]')) { toast('In the live version, this opens the file in SharePoint.'); return; }
+    if (t.closest('a, button, input, select, label')) return;
+    const row = t.closest('[data-href]');
+    if (row) location.hash = row.dataset.href;
+  });
 
-    // Controlled documents → table + recently published
-    const items = await allItems(site.id, C.controlled.title, tok);
-    docs = items.map(i => {
-      const f = i.fields || {};
-      return { id: i.id, docId: f[F.docId] || "", title: f[F.title] || f.Title || f.FileLeafRef || "", dept: f[F.dept] || "",
-        type: f[F.type] || "", revision: f[F.revision] || "", status: f[F.docStatus] || "",
-        effective: f[F.effective] || "", nextReview: f[F.nextReview] || "", owners: ids(f[F.owner + "LookupId"]), url: i.webUrl };
-    });
-    docsLoaded = true;
-    setupFilters();
-    renderRecent();
-    $("allLoading").classList.add("d-none");
-    $("allApp").classList.remove("d-none");
+  qs('#searchForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const target = '#all?q=' + encodeURIComponent(qs('#q').value.trim());
+    if (location.hash === target) route(); else location.hash = target;
+  });
+  qs('#q').addEventListener('input', () => { if (qs('#list')) drawAll(); });
+
+  qs('#resetBtn').addEventListener('click', () => {
+    if (!confirm('Reset the demo data in all apps? Your changes will be removed.')) return;
+    DEMO.reset();
+    data = DEMO.documents();
+    toast('Demo data reset');
     route();
-    loadCounters(site.id, tok);   // best-effort, doesn't block the page
-  } catch (e) { $("allLoading").classList.add("d-none"); fail(e); }
-}
-
-async function loadCounters(siteId, tok) {
-  try {
-    // Current user's SharePoint lookup ID (needed to match Person columns)
-    try {
-      const u = await graph(`/sites/${siteId}/lists/${enc("User Information List")}/items?$expand=fields($select=EMail)&$filter=fields/EMail eq '${account.username.replace(/'/g, "''")}'`,
-        tok, { Prefer: "HonorNonIndexedQueriesWarningMayFailRandomly" });
-      uid = u.value[0] ? String(u.value[0].id) : null;
-    } catch { uid = null; }
-
-    const unc = (await allItems(siteId, C.uncontrolled.title, tok)).map(i => i.fields || {});
-    const mine = (f, col) => uid && ids(f[col + "LookupId"]).includes(uid);
-    const horizon = Date.now() + 30 * 864e5;
-    const counts = {
-      qhse: unc.filter(f => f[F.status] === "Under QHSE Validation").length,
-      approve: uid ? unc.filter(f => f[F.status] === "Under Approval" && mine(f, F.approvers)).length : null,
-      review: uid ? unc.filter(f => f[F.status] === "Under Reviewer(s)" && mine(f, F.reviewers)).length : null,
-      mine: uid ? unc.filter(f => f[F.status] !== "Approved" && f[F.status] !== "Rejected" && mine(f, F.requestor)).length : null,
-      due: uid ? docs.filter(d => d.status === CFG.activeStatus && d.owners.includes(uid) && d.nextReview && new Date(d.nextReview) <= horizon).length : null,
-    };
-    COUNTERS.forEach(c => {
-      const n = counts[c.id];
-      if (n === null) return;
-      $("n-" + c.id).textContent = n;
-      if (!n) $("card-" + c.id).classList.add("opacity-75");
-    });
-  } catch { /* leave "–" */ }
-}
-
-function renderRecent() {
-  const recent = docs.filter(d => !d.status || d.status === CFG.activeStatus)
-    .sort((a, b) => String(b.effective).localeCompare(String(a.effective))).slice(0, 6);
-  $("recent").innerHTML = recent.map(d => `
-    <a href="${esc(d.url)}" target="_blank" rel="noopener" class="list-group-item list-group-item-action bg-light d-flex align-items-center gap-2">
-      <i class="bi bi-file-earmark-text text-secondary"></i>
-      <span class="small flex-grow-1">${esc(d.title)}<br><span class="text-muted" style="font-size:12px;">${esc(d.docId)} · ${esc(d.revision)}</span></span>
-      <span class="text-muted" style="font-size:12px;">${d.effective ? new Date(d.effective).toLocaleDateString("en-GB") : ""}</span>
-    </a>`).join("") || '<div class="list-group-item bg-light small text-secondary">Nothing published yet</div>';
-}
-
-/* ---------- All documents table ---------- */
-function setupFilters() {
-  const opts = (k, all) => `<option value="">${all}</option>` +
-    [...new Set(docs.map(d => d[k]).filter(Boolean))].sort().map(v => `<option>${esc(v)}</option>`).join("");
-  $("fDept").innerHTML = opts("dept", "All departments");
-  $("fType").innerHTML = opts("type", "All types");
-}
-
-function render() {
-  if (!docsLoaded) return;
-  $("head").innerHTML = COLS.map(c => {
-    const arrow = sort.key === c.key ? (sort.dir > 0 ? " ▲" : " ▼") : "";
-    return `<th role="button" class="small text-nowrap" data-k="${c.key}">${c.label}${arrow}</th>`;
-  }).join("");
-  $("head").querySelectorAll("th").forEach(th => th.onclick = () => {
-    sort = { key: th.dataset.k, dir: sort.key === th.dataset.k ? -sort.dir : 1 };
-    render();
   });
 
-  const q = $("q").value.trim().toLowerCase(), dept = $("fDept").value, type = $("fType").value, all = $("showAll").checked;
-  const list = docs
-    .filter(d => (all || !d.status || d.status === CFG.activeStatus)
-      && (!dept || d.dept === dept) && (!type || d.type === type)
-      && (!q || d.title.toLowerCase().includes(q) || d.docId.toLowerCase().includes(q)))
-    .sort((a, b) => String(a[sort.key]).localeCompare(String(b[sort.key]), undefined, { numeric: true }) * sort.dir);
+  // Approved changes arrive from Approvals: pick them up when you come back to this page.
+  const reload = () => { data = DEMO.documents(); route(); };
+  window.addEventListener('storage', e => { if ([DEMO.KEYS.documents, DEMO.KEYS.approvals].includes(e.key)) reload(); });
+  window.addEventListener('pageshow', e => { if (e.persisted) reload(); });
 
-  $("rows").innerHTML = list.map(d => `
-    <tr>
-      <td class="small text-nowrap">${esc(d.docId)}</td>
-      <td class="small"><a href="${esc(d.url)}" target="_blank" rel="noopener" class="text-decoration-none">${esc(d.title)}</a></td>
-      <td class="small">${esc(d.dept)}</td>
-      <td class="small">${esc(d.type)}</td>
-      <td class="small">${esc(d.revision)}</td>
-      <td class="small"><span class="badge ${!d.status || d.status === CFG.activeStatus ? "text-bg-success" : "text-bg-secondary"} fw-normal">${esc(d.status || CFG.activeStatus)}</span></td>
-      <td class="small text-nowrap">${d.effective ? new Date(d.effective).toLocaleDateString("en-GB") : ""}</td>
-    </tr>`).join("") || `<tr><td colspan="${COLS.length}" class="text-center text-secondary small py-4">No documents match</td></tr>`;
-  $("count").textContent = `${list.length} of ${docs.length} documents`;
-}
-
-/* ---------- Routing: #  (home)   #all?dept=..&type=..&q=..&obsolete=1 ---------- */
-function route() {
-  const [v, qs = ""] = location.hash.slice(1).split("?");
-  const p = new URLSearchParams(qs);
-  const isAll = v === "all", isPage = ["tasks", "log", "info"].includes(v);
-  $("viewHome").classList.toggle("d-none", isAll || isPage);
-  $("viewPage").classList.toggle("d-none", !isPage);
-  $("viewAll").classList.toggle("d-none", !isAll);
-  $("tabHome").classList.toggle("active", !isAll && !isPage);
-  $("tabAll").classList.toggle("active", isAll);
-  if (isPage) { renderPage(v, p); return; }
-  if (!isAll) return;
-
-  if (!account) { $("allSignin").classList.remove("d-none"); return; }
-  if (docsLoaded) {
-    if (qs) {
-      $("fDept").value = p.get("dept") || "";
-      $("fType").value = p.get("type") || "";
-      $("showAll").checked = p.get("obsolete") === "1";
-      if (p.has("q")) $("q").value = p.get("q");
-    }
-    render();
-  }
-}
-window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
-
-["fDept", "fType", "showAll"].forEach(id => $(id).addEventListener("change", render));
-$("q").addEventListener("input", () => { if (location.hash.startsWith("#all")) render(); });
-$("searchForm").onsubmit = e => {
-  e.preventDefault();
-  const q = $("q").value.trim();
-  location.hash = "all?q=" + enc(q);
-  if (location.hash.startsWith("#all")) route();
-};
-
-/* ---------- Demo data ---------- */
-const DEMO_TITLES = {
-  "Compliance": [["Policy","Anti-Bribery and Corruption Policy"],["Procedure","Regulatory Compliance Review Procedure"],["Form","Conflict of Interest Declaration"]],
-  "Legal Affairs": [["Policy","Contract Management Policy"],["Procedure","Legal Review of Agreements Procedure"],["Form","Power of Attorney Request Form"]],
-  "Support Services": [["Procedure","Office Maintenance Request Procedure"],["Form","Visitor Registration Form"],["Plan","Facilities Maintenance Plan"]],
-  "Human Resources": [["Policy","Recruitment and Onboarding Policy"],["Procedure","Leave Management Procedure"],["Form","Employee Exit Checklist"],["Plan","Annual Training Plan"]],
-  "Procurement": [["Policy","Procurement and Vendor Policy"],["Procedure","Supplier Evaluation Procedure"],["Form","Purchase Requisition Form"]],
-  "QHSE": [["Policy","Quality Policy"],["Procedure","Control of Documented Information"],["Procedure","Non-Conformance and Corrective Action"],["Form","Incident Report Form"],["Plan","Internal Audit Plan"]],
-  "IT": [["Policy","Information Security Policy"],["Procedure","Access Management Procedure"],["Form","IT Equipment Request Form"],["Plan","Disaster Recovery Plan"]],
-  "B2B Operations": [["Procedure","Client Onboarding Procedure"],["Procedure","Candidate Deployment Procedure"],["Form","Client Service Request Form"]],
-  "MARCOM": [["Policy","Brand and Communications Policy"],["Procedure","Social Media Approval Procedure"],["Plan","Annual Marketing Plan"]],
-  "B2C Sales and Operations": [["Procedure","Customer Booking Procedure"],["Form","Customer Complaint Form"],["Plan","Quarterly Sales Plan"]],
-  "Financial Control": [["Policy","Expense Reimbursement Policy"],["Procedure","Month-End Closing Procedure"],["Form","Expense Claim Form"]],
-  "Treasury": [["Policy","Treasury and Cash Management Policy"],["Procedure","Bank Reconciliation Procedure"],["Form","Payment Authorization Form"]],
-  "Company-wide": [["Policy","Code of Conduct"],["Policy","Document Control Policy"],["Procedure","Management Review Procedure"],["Plan","Business Continuity Plan"]],
-};
-const DEMO_CODES = { "Compliance":"CO","Legal Affairs":"LG","Support Services":"SS","Human Resources":"HR","Procurement":"PC","QHSE":"QH","IT":"IT","B2B Operations":"B2B","MARCOM":"MC","B2C Sales and Operations":"B2C","Financial Control":"FC","Treasury":"TR","Company-wide":"CW" };
-const DEMO_TYPE = { Policy: "PO", Procedure: "PR", Form: "FM", Plan: "PL" };
-const DEMO_DOCS = (() => {
-  const out = [], serial = {}; let n = 0;
-  Object.entries(DEMO_TITLES).forEach(([dept, list]) => list.forEach(([type, title]) => {
-    n++;
-    const key = dept + type; serial[key] = (serial[key] || 0) + 1;
-    const rev = n % 5 === 0 ? "V2.0" : "V1.0";
-    const status = n % 13 === 0 ? "Obsolete" : n % 8 === 0 ? "Superseded" : "Active";
-    const eff = new Date(2026, 9, 4); eff.setDate(eff.getDate() - n * 11);
-    const next = new Date(eff); next.setFullYear(next.getFullYear() + 1);
-    out.push({ docId: `ESAD-${DEMO_CODES[dept]}-${DEMO_TYPE[type]}-${String(serial[key]).padStart(2, "0")}-${rev}`,
-      title, dept, type, revision: rev, status, effective: eff.toISOString(), nextReview: next.toISOString(), owners: [], url: "#", id: String(n) });
-  }));
-  return out;
-})();
-
-function startDemo() {
-  account = { name: ME, username: "demo" };
-  docs = DEMO_DOCS; docsLoaded = true;
-  docs.filter(d => d.status === CFG.activeStatus).forEach((d, i) => d.nextReview = iso(i < 3 ? [9, 21, 27][i] : 45 + i * 9));
-  $("who").textContent = "Demo mode";
-  setupFilters(); renderRecent();
-  $("allApp").classList.remove("d-none");
-  refreshCounters();
+  qs('#who').textContent = `${DEMO.person(me).name} · ${DEMO.person(me).title}`;
   route();
-}
-
-/* ---------- Demo engine: requests, approvals, NCRs, log ---------- */
-const ME = "Demo user", DAY = 864e5, iso = (d = 0) => new Date(Date.now() + d * DAY).toISOString();
-const fmt = d => d ? new Date(d).toLocaleDateString("en-GB") : "";
-const H = (stage, by, decision, d, comment = "") => ({ stage, by, decision, date: iso(d), comment });
-const mk = (id, title, type, doc, requestor, priority, status, d, hist = []) =>
-  ({ id, title, type, doc, requestor, priority, status, desc: "Sample request for the demo.", submitted: iso(d), hist });
-let reqs = [
-  mk("DCR-001", "Annual Leave Policy update", "Revision to existing document", "4", "Sara Ahmed", "Medium", "Under Approval", -6, [H("QHSE validation", "QHSE Team", "Validated", -5), H("Review", "Reviewer", "Reviewed", -3)]),
-  mk("DCR-002", "Vendor Onboarding Form", "New document", "", "Omar Khan", "High", "Under Approval", -8, [H("QHSE validation", "QHSE Team", "Validated", -7), H("Review", "Reviewer", "Reviewed", -4)]),
-  mk("DCR-003", "Fire Evacuation Procedure", "New document", "", "Layla Hassan", "Medium", "Under Reviewer(s)", -4, [H("QHSE validation", "QHSE Team", "Validated", -2)]),
-  mk("DCR-004", "Data Backup Policy revision", "Revision to existing document", "20", "Yousef Ali", "Low", "Under Reviewer(s)", -3, [H("QHSE validation", "QHSE Team", "Validated", -1)]),
-  mk("DCR-005", "Client Complaint Handling Procedure", "New document", "", "Noor Saleh", "High", "Under QHSE Validation", -2),
-  mk("DCR-006", "Visitor Log Template", "New document", "", "Hassan Omar", "Low", "Under QHSE Validation", -1),
-  mk("DCR-007", "Travel Request Form", "New document", "", ME, "Medium", "Under Reviewer(s)", -5, [H("QHSE validation", "QHSE Team", "Validated", -4)]),
-  mk("DCR-008", "Overtime Policy", "New document", "", ME, "Medium", "Approved", -20, [H("QHSE validation", "QHSE Team", "Validated", -19), H("Review", "Reviewer", "Reviewed", -15), H("Approval", "Approver", "Approved", -12)]),
-  mk("DCR-009", "Petty Cash Procedure", "New document", "", ME, "Low", "Rejected", -30, [H("QHSE validation", "QHSE Team", "Validated", -29), H("Approval", "Approver", "Rejected", -25, "Overlaps with the Expense Policy.")]),
-];
-let log = reqs.flatMap(r => r.hist.map(h => ({ ...h, ref: r.id + " · " + r.title })));
-const isOpen = r => !["Approved", "Rejected"].includes(r.status);
-const dueDocs = () => docs.filter(d => (!d.status || d.status === CFG.activeStatus) && d.nextReview && new Date(d.nextReview) <= Date.now() + 30 * DAY);
-const getCounts = () => ({ approve: reqs.filter(r => r.status === "Under Approval").length, review: reqs.filter(r => r.status === "Under Reviewer(s)").length,
-  qhse: reqs.filter(r => r.status === "Under QHSE Validation").length, mine: reqs.filter(r => r.requestor === ME && isOpen(r)).length, due: dueDocs().length });
-function refreshCounters() {
-  const n = getCounts();
-  COUNTERS.forEach(c => {
-    const el = $("card-" + c.id);
-    $("n-" + c.id).textContent = n[c.id];
-    el.href = "#tasks?v=" + c.id;
-    el.classList.toggle("opacity-75", !n[c.id]);
-  });
-}
-const SB = { "Under QHSE Validation": "text-bg-primary", "Under Reviewer(s)": "text-bg-info", "Under Approval": "text-bg-warning", Approved: "text-bg-success", Rejected: "text-bg-danger",
-  Open: "text-bg-secondary", "In progress": "text-bg-warning", Closed: "text-bg-success", Major: "text-bg-warning", Minor: "text-bg-secondary", Critical: "text-bg-danger" };
-const sb = s => `<span class="badge ${SB[s] || "text-bg-secondary"} fw-normal">${esc(s)}</span>`;
-const STAGE = { "Under QHSE Validation": "QHSE validation", "Under Reviewer(s)": "Review", "Under Approval": "Approval" };
-const TASKS = {
-  approve: { title: "Awaiting my approval", st: "Under Approval", acts: [["Approved", "Approve", "success"], ["Rejected", "Reject", "outline-danger"]] },
-  review: { title: "Awaiting my review", st: "Under Reviewer(s)", acts: [["Under Approval", "Complete review", "success"], ["Rejected", "Reject", "outline-danger"]] },
-  qhse: { title: "Awaiting QHSE validation", st: "Under QHSE Validation", acts: [["Under Reviewer(s)", "Validate", "success"], ["Rejected", "Reject", "outline-danger"]] },
-};
-
-function publish(r) {   // approved request → controlled document
-  if (r.type === CFG.dcr.newType) {
-    const type = Object.keys(DEMO_TYPE).find(t => new RegExp(t, "i").test(r.title)) || "Procedure";
-    const n = docs.filter(d => d.dept === "Company-wide" && d.type === type).length + 1;
-    docs.push({ id: "n" + Date.now(), docId: `ESAD-CW-${DEMO_TYPE[type]}-${String(n).padStart(2, "0")}-V1.0`, title: r.title, dept: "Company-wide", type, revision: "V1.0",
-      status: "Active", effective: iso(), nextReview: iso(365), owners: [], url: "#" });
-  } else {
-    const d = docs.find(x => x.id === r.doc); if (!d) return;
-    if (r.type === CFG.dcr.changeTypes[2]) d.status = "Obsolete";
-    else { d.revision = "V" + (parseFloat(d.revision.slice(1)) + 1).toFixed(1); d.docId = d.docId.replace(/V[\d.]+$/, d.revision); d.effective = iso(); d.nextReview = iso(365); }
-  }
-  renderRecent(); setupFilters();
-}
-
-function decide(id, to) {
-  const r = reqs.find(x => x.id === id); if (!r) return;
-  let comment = "";
-  if (to === "Rejected") { comment = (prompt("Reason for rejection (required):") || "").trim(); if (!comment) return; }
-  const h = { stage: STAGE[r.status], by: ME, decision: to === "Rejected" ? "Rejected" : to === "Approved" ? "Approved" : "Approved stage", date: iso(), comment };
-  r.hist.push(h); log.push({ ...h, ref: r.id + " · " + r.title });
-  r.status = to;
-  if (to === "Approved") publish(r);
-  refreshCounters();
-}
-
-const back = '<a href="#" class="small text-decoration-none d-inline-block mb-3"><i class="bi bi-arrow-left me-1"></i>Back to home</a>';
-const tbl = (head, body, empty) => `<div class="table-responsive border rounded"><table class="table table-sm table-hover align-middle mb-0">
-  <thead class="table-light"><tr>${head.map(h => `<th class="small text-nowrap">${h}</th>`).join("")}</tr></thead>
-  <tbody>${body || `<tr><td colspan="${head.length}" class="text-center text-secondary small py-4">${empty}</td></tr>`}</tbody></table></div>`;
-const last = r => { const h = r.hist[r.hist.length - 1]; return h ? `<div class="text-muted" style="font-size:12px;">${esc(h.decision)} by ${esc(h.by)}, ${fmt(h.date)}${h.comment ? ": " + esc(h.comment) : ""}</div>` : ""; };
-
-const INFO = {
-  guidelines: ["Guidelines for writing controlled documents", `<ul class="small"><li>Start from the approved template for the document type.</li><li>Give the document a clear purpose, scope and owner.</li><li>Use short, numbered steps and plain language.</li><li>Reference related documents by their Document ID.</li><li>Do not edit the Document ID or Revision. They are set on approval.</li></ul>`],
-  templates: ["Document templates", `<div class="list-group">${["Policy", "Procedure", "Form", "Plan"].map(t => `<div class="list-group-item bg-light d-flex align-items-center"><i class="bi bi-file-earmark-word text-secondary me-2"></i><span class="small flex-grow-1">${t} template.docx</span><button class="btn btn-sm btn-outline-secondary" data-act="tpl">Download</button></div>`).join("")}</div>`],
-  ids: ["Document ID numbering guide", `<p class="small">Format: <code>ESAD-[Department]-[Type]-[Serial]-[Version]</code>, for example <code>ESAD-HR-PR-01-V1.0</code>.</p><div class="row"><div class="col-md-6">${tbl(["Department", "Code"], Object.entries(DEMO_CODES).map(([k, v]) => `<tr><td class="small">${esc(k)}</td><td class="small"><code>${v}</code></td></tr>`).join(""))}</div><div class="col-md-4 mt-3 mt-md-0">${tbl(["Type", "Code"], Object.entries(DEMO_TYPE).map(([k, v]) => `<tr><td class="small">${k}</td><td class="small"><code>${v}</code></td></tr>`).join(""))}</div></div>`],
-  process: ["Document control procedure", `<ol class="small"><li><b>Submit</b> a request with the file.</li><li><b>QHSE validation</b> checks format and content.</li><li><b>Review</b> by the selected reviewers.</li><li><b>Approval</b> by the approvers.</li><li><b>Published</b> to Controlled Documents with a new revision.</li></ol><p class="small text-muted">Rejected requests are closed. Submit a new request to try again.</p>`],
-};
-
-function renderPage(v, p) {
-  const el = $("viewPage");
-  if (!CFG.demo) { el.innerHTML = back + '<div class="alert alert-secondary small">This page is available in demo mode only.</div>'; return; }
-  if (v === "tasks") {
-    const k = p.get("v") || "mine";
-    if (k === "due") {
-      el.innerHTML = back + `<h2 class="h5 text-dark mb-3">My documents due for review (30 days)</h2>` +
-        tbl(["Document ID", "Title", "Department", "Next review", ""], dueDocs().map(d => `<tr><td class="small text-nowrap">${esc(d.docId)}</td><td class="small">${esc(d.title)}</td><td class="small">${esc(d.dept)}</td><td class="small">${fmt(d.nextReview)}</td>
-          <td class="text-end text-nowrap"><button class="btn btn-sm btn-success me-1" data-act="due-ok" data-id="${esc(d.id)}">No change needed</button><button class="btn btn-sm btn-outline-secondary" data-act="due-rev" data-id="${esc(d.id)}">Request revision</button></td></tr>`).join(""), "Nothing is due for review.");
-    } else if (k === "mine") {
-      el.innerHTML = back + `<h2 class="h5 text-dark mb-3">My requests</h2>` +
-        tbl(["ID", "Title", "Type", "Priority", "Submitted", "Status"], reqs.filter(r => r.requestor === ME).map(r => `<tr><td class="small text-nowrap">${r.id}</td><td class="small">${esc(r.title)}${last(r)}</td><td class="small">${esc(r.type)}</td><td class="small">${esc(r.priority)}</td><td class="small">${fmt(r.submitted)}</td><td>${sb(r.status)}</td></tr>`).join(""), "You haven't submitted any requests.") +
-        `<a href="${CFG.dcrForm}" target="_blank" rel="noopener" class="btn btn-primary btn-sm mt-3"><i class="bi bi-file-earmark-plus me-1"></i>New request</a>`;
-    } else {
-      const T = TASKS[k];
-      el.innerHTML = back + `<h2 class="h5 text-dark mb-3">${T.title}</h2>` +
-        tbl(["ID", "Title", "Type", "Requestor", "Priority", "Submitted", ""], reqs.filter(r => r.status === T.st).map(r => `<tr><td class="small text-nowrap">${r.id}</td><td class="small">${esc(r.title)}${last(r)}</td><td class="small">${esc(r.type)}</td><td class="small">${esc(r.requestor)}</td><td class="small">${esc(r.priority)}</td><td class="small">${fmt(r.submitted)}</td>
-          <td class="text-end text-nowrap">${T.acts.map(([to, label, c]) => `<button class="btn btn-sm btn-${c} ms-1" data-act="decide" data-id="${r.id}" data-to="${to}">${label}</button>`).join("")}</td></tr>`).join(""), "Nothing is waiting for you.");
-    }
-  } else if (v === "log") {
-    el.innerHTML = back + `<h2 class="h5 text-dark mb-3">Decision log</h2>` +
-      tbl(["Date", "Request", "Stage", "Decision", "By", "Comment"], [...log].sort((a, b) => b.date.localeCompare(a.date)).map(l => `<tr><td class="small text-nowrap">${fmt(l.date)}</td><td class="small">${esc(l.ref)}</td><td class="small">${esc(l.stage)}</td><td>${sb(l.decision)}</td><td class="small">${esc(l.by)}</td><td class="small">${esc(l.comment)}</td></tr>`).join(""), "No decisions yet.");
-  } else {
-    const [t, body] = INFO[p.get("k")] || INFO.guidelines;
-    el.innerHTML = back + `<h2 class="h5 text-dark mb-3">${t}</h2><div style="max-width:760px;">${body}</div>`;
-  }
-}
-
-$("viewPage").addEventListener("click", e => {
-  const b = e.target.closest("[data-act]"); if (!b) return;
-  const a = b.dataset.act, id = b.dataset.id;
-  if (a === "decide") decide(id, b.dataset.to);
-  else if (a === "due-ok") { const d = docs.find(x => x.id === id); d.nextReview = iso(365); refreshCounters(); }
-  else if (a === "due-rev") { window.open(CFG.dcrForm, "_blank", "noopener"); return; }
-  else if (a === "tpl") { alert("Demo: template download."); return; }
-  route();
-});
-/* ---------- Start ---------- */
-const signIn = () => msalApp && msalApp.loginRedirect({ scopes: SCOPES });
-$("signinBtn").onclick = $("signinBtn2").onclick = signIn;
-
-(async () => {
-  if (CFG.demo) { startDemo(); return; }
-  route();
-  try {
-    await msalApp.initialize();
-    const res = await msalApp.handleRedirectPromise();
-    account = (res && res.account) || msalApp.getAllAccounts()[0] || null;
-    if (account) {
-      msalApp.setActiveAccount(account);
-      $("who").textContent = account.name || account.username;
-      loadData();
-    } else {
-      $("signinBtn").classList.remove("d-none");
-      route();
-    }
-  } catch (e) { fail(e); }
-})();
 })();
 </script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});</script>

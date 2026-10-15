@@ -1,0 +1,1285 @@
+<!doctype html>
+<!-- Projects (demo): projects and work items. Sample data comes from demo.js and is kept in this browser. Work item approvals happen in Approvals. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects</title>
+<link rel="icon" type="image/png" href="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+
+<div class="container py-3 py-md-4" style="max-width: 1100px; font-family: 'Segoe UI', Arial, sans-serif;">
+
+  <!-- All apps + who you are -->
+  <div class="d-flex justify-content-between align-items-center gap-2 mb-2 small text-secondary">
+    <a href="index.html" class="text-secondary text-decoration-none text-nowrap"><i class="bi bi-grid-3x3-gap me-1"></i>All apps</a>
+    <span class="text-nowrap"><i class="bi bi-person-circle me-1"></i><span id="who"></span></span>
+  </div>
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-3 mb-3">
+    <div class="d-flex align-items-center gap-3" style="min-width: 0;">
+      <a href="index.html" class="flex-shrink-0"><img src="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png" alt="ESAD" style="height: 48px; width: auto;"></a>
+      <h1 class="h4 mb-0 text-truncate"><a href="#home" class="text-dark text-decoration-none">Projects</a></h1>
+    </div>
+    <button type="button" class="btn btn-sm btn-primary flex-shrink-0" id="newProject" title="New project"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">New project</span></button>
+  </div>
+
+  <!-- Menu -->
+  <ul class="nav nav-underline flex-nowrap overflow-x-auto text-nowrap gap-2 gap-sm-3 border-bottom mb-4" id="nav">
+    <li class="nav-item"><a class="nav-link" href="#home" data-nav="home">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="#projects" data-nav="projects">Projects</a></li>
+    <li class="nav-item"><a class="nav-link" href="#overdue" data-nav="overdue">Overdue<span class="badge rounded-pill text-bg-danger fw-normal ms-1 d-none" data-count="overdue"></span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#mywork" data-nav="mywork">My work<span class="badge rounded-pill text-bg-secondary fw-normal ms-1 d-none" data-count="mywork"></span></a></li>
+  </ul>
+
+  <div id="alertBox"></div>
+  <div id="view"></div>
+
+  <div class="border-top mt-5 pt-3 d-flex flex-wrap justify-content-between gap-2 text-secondary" style="font-size: 12px;">
+    <span>Demo with sample data. Changes are saved in this browser only.</span>
+    <button type="button" class="btn btn-link btn-sm p-0 text-secondary text-decoration-none" style="font-size: 12px;" id="resetBtn">Reset demo data</button>
+  </div>
+
+  <!-- Project form -->
+  <div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="pmHeading" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 mb-0" id="pmHeading">New project</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-light border small py-2 d-none" role="alert" data-err></div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="pmName">Name</label>
+            <input type="text" class="form-control form-control-sm" id="pmName" maxlength="255" required>
+            <div class="invalid-feedback">Enter a project name.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="pmDesc">Description <span class="fw-normal text-secondary">(optional)</span></label>
+            <textarea class="form-control form-control-sm" id="pmDesc" rows="3"></textarea>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold" for="pmStatus">Status</label>
+              <select class="form-select form-select-sm" id="pmStatus"></select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold" for="pmDept">Department</label>
+              <select class="form-select form-select-sm" id="pmDept"></select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label small fw-semibold" for="pmOwnerInput">Owner</label>
+            <div id="pmOwner"></div>
+          </div>
+          <div id="pmCustom"></div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-danger me-auto" id="pmDelete"><i class="bi bi-trash me-1"></i>Delete</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary" id="pmSave">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Work item form -->
+  <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="imHeading" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <div class="me-2">
+            <h2 class="modal-title h6 mb-0" id="imHeading">Work item</h2>
+            <div class="small text-secondary" id="imProject"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="imName">Title</label>
+            <input type="text" class="form-control form-control-sm" id="imName" maxlength="255" required>
+            <div class="invalid-feedback">Enter a title.</div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-sm-4">
+              <label class="form-label small fw-semibold" for="imStatus">Status</label>
+              <select class="form-select form-select-sm" id="imStatus"></select>
+            </div>
+            <div class="col-6 col-sm-4">
+              <label class="form-label small fw-semibold" for="imDue">Due date <span class="fw-normal text-secondary">(optional)</span></label>
+              <input type="date" class="form-control form-control-sm" id="imDue">
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex align-items-baseline justify-content-between">
+              <label class="form-label small fw-semibold" for="imWhoInput">Assignees</label>
+              <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" style="font-size: 12px;" data-act="assign-me" id="imAssignMe">Assign to me</button>
+            </div>
+            <div id="imWho"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="imDesc">Description <span class="fw-normal text-secondary">(optional)</span></label>
+            <textarea class="form-control form-control-sm" id="imDesc" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex align-items-baseline justify-content-between mb-1">
+              <label class="form-label small fw-semibold mb-0" for="imCheckNew">Checklist</label>
+              <span class="text-secondary" style="font-size: 12px;" id="imCheckCount"></span>
+            </div>
+            <div id="imChecklist"></div>
+            <div class="input-group input-group-sm mt-1">
+              <input type="text" class="form-control" id="imCheckNew" placeholder="Add an item" maxlength="255">
+              <button type="button" class="btn btn-outline-secondary" data-act="check-add" aria-label="Add checklist item"><i class="bi bi-plus-lg"></i></button>
+            </div>
+          </div>
+          <div id="imCustom"></div>
+          <div class="text-secondary border-top pt-2 mt-3" style="font-size: 12px;" id="imMeta"></div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-danger" data-act="delete-item" id="imDelete"><i class="bi bi-trash me-1"></i>Delete</button>
+          <a href="#" class="btn btn-sm btn-outline-secondary me-auto" data-act="ask-approval" id="imApproval"><i class="bi bi-check2-square me-1"></i>Request approval</a>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary" id="imSave">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom fields -->
+  <div class="modal fade" id="fieldsModal" tabindex="-1" aria-labelledby="fmHeading" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <div class="me-2">
+            <h2 class="modal-title h6 mb-0" id="fmHeading">Custom fields</h2>
+            <div class="small text-secondary" id="fmProject"></div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-light border small py-2 d-none" role="alert" data-err></div>
+          <p class="small text-secondary mb-3">Fields you add here only exist in this project.</p>
+          <div id="fmList"></div>
+          <div class="border rounded bg-light p-3 mt-3">
+            <div class="small fw-semibold mb-2">Add a field</div>
+            <div class="row g-2 align-items-end">
+              <div class="col-12 col-sm-4">
+                <label class="form-label small mb-1" for="fmName">Name</label>
+                <input type="text" class="form-control form-control-sm" id="fmName" maxlength="60">
+              </div>
+              <div class="col-6 col-sm-3">
+                <label class="form-label small mb-1" for="fmType">Type</label>
+                <select class="form-select form-select-sm" id="fmType">
+                  <option value="text">Text</option><option value="number">Number</option><option value="date">Date</option><option value="choice">Choice</option>
+                </select>
+              </div>
+              <div class="col-6 col-sm-3">
+                <label class="form-label small mb-1" for="fmTarget">Applies to</label>
+                <select class="form-select form-select-sm" id="fmTarget">
+                  <option value="workItem">Work items</option><option value="project">Project</option>
+                </select>
+              </div>
+              <div class="col-12 col-sm-2">
+                <button type="button" class="btn btn-outline-primary btn-sm w-100" data-act="field-add">Add</button>
+              </div>
+              <div class="col-12 d-none" id="fmOptsWrap">
+                <label class="form-label small mb-1" for="fmOpts">Options</label>
+                <input type="text" class="form-control form-control-sm" id="fmOpts" placeholder="Comma-separated, e.g. Design, Build, Test">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary">Save fields</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast align-items-center text-bg-dark border-0" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body small" id="toastMsg"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="demo.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // Status values the app gives a meaning to. The lists of choices are in demo.js.
+  const ST = {
+    projectActive: 'Active', projectOnHold: 'On Hold', projectDone: 'Completed', projectCancelled: 'Cancelled',
+    itemActive: 'In Progress', itemDone: 'Done',
+  };
+  const CHOICES = { projectStatus: DEMO.PROJECT_STATUS, department: DEMO.PROJECT_DEPTS, itemStatus: DEMO.ITEM_STATUS };
+  const FIELD_TYPES = { text: 'Text', number: 'Number', date: 'Date', choice: 'Choice' };
+  const TARGETS = { workItem: 'Work items', project: 'Project' };
+  const QUIET_DAYS = 14;   // an active project with no activity for this long needs attention
+  const me = DEMO.ME;
+  const DAY = 864e5;
+
+  /* ---------- helpers ---------- */
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  const low = v => String(v ?? '').trim().toLowerCase();
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const byId = (list, id) => list.find(x => x.id === id);
+  const time = iso => Date.parse(iso) || 0;
+  const modal = sel => bootstrap.Modal.getOrCreateInstance(qs(sel));
+  const newFieldId = taken => { let id; do { id = 'f' + Math.random().toString(36).slice(2, 9); } while (taken.has(id)); return id; };
+  const splitOptions = s => [...new Set(String(s || '').split(',').map(x => x.trim()).filter(Boolean))];
+
+  // People are stored by id; names and titles come from demo.js.
+  const nameOf = id => DEMO.person(id).name;
+  const isMe = id => id === me;
+  const who = (id, fallback = 'unknown') => !id ? fallback : isMe(id) ? 'you' : esc(nameOf(id));   // for sentences: "Created by you"
+  function peopleText(ids, max = 2) {
+    if (!ids.length) return '<span class="text-muted">Unassigned</span>';
+    const shown = ids.slice(0, max).map(id => esc(nameOf(id))).join(', ');
+    return ids.length > max ? `<span title="${esc(ids.map(nameOf).join(', '))}">${shown} +${ids.length - max}</span>` : shown;
+  }
+
+  // Dates
+  const fmtDate = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const fmtStamp = d => d.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const fromYmd = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '')); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  function ago(iso) {
+    const d = new Date(iso), now = new Date();
+    if (isNaN(d)) return '';
+    const mins = Math.round((now - d) / 6e4);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins} min ago`;
+    const midnight = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const days = Math.round((midnight(now) - midnight(d)) / DAY);
+    if (days <= 0) return plural(Math.round(mins / 60), 'hour') + ' ago';
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    return fmtDate(d);
+  }
+  const when = iso => (iso && !isNaN(new Date(iso))) ? `<span title="${esc(fmtStamp(new Date(iso)))}">${esc(ago(iso))}</span>` : '';
+
+  // Due dates: an item is overdue when it isn't done and its due date has passed.
+  const isOverdue = i => !!i.due && i.status !== ST.itemDone && i.due < DEMO.today();
+  const lateDays = i => Math.round((fromYmd(DEMO.today()) - fromYmd(i.due)) / DAY);
+  function dueText(i) {
+    const d = fromYmd(i.due);
+    if (!d) return '';
+    return isOverdue(i)
+      ? `<span class="text-danger text-nowrap" title="Due ${esc(fmtDate(d))}"><i class="bi bi-exclamation-circle me-1"></i>${esc(fmtDate(d))} · ${plural(lateDays(i), 'day')} late</span>`
+      : `<span class="text-nowrap">${esc(fmtDate(d))}</span>`;
+  }
+
+  // Custom field values
+  function showValue(field, value) {
+    if (value == null || value === '') return '';
+    if (field.type === 'number') return Number(value).toLocaleString('en-US');
+    if (field.type === 'date') { const d = fromYmd(value); return d ? fmtDate(d) : String(value); }
+    return String(value);
+  }
+  const fieldsFor = (project, target) => (project?.schema || []).filter(f => f && f.id && f.name && !f.archived && (f.target || 'workItem') === target);
+
+  // Colours carry meaning: blue = in progress, green = done, amber = on hold, red = overdue, grey = not started/inactive
+  function statusLook(kind, s) {
+    if (kind === 'item') {
+      if (s === ST.itemActive) return { cls: 'text-bg-primary' };
+      if (s === ST.itemDone) return { cls: 'text-bg-success', icon: 'check2' };
+      return { cls: 'text-bg-secondary' };
+    }
+    if (s === ST.projectActive) return { cls: 'text-bg-primary' };
+    if (s === ST.projectOnHold) return { cls: 'text-bg-warning', icon: 'pause-fill' };
+    if (s === ST.projectDone) return { cls: 'text-bg-success', icon: 'check2' };
+    if (s === ST.projectCancelled) return { cls: 'text-bg-light border text-secondary', icon: 'x' };
+    return { cls: 'text-bg-secondary' };
+  }
+  const statusInner = look => `${look.icon ? `<i class="bi bi-${look.icon} me-1"></i>` : ''}`;
+  function badge(kind, s) {
+    if (!s) return '';
+    const look = statusLook(kind, s);
+    return `<span class="badge fw-normal ${look.cls}">${statusInner(look)}${esc(s)}</span>`;
+  }
+  // Part-to-whole bar: done (green), in progress (blue), to do (grey track); 2px gaps between segments
+  function stackedBar(done, active, todo) {
+    const total = done + active + todo;
+    if (!total) return '<span class="text-muted" style="font-size: 12px;">No work items</span>';
+    const label = `${done} done, ${active} in progress, ${todo} to do`;
+    const segs = [[done, 'bg-success'], [active, 'bg-primary'], [todo, 'bg-body-secondary']].filter(s => s[0] > 0);
+    return `<div class="d-flex align-items-center gap-2" title="${esc(label)}">
+      <div class="d-flex flex-grow-1" style="gap: 2px; height: 8px; min-width: 80px;" role="img" aria-label="${esc(label)}">
+        ${segs.map(([n, cls], i) => `<div class="${cls}" style="flex: ${n} 1 0;${i === segs.length - 1 ? ' border-radius: 0 4px 4px 0;' : ''}"></div>`).join('')}
+      </div>
+      <span class="text-secondary text-nowrap" style="font-size: 12px; min-width: 2.6em;">${Math.round(done * 100 / total)}%</span>
+    </div>`;
+  }
+  const legendKey = (cls, label) => `<span class="text-secondary d-inline-flex align-items-center gap-1" style="font-size: 12px;"><span class="d-inline-block ${cls}" style="width: 10px; height: 10px; border-radius: 2px;"></span>${label}</span>`;
+  const itemOrder = i => i.status === ST.itemActive ? 0 : i.status === ST.itemDone ? 2 : 1;
+  const checkInfo = i => i.checklist?.length
+    ? `<span class="text-secondary text-nowrap ms-2" style="font-size: 12px;" title="Checklist: ${i.checklist.filter(c => c.done).length} of ${i.checklist.length} done"><i class="bi bi-check2-square me-1"></i>${i.checklist.filter(c => c.done).length}/${i.checklist.length}</span>`
+    : '';
+
+  function options(values, selected = '', blank = null) {
+    const list = selected && !values.includes(selected) ? [...values, selected] : values;
+    return (blank != null ? `<option value="">${esc(blank)}</option>` : '') +
+      list.map(v => `<option value="${esc(v)}"${v === selected ? ' selected' : ''}>${esc(v)}</option>`).join('');
+  }
+  const empty = (icon, title, text = '', action = '') => `
+    <div class="card bg-light border"><div class="card-body text-center py-5">
+      <i class="bi bi-${icon} fs-3 text-secondary"></i>
+      <p class="fw-semibold mb-1 mt-2" style="font-size: 14px;">${esc(title)}</p>
+      ${text ? `<p class="text-muted mb-3" style="font-size: 12px;">${esc(text)}</p>` : '<div class="mb-3"></div>'}
+      ${action}
+    </div></div>`;
+
+  /* ---------- data (kept in this browser by demo.js) ---------- */
+  const state = {
+    projects: [], items: [], next: {},
+    hf: { dept: '' },                                    // home page filter
+    pf: { q: '', scope: 'all', status: '', dept: '' },   // projects page filters
+    wf: { pid: 0, status: '', q: '', who: '' },          // work item filters on a project page
+    showDone: false,
+    backHash: '#home',                                   // page under an open work item
+  };
+  const load = () => Object.assign(state, DEMO.projects());
+  const save = () => DEMO.saveProjects({ projects: state.projects, items: state.items, next: state.next });
+  // Add or update a project or work item, stamp who changed it and when, and save.
+  function saveRecord(list, rec) {
+    const now = new Date().toISOString();
+    let row = rec.id ? byId(state[list], rec.id) : null;
+    if (row) Object.assign(row, rec);
+    else { row = { ...rec, id: state.next[list]++, created: now, createdBy: me }; state[list].push(row); }
+    Object.assign(row, { modified: now, modifiedBy: me });
+    save();
+    return row;
+  }
+
+  const view = qs('#view');
+  const projectOf = it => byId(state.projects, it.projectId);
+  const isOpenProject = p => !!p && (p.status === ST.projectActive || p.status === ST.projectOnHold);
+  const myItems = includeDone => state.items.filter(i => i.assignees.includes(me) && (includeDone || i.status !== ST.itemDone) && projectOf(i));
+  const overdueItems = () => state.items.filter(i => isOverdue(i) && isOpenProject(projectOf(i))).sort((a, b) => a.due.localeCompare(b.due));
+
+  function projectStats() {
+    const map = new Map(state.projects.map(p => [p.id, { total: 0, done: 0, overdue: 0, last: time(p.modified) }]));
+    for (const it of state.items) {
+      const s = map.get(it.projectId);
+      if (!s) continue;
+      s.total++;
+      if (it.status === ST.itemDone) s.done++;
+      if (isOverdue(it)) s.overdue++;
+      s.last = Math.max(s.last, time(it.modified));
+    }
+    return map;
+  }
+
+  /* ---------- feedback ---------- */
+  function toast(msg) {
+    qs('#toastMsg').textContent = msg;
+    bootstrap.Toast.getOrCreateInstance(qs('#toast'), { delay: 3000 }).show();
+  }
+  function showAlert(msg) {
+    qs('#alertBox').innerHTML = `<div class="alert alert-light border d-flex align-items-start gap-2 small py-2" role="alert">
+      <i class="bi bi-exclamation-circle text-danger"></i><div class="flex-grow-1">${esc(msg)}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+  }
+  function showErr(modalEl, msg) { const box = qs('[data-err]', modalEl); box.textContent = msg; box.classList.remove('d-none'); box.scrollIntoView({ block: 'nearest' }); }
+  function hideErr(modalEl) { qs('[data-err]', modalEl)?.classList.add('d-none'); }
+
+  /* ---------- people picker ---------- */
+  function makePicker(host, { multi = true, value = [], inputId, placeholder = 'Search people', invalidText = '' }) {
+    let sel = value.filter(Boolean), results = [], active = -1;
+    host.innerHTML = `
+      <div class="d-flex flex-wrap gap-1" data-chips></div>
+      <div class="position-relative">
+        <input type="text" class="form-control form-control-sm" id="${esc(inputId)}" placeholder="${esc(placeholder)}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false">
+        <div class="list-group position-absolute start-0 end-0 shadow-sm d-none" role="listbox" style="z-index: 1080; top: 100%; max-height: 240px; overflow-y: auto;"></div>
+        <div class="invalid-feedback">${esc(invalidText)}</div>
+      </div>`;
+    const chips = qs('[data-chips]', host), input = qs('input', host), menu = qs('[role=listbox]', host);
+    const changed = () => host.dispatchEvent(new CustomEvent('picker-change'));
+    const drawChips = () => {
+      chips.innerHTML = sel.map((id, i) => `<span class="badge rounded-pill text-bg-light border fw-normal d-inline-flex align-items-center gap-1 py-1" style="font-size: 12px;">${esc(nameOf(id))}<button type="button" class="btn-close" style="font-size: 8px;" data-rm="${i}" aria-label="Remove ${esc(nameOf(id))}"></button></span>`).join('');
+      chips.classList.toggle('mb-1', sel.length > 0);
+    };
+    const close = () => { menu.classList.add('d-none'); input.setAttribute('aria-expanded', 'false'); active = -1; };
+    const highlight = () => qsa('[data-i]', menu).forEach((b, i) => { b.classList.toggle('active', i === active); if (i === active) b.scrollIntoView({ block: 'nearest' }); });
+    const choose = i => {
+      const p = results[i];
+      if (!p) return;
+      sel = multi ? [...sel, p.id] : [p.id];
+      input.value = ''; input.classList.remove('is-invalid');
+      close(); drawChips(); changed();
+    };
+    input.addEventListener('input', () => {
+      const terms = low(input.value).split(/\s+/).filter(Boolean);
+      if (!terms.length) { close(); return; }
+      results = DEMO.PEOPLE.filter(p => !sel.includes(p.id) && terms.every(t => `${p.name} ${p.title}`.toLowerCase().split(/\s+/).some(w => w.startsWith(t)))).slice(0, 8);
+      active = results.length ? 0 : -1;
+      menu.innerHTML = results.length
+        ? results.map((p, i) => `<button type="button" class="list-group-item list-group-item-action py-1${i === 0 ? ' active' : ''}" data-i="${i}" role="option"><div class="small">${esc(p.name)}</div><div class="opacity-75" style="font-size: 11px;">${esc(p.title)}</div></button>`).join('')
+        : '<div class="list-group-item small text-secondary">No one found</div>';
+      menu.classList.remove('d-none');
+      input.setAttribute('aria-expanded', 'true');
+    });
+    input.addEventListener('keydown', e => {
+      const isOpen = !menu.classList.contains('d-none') && results.length > 0;
+      if (e.key === 'ArrowDown' && isOpen) { e.preventDefault(); active = (active + 1) % results.length; highlight(); }
+      else if (e.key === 'ArrowUp' && isOpen) { e.preventDefault(); active = (active - 1 + results.length) % results.length; highlight(); }
+      else if (e.key === 'Enter') { if (input.value.trim()) e.preventDefault(); if (isOpen && active >= 0) choose(active); }
+      else if (e.key === 'Escape' && !menu.classList.contains('d-none')) { e.preventDefault(); e.stopPropagation(); close(); }
+      else if (e.key === 'Backspace' && !input.value && sel.length) { sel.pop(); drawChips(); changed(); }
+    });
+    input.addEventListener('blur', () => setTimeout(close, 150));
+    menu.addEventListener('mousedown', e => { e.preventDefault(); const b = e.target.closest('[data-i]'); if (b) choose(Number(b.dataset.i)); });
+    chips.addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { sel.splice(Number(b.dataset.rm), 1); drawChips(); changed(); input.focus(); } });
+    drawChips();
+    return {
+      get: () => [...sel],
+      add: id => { if (!sel.includes(id)) { sel = multi ? [...sel, id] : [id]; drawChips(); changed(); } },
+      invalid: on => input.classList.toggle('is-invalid', on),
+      pending: () => input.value.trim(),
+      focus: () => input.focus(),
+    };
+  }
+
+  /* ---------- custom field inputs ---------- */
+  function customInputs(fields, values) {
+    return `<div class="row g-3">${fields.map(f => {
+      const v = values[f.id] ?? '';
+      const id = 'cf_' + esc(f.id);
+      let input;
+      if (f.type === 'choice') {
+        const opts = [...(f.options || [])];
+        if (v !== '' && !opts.includes(v)) opts.push(String(v));
+        input = `<select class="form-select form-select-sm" id="${id}" data-cf="${esc(f.id)}">${options(opts, String(v), '—')}</select>`;
+      } else {
+        const type = f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text';
+        input = `<input type="${type}"${type === 'number' ? ' step="any"' : ''} class="form-control form-control-sm" id="${id}" data-cf="${esc(f.id)}" value="${esc(v)}">`;
+      }
+      return `<div class="col-12 col-sm-6"><label class="form-label small fw-semibold mb-1" for="${id}">${esc(f.name)}</label>${input}</div>`;
+    }).join('')}</div>`;
+  }
+  function readCustom(container, base) {
+    const out = { ...base };
+    qsa('[data-cf]', container).forEach(el => {
+      const raw = el.value.trim();
+      if (raw === '') delete out[el.dataset.cf];
+      else out[el.dataset.cf] = el.type === 'number' ? Number(raw) : raw;
+    });
+    return out;
+  }
+
+  /* ---------- views ---------- */
+  function setNav(name) {
+    qsa('#nav [data-nav]').forEach(a => {
+      const on = a.dataset.nav === name;
+      a.classList.toggle('active', on);
+      if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+  function updateCounts() {
+    const counts = { mywork: myItems(false).length, overdue: overdueItems().length };
+    qsa('#nav [data-count]').forEach(b => { const n = counts[b.dataset.count]; b.textContent = n; b.classList.toggle('d-none', !n); });
+  }
+
+  // Phones (< 768px) get stacked cards; tablets and up get tables.
+  const onDesktop = html => `<div class="d-none d-md-block">${html}</div>`;
+  const onPhone = (html, extra = '') => `<div class="list-group d-md-none ${extra}">${html}</div>`;
+  const metaLine = parts => `<div class="text-secondary mt-1" style="font-size: 12px;">${parts.filter(Boolean).join(' · ')}</div>`;
+  const cardTop = (left, right) => `<div class="d-flex justify-content-between align-items-start gap-2"><div class="small" style="min-width: 0;">${left}</div><div class="flex-shrink-0">${right}</div></div>`;
+  const table = (head, rows) => `<div class="table-responsive border rounded">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr>${head.map((h, i) => `<th class="small${i === 0 ? ' ps-3' : ''}${i === head.length - 1 ? ' pe-3' : ''}">${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table></div>`;
+  function doneBar(s) {
+    if (!s.total) return '<span class="text-muted" style="font-size: 12px;">No work items</span>';
+    const pct = Math.round(s.done * 100 / s.total);
+    return `<div class="d-flex align-items-center gap-2" title="${s.done} of ${s.total} work items done">
+      <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;" role="progressbar" aria-label="Progress" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width: ${pct}%"></div></div>
+      <span class="text-secondary text-nowrap" style="font-size: 12px;">${s.done}/${s.total}</span></div>`;
+  }
+  const itemLink = i => `<a href="#item/${i.id}" class="text-decoration-none" data-open-item="${i.id}">${esc(i.title)}</a>${checkInfo(i)}`;
+  const projectLink = i => `<a href="#project/${i.projectId}" class="text-reset text-decoration-none">${esc(projectOf(i).title)}</a>`;
+  function itemCard(i, { cols = [], showProject = false } = {}) {
+    const custom = cols.map(f => { const v = showValue(f, i.custom[f.id]); return v ? `<span class="text-secondary">${esc(f.name)}:</span> ${esc(v)}` : ''; }).filter(Boolean);
+    return `<div class="list-group-item py-2" data-item="${i.id}" style="cursor: pointer;">
+      ${cardTop(itemLink(i), statusMenu(i))}
+      ${metaLine([showProject ? esc(projectOf(i).title) : peopleText(i.assignees), dueText(i), when(i.modified)])}
+      ${custom.length ? `<div class="mt-1" style="font-size: 12px;">${custom.join(' · ')}</div>` : ''}
+    </div>`;
+  }
+
+  // Home: where things stand across the company, filterable by department
+  function renderHome() {
+    setNav('home');
+    const dept = state.hf.dept, now = Date.now();
+    const inDept = p => !!p && (!dept || p.department === dept);
+    const count = (list, s) => list.filter(i => i.status === s).length;
+    const stats = projectStats();
+    const open = state.projects.filter(p => inDept(p) && isOpenProject(p));
+    const active = open.filter(p => p.status === ST.projectActive);
+    const openIds = new Set(open.map(p => p.id));
+    const items = state.items.filter(i => openIds.has(i.projectId));
+    const done = count(items, ST.itemDone), moving = count(items, ST.itemActive);
+    const late = items.filter(isOverdue);
+    const quiet = active.filter(p => now - stats.get(p.id).last >= QUIET_DAYS * DAY).sort((a, b) => stats.get(a.id).last - stats.get(b.id).last);
+    const share = p => { const s = stats.get(p.id); return s.total ? s.done / s.total : 0; };
+    const sorted = open.slice().sort((a, b) => (a.status === ST.projectActive ? 0 : 1) - (b.status === ST.projectActive ? 0 : 1)
+      || share(a) - share(b) || a.title.localeCompare(b.title));
+
+    const tile = (value, label, sub, icon, iconCls, dim) => `
+      <div class="card h-100 bg-light border${dim ? ' opacity-75' : ''}"><div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-start"><span class="fs-2 fw-semibold lh-1">${esc(value)}</span><i class="bi bi-${icon} fs-4 ${iconCls}"></i></div>
+        <p class="small text-dark mb-0 mt-2">${esc(label)}</p>
+        <p class="text-secondary mb-0" style="font-size: 12px;">${esc(sub)}</p>
+      </div></div>`;
+
+    const attention = quiet.length ? `
+      <h2 class="h5 mb-3 text-dark">Needs attention</h2>
+      <div class="list-group mb-4">
+        ${quiet.map(p => `<a href="#project/${p.id}" class="list-group-item list-group-item-action bg-light d-flex flex-wrap align-items-center gap-2">
+          <i class="bi bi-pause-circle text-warning"></i>
+          <span class="small"><span class="fw-semibold">${esc(p.title)}</span> has had no activity for ${Math.floor((now - stats.get(p.id).last) / DAY)} days</span>
+          <span class="ms-auto text-secondary" style="font-size: 12px;">Owner: ${esc(nameOf(p.owner))}</span></a>`).join('')}
+      </div>` : '';
+
+    const lateCell = n => (n ? `<span class="text-danger text-nowrap"><i class="bi bi-exclamation-circle me-1"></i>${n} overdue</span>` : '');
+    const progress = open.length ? `
+      <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+        <h2 class="h5 mb-0 text-dark me-auto">Project progress</h2>
+        ${legendKey('bg-success', 'Done')}${legendKey('bg-primary', 'In progress')}${legendKey('bg-body-secondary border', 'To do')}
+      </div>
+      ${onDesktop(`<div class="mb-4">${table(['Project', 'Status', ...(dept ? [] : ['Department']), 'Owner', 'Work items', 'Overdue', 'Last activity'], sorted.map(p => {
+        const list = state.items.filter(i => i.projectId === p.id);
+        const d = count(list, ST.itemDone), m = count(list, ST.itemActive), s = stats.get(p.id);
+        return `<tr data-href="#project/${p.id}" style="cursor: pointer;">
+          <td class="small ps-3"><a href="#project/${p.id}" class="fw-semibold text-decoration-none">${esc(p.title)}</a></td>
+          <td>${badge('project', p.status)}</td>
+          ${dept ? '' : `<td class="small">${esc(p.department)}</td>`}
+          <td class="small text-nowrap">${esc(nameOf(p.owner))}</td>
+          <td class="small" style="width: 220px;">${stackedBar(d, m, list.length - d - m)}</td>
+          <td class="small">${lateCell(s.overdue)}</td>
+          <td class="small text-secondary text-nowrap pe-3">${s.last ? when(new Date(s.last).toISOString()) : ''}</td>
+        </tr>`;
+      }))}</div>`)}
+      ${onPhone(sorted.map(p => {
+        const list = state.items.filter(i => i.projectId === p.id);
+        const d = count(list, ST.itemDone), m = count(list, ST.itemActive), s = stats.get(p.id);
+        return `<a href="#project/${p.id}" class="list-group-item list-group-item-action py-2">
+          ${cardTop(`<span class="fw-semibold text-primary">${esc(p.title)}</span>`, badge('project', p.status))}
+          ${metaLine([dept ? '' : esc(p.department), esc(nameOf(p.owner)), lateCell(s.overdue), s.last ? esc(ago(new Date(s.last).toISOString())) : ''])}
+          <div class="mt-2">${stackedBar(d, m, list.length - d - m)}</div>
+        </a>`;
+      }).join(''), 'mb-4')}` : empty('kanban', dept ? `No active projects in ${dept}` : 'No active projects', '', '<a href="#projects" class="btn btn-outline-secondary btn-sm">See all projects</a>');
+
+    const byDept = new Map();
+    open.forEach(p => {
+      const key = p.department || '';
+      if (!byDept.has(key)) byDept.set(key, { active: 0, hold: 0, items: [] });
+      const r = byDept.get(key);
+      if (p.status === ST.projectActive) r.active++; else r.hold++;
+      r.items.push(...state.items.filter(i => i.projectId === p.id));
+    });
+    const order = CHOICES.department;
+    const rank = name => { const i = order.indexOf(name); return i < 0 ? order.length : i; };
+    const deptRows = [...byDept.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
+    const departments = !dept && byDept.size > 1 ? `
+      <h2 class="h5 mb-2 text-dark">By department</h2>
+      ${onPhone(deptRows.map(([name, r]) => {
+        const d = count(r.items, ST.itemDone), m = count(r.items, ST.itemActive);
+        return `<button type="button" class="list-group-item list-group-item-action py-2" data-act="home-dept" data-value="${esc(name)}">
+          <div class="d-flex justify-content-between align-items-baseline gap-2"><span class="small fw-semibold">${esc(name || 'No department')}</span>
+          <span class="text-secondary" style="font-size: 12px;">${[`${r.active} active`, r.hold ? `${r.hold} on hold` : '', `${r.items.length - d} open`].filter(Boolean).join(' · ')}</span></div>
+          <div class="mt-2">${stackedBar(d, m, r.items.length - d - m)}</div>
+        </button>`;
+      }).join(''))}
+      ${onDesktop(table(['Department', 'Active projects', 'On hold', 'Open work items', 'Work items'], deptRows.map(([name, r]) => {
+        const d = count(r.items, ST.itemDone), m = count(r.items, ST.itemActive);
+        return `<tr data-dept="${esc(name)}" style="cursor: pointer;" title="Show only ${esc(name || 'projects without a department')}">
+          <td class="small ps-3">${name ? `<button type="button" class="btn btn-link btn-sm p-0 border-0 align-baseline text-decoration-none" data-act="home-dept" data-value="${esc(name)}">${esc(name)}</button>` : '<span class="text-secondary">No department</span>'}</td>
+          <td class="small">${r.active}</td><td class="small">${r.hold || ''}</td><td class="small">${r.items.length - d}</td>
+          <td class="small pe-3" style="width: 220px;">${stackedBar(d, m, r.items.length - d - m)}</td>
+        </tr>`;
+      })))}` : '';
+
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <select class="form-select form-select-sm w-auto" id="hDept" aria-label="Department">${options(CHOICES.department, dept, 'All departments')}</select>
+        <span class="small text-secondary">Active and on-hold projects${dept ? ' in ' + esc(dept) : ''}</span>
+      </div>
+      <div class="d-grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+        ${tile(active.length, 'Active projects', open.length > active.length ? `${open.length - active.length} on hold` : 'None on hold', 'kanban', 'text-primary', !active.length)}
+        ${tile(items.length - done, 'Open work items', `${moving} in progress`, 'list-task', 'text-primary', items.length === done)}
+        ${tile(items.length ? Math.round(done * 100 / items.length) + '%' : '—', 'Work done', items.length ? `${done} of ${plural(items.length, 'work item')}` : 'No work items yet', 'check2-circle', 'text-success', !done)}
+        ${tile(late.length, 'Overdue', late.length ? `In ${plural(new Set(late.map(i => i.projectId)).size, 'project')}` : 'Everything is on time', 'exclamation-circle', 'text-danger', !late.length)}
+      </div>
+      ${attention}${progress}${departments}`;
+    qs('#hDept').addEventListener('change', e => { state.hf.dept = e.target.value; renderHome(); });
+  }
+
+  // Projects
+  function renderProjects() {
+    setNav('projects');
+    const f = state.pf;
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="input-group input-group-sm flex-grow-1 flex-md-grow-0" style="width: 260px;">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-secondary"></i></span>
+          <input type="search" class="form-control" id="pfQ" placeholder="Search projects" aria-label="Search projects" value="${esc(f.q)}">
+        </div>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="pfScope" aria-label="Whose projects">
+          <option value="all"${f.scope === 'all' ? ' selected' : ''}>All projects</option>
+          <option value="mine"${f.scope === 'mine' ? ' selected' : ''}>My projects</option>
+        </select>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="pfStatus" aria-label="Status">${options(CHOICES.projectStatus, f.status, 'All statuses')}</select>
+        <select class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" id="pfDept" aria-label="Department">${options(CHOICES.department, f.dept, 'All departments')}</select>
+      </div>
+      <div id="projectList"></div>`;
+    const sync = () => {
+      Object.assign(f, { q: qs('#pfQ').value, scope: qs('#pfScope').value, status: qs('#pfStatus').value, dept: qs('#pfDept').value });
+      renderProjectList();
+    };
+    qs('#pfQ').addEventListener('input', sync);
+    qsa('#pfScope, #pfStatus, #pfDept').forEach(el => el.addEventListener('change', sync));
+    renderProjectList();
+  }
+
+  function renderProjectList() {
+    const box = qs('#projectList');
+    if (!box) return;
+    const f = state.pf, q = low(f.q), stats = projectStats(), order = CHOICES.projectStatus;
+    const rank = s => { const i = order.indexOf(s); return i < 0 ? order.length : i; };
+    const mine = p => isMe(p.owner) || state.items.some(i => i.projectId === p.id && i.assignees.includes(me));
+    const list = state.projects.filter(p =>
+      (!q || [p.title, p.description, nameOf(p.owner), p.department].some(v => low(v).includes(q))) &&
+      (!f.status || p.status === f.status) &&
+      (!f.dept || p.department === f.dept) &&
+      (f.scope !== 'mine' || mine(p)))
+      .sort((a, b) => rank(a.status) - rank(b.status) || stats.get(b.id).last - stats.get(a.id).last);
+    const filtered = !!(f.q || f.status || f.dept || f.scope === 'mine');
+
+    if (!state.projects.length) {
+      box.innerHTML = empty('kanban', 'No projects yet', 'Create the first project to start tracking work.', '<button type="button" class="btn btn-primary btn-sm" data-act="new-project"><i class="bi bi-plus-lg me-1"></i>New project</button>');
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = empty('search', 'No projects match these filters', '', '<button type="button" class="btn btn-outline-secondary btn-sm" data-act="clear-project-filters">Clear filters</button>');
+      return;
+    }
+    box.innerHTML = `
+      <div class="small text-secondary mb-2">${filtered ? `${list.length} of ${plural(state.projects.length, 'project')}` : plural(list.length, 'project')}${f.scope === 'mine' ? ' · ones you own or have work in' : ''}</div>
+      ${onDesktop(table(['Project', 'Status', 'Department', 'Owner', 'Progress', 'Last activity'], list.map(p => {
+        const s = stats.get(p.id);
+        return `<tr data-href="#project/${p.id}" style="cursor: pointer;">
+          <td class="small ps-3"><a href="#project/${p.id}" class="fw-semibold text-decoration-none">${esc(p.title)}</a></td>
+          <td>${badge('project', p.status)}</td>
+          <td class="small">${esc(p.department)}</td>
+          <td class="small text-nowrap">${esc(nameOf(p.owner))}</td>
+          <td class="small" style="width: 170px;">${doneBar(s)}</td>
+          <td class="small text-secondary text-nowrap pe-3">${s.last ? when(new Date(s.last).toISOString()) : ''}</td>
+        </tr>`;
+      })))}
+      ${onPhone(list.map(p => {
+        const s = stats.get(p.id);
+        return `<a href="#project/${p.id}" class="list-group-item list-group-item-action py-2">
+          ${cardTop(`<span class="fw-semibold text-primary">${esc(p.title)}</span>`, badge('project', p.status))}
+          ${metaLine([esc(p.department), esc(nameOf(p.owner)), s.last ? esc(ago(new Date(s.last).toISOString())) : ''])}
+          <div class="mt-2">${doneBar(s)}</div>
+        </a>`;
+      }).join(''))}`;
+  }
+
+  // One project
+  function renderProject(id) {
+    setNav('projects');
+    const p = byId(state.projects, id);
+    if (!p) {
+      view.innerHTML = empty('folder-x', 'Project not found', 'It may have been deleted.', '<a href="#projects" class="btn btn-outline-secondary btn-sm">Back to projects</a>');
+      return;
+    }
+    if (state.wf.pid !== id) state.wf = { pid: id, status: '', q: '', who: '' };
+    const s = projectStats().get(id);
+    const pct = s.total ? Math.round(s.done * 100 / s.total) : 0;
+    const created = p.created ? `<span title="${esc(fmtStamp(new Date(p.created)))}">${esc(fmtDate(new Date(p.created)))}</span>` : '';
+    const meta = [
+      ['Owner', esc(nameOf(p.owner))],
+      ['Department', esc(p.department)],
+      ['Created', created],
+      ...fieldsFor(p, 'project').map(f => [esc(f.name), esc(showValue(f, p.custom[f.id]))]),
+    ];
+    const projItems = state.items.filter(i => i.projectId === id);
+    const tabs = [['', 'All', projItems.length], ...CHOICES.itemStatus.map(v => [v, v, projItems.filter(i => i.status === v).length])];
+    const people = [...new Set(projItems.flatMap(i => i.assignees))].filter(a => !isMe(a)).sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
+
+    view.innerHTML = `
+      <a href="#projects" class="small text-decoration-none d-inline-block mb-2"><i class="bi bi-arrow-left me-1"></i>All projects</a>
+      <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <h2 class="h4 mb-0 text-dark">${esc(p.title)}</h2>${badge('project', p.status)}
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-act="fields" title="Add or change this project's custom fields"><i class="bi bi-sliders me-1"></i>Fields</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-act="edit-project"><i class="bi bi-pencil me-1"></i>Edit</button>
+        </div>
+      </div>
+      ${p.description ? `<p class="text-secondary small mb-3" style="white-space: pre-line;">${esc(p.description)}</p>` : '<div class="mb-3"></div>'}
+      <div class="card bg-light border mb-4"><div class="card-body p-3">
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+          ${meta.map(([label, value]) => `<div class="col"><div class="text-secondary" style="font-size: 12px;">${label}</div><div class="small">${value || '<span class="text-muted">—</span>'}</div></div>`).join('')}
+        </div>
+        <div class="d-flex align-items-center gap-3 border-top pt-3 mt-3">
+          <span class="text-secondary text-nowrap" style="font-size: 12px;">Progress</span>
+          ${s.total
+            ? `<div class="progress flex-grow-1" style="height: 6px;" role="progressbar" aria-label="Progress" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-success" style="width: ${pct}%"></div></div>
+               <span class="small text-nowrap">${s.done} of ${s.total} done${s.overdue ? ` · <span class="text-danger">${s.overdue} overdue</span>` : ''}</span>`
+            : '<span class="small text-muted">No work items yet</span>'}
+        </div>
+      </div></div>
+
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <h3 class="h5 mb-0 text-dark me-auto">Work items</h3>
+        <button type="button" class="btn btn-primary btn-sm" data-act="new-item"><i class="bi bi-plus-lg me-1"></i>New work item</button>
+      </div>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="overflow-x-auto" style="max-width: 100%;">
+          <div class="btn-group btn-group-sm text-nowrap" role="group" aria-label="Filter by status" id="wfStatus">
+            ${tabs.map(([v, label, n]) => `<button type="button" class="btn btn-outline-secondary${state.wf.status === v ? ' active' : ''}" data-act="wf-status" data-value="${esc(v)}" aria-pressed="${state.wf.status === v}">${esc(label)} <span class="opacity-75">${n}</span></button>`).join('')}
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-grow-1 flex-md-grow-0 ms-md-auto" style="min-width: 0;">
+          <input type="search" class="form-control form-control-sm flex-grow-1" style="width: 190px; min-width: 0;" id="wfQ" placeholder="Search work items" aria-label="Search work items" value="${esc(state.wf.q)}">
+          <select class="form-select form-select-sm w-auto" id="wfWho" aria-label="Assignee">
+            <option value="">Anyone</option><option value="me">Assigned to me</option><option value="none">Unassigned</option>
+            ${people.map(id => `<option value="${esc(id)}">${esc(nameOf(id))}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div id="itemList"></div>`;
+
+    const whoSel = qs('#wfWho');
+    whoSel.value = state.wf.who;
+    if (whoSel.value !== state.wf.who) { state.wf.who = ''; whoSel.value = ''; }
+    qs('#wfQ').addEventListener('input', e => { state.wf.q = e.target.value; renderItemList(p); });
+    whoSel.addEventListener('change', e => { state.wf.who = e.target.value; renderItemList(p); });
+    renderItemList(p);
+  }
+
+  function statusMenu(it) {
+    const look = statusLook('item', it.status);
+    const cls = look.cls.includes('border') ? look.cls : look.cls + ' border-0';
+    return `<div class="dropdown">
+      <button type="button" class="badge fw-normal dropdown-toggle ${cls}" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" title="Change status">${statusInner(look)}${esc(it.status || 'No status')}</button>
+      <ul class="dropdown-menu shadow-sm" style="font-size: 13px; min-width: 9rem;">
+        ${CHOICES.itemStatus.map(v => `<li><button type="button" class="dropdown-item${v === it.status ? ' active' : ''}" data-set-status="${esc(v)}" data-id="${it.id}">${esc(v)}</button></li>`).join('')}
+      </ul>
+    </div>`;
+  }
+
+  function renderItemList(p) {
+    const box = qs('#itemList');
+    if (!box) return;
+    const wf = state.wf, q = low(wf.q), cols = fieldsFor(p, 'workItem');
+    const all = state.items.filter(i => i.projectId === p.id);
+    const list = all.filter(i =>
+      (!wf.status || i.status === wf.status) &&
+      (!q || [i.title, i.description, ...i.checklist.map(c => c.text), ...cols.map(f => showValue(f, i.custom[f.id]))].some(v => low(v).includes(q))) &&
+      (!wf.who || (wf.who === 'me' ? i.assignees.includes(me) : wf.who === 'none' ? !i.assignees.length : i.assignees.includes(wf.who))))
+      .sort((a, b) => itemOrder(a) - itemOrder(b) || time(b.modified) - time(a.modified));
+
+    if (!all.length) {
+      box.innerHTML = empty('list-check', 'No work items yet', 'Break the project into work items and assign them to people.', '<button type="button" class="btn btn-primary btn-sm" data-act="new-item"><i class="bi bi-plus-lg me-1"></i>New work item</button>');
+      return;
+    }
+    if (!list.length) {
+      box.innerHTML = empty('search', 'No work items match these filters', '', '<button type="button" class="btn btn-outline-secondary btn-sm" data-act="clear-item-filters">Clear filters</button>');
+      return;
+    }
+    const showDue = all.some(i => i.due);
+    box.innerHTML = onDesktop(table(['Title', 'Status', 'Assignees', ...cols.map(f => esc(f.name)), ...(showDue ? ['Due'] : []), 'Updated'], list.map(i => `
+      <tr data-item="${i.id}" style="cursor: pointer;">
+        <td class="small ps-3">${itemLink(i)}</td>
+        <td>${statusMenu(i)}</td>
+        <td class="small">${peopleText(i.assignees)}</td>
+        ${cols.map(f => `<td class="small">${esc(showValue(f, i.custom[f.id]))}</td>`).join('')}
+        ${showDue ? `<td class="small">${dueText(i)}</td>` : ''}
+        <td class="small text-secondary text-nowrap pe-3">${when(i.modified)}</td>
+      </tr>`))) + onPhone(list.map(i => itemCard(i, { cols })).join(''));
+  }
+
+  // Overdue: every late work item, across projects
+  function renderOverdue() {
+    setNav('overdue');
+    const list = overdueItems();
+    view.innerHTML = list.length ? `
+      <p class="small text-secondary mb-3">Work items past their due date in active and on-hold projects, most overdue first.</p>
+      ${onDesktop(table(['Work item', 'Project', 'Assignees', 'Due', 'Status'], list.map(i => `
+        <tr data-item="${i.id}" style="cursor: pointer;">
+          <td class="small ps-3">${itemLink(i)}</td>
+          <td class="small">${projectLink(i)}</td>
+          <td class="small">${peopleText(i.assignees)}</td>
+          <td class="small">${dueText(i)}</td>
+          <td class="pe-3">${statusMenu(i)}</td>
+        </tr>`)))}
+      ${onPhone(list.map(i => itemCard(i, { showProject: true })).join(''))}`
+      : empty('check2-circle', 'Nothing is overdue', 'Every open work item is on time.');
+  }
+
+  // My work
+  function renderMyWork() {
+    setNav('mywork');
+    const all = myItems(true);
+    const open = all.filter(i => i.status !== ST.itemDone);
+    const doneCount = all.length - open.length;
+    const list = (state.showDone ? all : open).slice().sort((a, b) => itemOrder(a) - itemOrder(b) || time(b.modified) - time(a.modified));
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <p class="small text-secondary mb-0">Work items assigned to you, across all projects.</p>
+        <div class="form-check form-switch ms-auto mb-0 small">
+          <input class="form-check-input" type="checkbox" role="switch" id="showDone"${state.showDone ? ' checked' : ''}>
+          <label class="form-check-label" for="showDone">Show done${doneCount ? ` (${doneCount})` : ''}</label>
+        </div>
+      </div>
+      ${list.length ? onDesktop(table(['Work item', 'Project', 'Status', 'Due', 'Updated'], list.map(i => `
+        <tr data-item="${i.id}" style="cursor: pointer;">
+          <td class="small ps-3">${itemLink(i)}</td>
+          <td class="small">${projectLink(i)}</td>
+          <td>${statusMenu(i)}</td>
+          <td class="small">${dueText(i)}</td>
+          <td class="small text-secondary text-nowrap pe-3">${when(i.modified)}</td>
+        </tr>`))) + onPhone(list.map(i => itemCard(i, { showProject: true })).join(''))
+        : empty('check2-circle', all.length ? 'Nothing open is assigned to you' : 'Nothing is assigned to you', doneCount && !state.showDone ? `${plural(doneCount, 'done item')} hidden.` : '')}`;
+    qs('#showDone').addEventListener('change', e => { state.showDone = e.target.checked; renderMyWork(); });
+  }
+
+  /* ---------- routing ---------- */
+  function parseHash(h = location.hash) {
+    const [name, arg] = String(h || '').replace(/^#\/?/, '').split('/');
+    return { name: name || 'home', id: /^\d+$/.test(arg || '') ? Number(arg) : null };
+  }
+  function renderView(hash) {
+    const r = parseHash(hash);
+    if (r.name === 'project' && r.id) renderProject(r.id);
+    else if (r.name === 'projects') renderProjects();
+    else if (r.name === 'overdue') renderOverdue();
+    else if (r.name === 'mywork') renderMyWork();
+    else renderHome();
+    updateCounts();
+  }
+  // Re-render the current page in place (keeps scroll position and filters).
+  function refresh() { renderView(parseHash().name === 'item' ? state.backHash : location.hash); }
+  function onHashChange() {
+    qs('#alertBox').innerHTML = '';
+    const r = parseHash();
+    qsa('.modal.show').forEach(m => { if (!(r.name === 'item' && m.id === 'itemModal')) bootstrap.Modal.getInstance(m)?.hide(); });
+    if (r.name === 'item') {
+      const it = r.id ? byId(state.items, r.id) : null;
+      if (!it || !projectOf(it)) {
+        history.replaceState(null, '', '#projects');
+        renderView('#projects');
+        showAlert("That work item doesn't exist anymore.");
+        return;
+      }
+      state.backHash = '#project/' + it.projectId;
+      renderView(state.backHash);
+      window.scrollTo(0, 0);
+      openItem(it);
+      return;
+    }
+    renderView(location.hash);
+    window.scrollTo(0, 0);
+  }
+  const currentProject = () => {
+    const r = parseHash(parseHash().name === 'item' ? state.backHash : location.hash);
+    return r.name === 'project' ? byId(state.projects, r.id) : null;
+  };
+
+  view.addEventListener('click', e => {
+    const t = e.target;
+    const act = t.closest('[data-act]');
+    if (act) {
+      const p = currentProject();
+      switch (act.dataset.act) {
+        case 'home-dept': state.hf.dept = act.dataset.value; renderHome(); window.scrollTo(0, 0); break;
+        case 'new-project': openProject(null); break;
+        case 'edit-project': if (p) openProject(p); break;
+        case 'fields': if (p) openFields(p); break;
+        case 'new-item': if (p) openItem(null, p); break;
+        case 'clear-project-filters': state.pf = { q: '', scope: 'all', status: '', dept: '' }; renderProjects(); break;
+        case 'clear-item-filters': if (p) { Object.assign(state.wf, { status: '', q: '', who: '' }); renderProject(p.id); } break;
+        case 'wf-status':
+          if (!p) break;
+          state.wf.status = act.dataset.value;
+          qsa('#wfStatus [data-act]').forEach(b => { const on = b.dataset.value === state.wf.status; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+          renderItemList(p);
+          break;
+      }
+      return;
+    }
+    const set = t.closest('[data-set-status]');
+    if (set) { setItemStatus(Number(set.dataset.id), set.dataset.setStatus); return; }
+    const openLink = t.closest('[data-open-item]');
+    if (openLink) { e.preventDefault(); const it = byId(state.items, Number(openLink.dataset.openItem)); if (it) openItem(it); return; }
+    if (t.closest('a, button, input, select, textarea, label, .dropdown')) return;
+    const deptRow = t.closest('tr[data-dept]');
+    if (deptRow) { state.hf.dept = deptRow.dataset.dept; renderHome(); window.scrollTo(0, 0); return; }
+    const row = t.closest('[data-href]');
+    if (row) { location.hash = row.dataset.href; return; }
+    const itemRow = t.closest('[data-item]');
+    if (itemRow) { const it = byId(state.items, Number(itemRow.dataset.item)); if (it) openItem(it); }
+  });
+
+  // Quick status change from a list
+  function setItemStatus(id, status) {
+    const it = byId(state.items, id);
+    if (!it || it.status === status) return;
+    saveRecord('items', { id, status });
+    refresh();
+    toast(`Moved to ${status}`);
+  }
+
+  /* ---------- project form ---------- */
+  let projectCtx = null;
+  const projectSnapshot = () => JSON.stringify([qs('#pmName').value, qs('#pmDesc').value, qs('#pmStatus').value, qs('#pmDept').value,
+    projectCtx.owner.get(), projectCtx.owner.pending(), qsa('[data-cf]', qs('#pmCustom')).map(el => el.value)]);
+
+  function openProject(p) {
+    projectCtx = { project: p, saved: false };
+    qs('#pmHeading').textContent = p ? 'Edit project' : 'New project';
+    qs('#pmName').value = p?.title || '';
+    qs('#pmName').classList.remove('is-invalid');
+    qs('#pmDesc').value = p?.description || '';
+    qs('#pmStatus').innerHTML = options(CHOICES.projectStatus, p ? p.status : ST.projectActive);
+    qs('#pmDept').innerHTML = options(CHOICES.department, p ? p.department : '', '—');
+    projectCtx.owner = makePicker(qs('#pmOwner'), { multi: false, value: [p ? p.owner : me], inputId: 'pmOwnerInput', invalidText: 'Choose an owner.' });
+    const fields = p ? fieldsFor(p, 'project') : [];
+    qs('#pmCustom').innerHTML = fields.length ? `<div class="border-top pt-3 mt-3">${customInputs(fields, p.custom)}</div>` : '';
+    qs('#pmDelete').classList.toggle('d-none', !p);
+    qs('#pmSave').textContent = p ? 'Save' : 'Create project';
+    hideErr(qs('#projectModal'));
+    projectCtx.snapshot = projectSnapshot();
+    modal('#projectModal').show();
+  }
+
+  function saveProject(e) {
+    e.preventDefault();
+    const p = projectCtx.project;
+    const title = qs('#pmName').value.trim();
+    const owner = projectCtx.owner.get()[0] || null;
+    qs('#pmName').classList.toggle('is-invalid', !title);
+    projectCtx.owner.invalid(!owner);
+    if (!title) { qs('#pmName').focus(); return; }
+    if (!owner) { projectCtx.owner.focus(); return; }
+    const saved = saveRecord('projects', {
+      ...(p || { schema: [], custom: {} }),
+      title, owner,
+      description: qs('#pmDesc').value.trim(),
+      status: qs('#pmStatus').value, department: qs('#pmDept').value,
+      custom: p ? readCustom(qs('#pmCustom'), p.custom) : {},
+    });
+    projectCtx.saved = true;
+    modal('#projectModal').hide();
+    toast(p ? 'Project saved' : 'Project created');
+    if (p) refresh(); else location.hash = '#project/' + saved.id;
+  }
+
+  function deleteProject() {
+    const p = projectCtx.project;
+    const count = state.items.filter(i => i.projectId === p.id).length;
+    if (!confirm(`Delete "${p.title}"${count ? ` and its ${plural(count, 'work item')}` : ''}?`)) return;
+    state.items = state.items.filter(i => i.projectId !== p.id);
+    state.projects = state.projects.filter(x => x.id !== p.id);
+    save();
+    projectCtx.saved = true;
+    modal('#projectModal').hide();
+    toast('Project deleted');
+    location.hash = '#projects';
+  }
+
+  /* ---------- work item form ---------- */
+  let itemCtx = null;
+  const itemSnapshot = () => JSON.stringify([qs('#imName').value, qs('#imStatus').value, qs('#imDue').value, qs('#imDesc').value, itemCtx.who.get(), itemCtx.who.pending(),
+    itemCtx.checklist, qs('#imCheckNew').value.trim(), qsa('[data-cf]', qs('#imCustom')).map(el => el.value)]);
+
+  function openItem(it, project = it ? projectOf(it) : null) {
+    if (!project) return;
+    itemCtx = { item: it, project, saved: false, checklist: (it?.checklist || []).map(c => ({ ...c })) };
+    if (it && parseHash().name !== 'item') {
+      state.backHash = location.hash || '#home';
+      history.replaceState(null, '', '#item/' + it.id);   // shareable link while the item is open
+    }
+    qs('#imHeading').textContent = it ? 'Edit work item' : 'New work item';
+    qs('#imProject').innerHTML = `in <a href="#project/${project.id}" class="text-decoration-none" data-act="go-project">${esc(project.title)}</a>`;
+    qs('#imName').value = it?.title || '';
+    qs('#imName').classList.remove('is-invalid');
+    qs('#imStatus').innerHTML = options(CHOICES.itemStatus, it ? it.status : CHOICES.itemStatus[0]);
+    qs('#imDue').value = it?.due || '';
+    itemCtx.who = makePicker(qs('#imWho'), { multi: true, value: it?.assignees || [], inputId: 'imWhoInput' });
+    qs('#imDesc').value = it?.description || '';
+    qs('#imCheckNew').value = '';
+    drawChecklist();
+    const cols = fieldsFor(project, 'workItem');
+    qs('#imCustom').innerHTML = cols.length ? `<div class="mb-3">${customInputs(cols, it?.custom || {})}</div>` : '';
+    qs('#imMeta').innerHTML = it ? `Created by ${who(it.createdBy)} · ${when(it.created)}&nbsp;&nbsp;·&nbsp;&nbsp;Updated by ${who(it.modifiedBy)} · ${when(it.modified)}` : '';
+    qs('#imMeta').classList.toggle('d-none', !it);
+    qs('#imDelete').classList.toggle('d-none', !it);
+    // Approvals happen in the Approvals app; this opens its form with the work item filled in.
+    const canAsk = it && isOpenProject(project);
+    qs('#imApproval').classList.toggle('d-none', !canAsk);
+    qs('#imApproval').href = canAsk ? `approvals.html#new/workitem?project=${encodeURIComponent(project.title)}&item=${encodeURIComponent(it.title)}` : '#';
+    qs('#imSave').textContent = it ? 'Save' : 'Create work item';
+    updateAssignMe();
+    itemCtx.snapshot = itemSnapshot();
+    modal('#itemModal').show();
+  }
+  const updateAssignMe = () => { if (itemCtx) qs('#imAssignMe').classList.toggle('d-none', itemCtx.who.get().includes(me)); };
+  qs('#imWho').addEventListener('picker-change', updateAssignMe);
+
+  function drawChecklist() {
+    const list = itemCtx.checklist;
+    qs('#imChecklist').innerHTML = list.length ? `<div class="list-group">${list.map((c, i) => `
+      <div class="list-group-item bg-light d-flex align-items-center gap-2 py-1">
+        <input class="form-check-input mt-0 flex-shrink-0" type="checkbox" data-check="${i}"${c.done ? ' checked' : ''} aria-label="Done">
+        <input type="text" class="form-control form-control-sm border-0 bg-transparent px-1${c.done ? ' text-decoration-line-through text-secondary' : ''}" data-check-text="${i}" value="${esc(c.text)}" maxlength="255" aria-label="Checklist item">
+        <button type="button" class="btn btn-link btn-sm text-secondary p-0" data-act="check-remove" data-i="${i}" aria-label="Remove item"><i class="bi bi-x-lg"></i></button>
+      </div>`).join('')}</div>` : '';
+    countChecklist();
+  }
+  function countChecklist() {
+    const list = itemCtx.checklist;
+    qs('#imCheckCount').textContent = list.length ? `${list.filter(c => c.done).length} of ${list.length} done` : '';
+  }
+  function addCheckItem() {
+    const input = qs('#imCheckNew');
+    const text = input.value.trim();
+    if (!text) return;
+    itemCtx.checklist.push({ text, done: false });
+    input.value = '';
+    drawChecklist();
+    input.focus();
+  }
+  qs('#imChecklist').addEventListener('input', e => {
+    const box = e.target.closest('[data-check]'), txt = e.target.closest('[data-check-text]');
+    if (box) {
+      itemCtx.checklist[Number(box.dataset.check)].done = box.checked;
+      const field = qs(`[data-check-text="${box.dataset.check}"]`);
+      field.classList.toggle('text-decoration-line-through', box.checked);
+      field.classList.toggle('text-secondary', box.checked);
+      countChecklist();
+    } else if (txt) {
+      itemCtx.checklist[Number(txt.dataset.checkText)].text = txt.value;
+    }
+  });
+  qs('#imChecklist').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-check-text]')) { e.preventDefault(); qs('#imCheckNew').focus(); } });
+  qs('#imCheckNew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCheckItem(); } });
+
+  function saveItem(e) {
+    e.preventDefault();
+    const { item, project } = itemCtx;
+    const title = qs('#imName').value.trim();
+    qs('#imName').classList.toggle('is-invalid', !title);
+    if (!title) { qs('#imName').focus(); return; }
+    addCheckItem();   // keep an item typed into "Add an item" but not added yet
+    saveRecord('items', {
+      ...(item || { projectId: project.id }),
+      title,
+      status: qs('#imStatus').value,
+      due: qs('#imDue').value,
+      assignees: itemCtx.who.get(),
+      description: qs('#imDesc').value.trim(),
+      checklist: itemCtx.checklist.map(c => ({ text: c.text.trim(), done: c.done })).filter(c => c.text),
+      custom: readCustom(qs('#imCustom'), item?.custom || {}),
+    });
+    itemCtx.saved = true;
+    modal('#itemModal').hide();
+    toast(item ? 'Work item saved' : 'Work item created');
+    refresh();
+  }
+
+  function deleteItem() {
+    const it = itemCtx.item;
+    if (!confirm(`Delete "${it.title}"?`)) return;
+    state.items = state.items.filter(x => x.id !== it.id);
+    save();
+    itemCtx.saved = true;
+    modal('#itemModal').hide();
+    toast('Work item deleted');
+    refresh();
+  }
+
+  qs('#itemModal').addEventListener('click', e => {
+    const act = e.target.closest('[data-act]');
+    if (!act || !itemCtx) return;
+    const dirty = () => !itemCtx.saved && itemSnapshot() !== itemCtx.snapshot;
+    switch (act.dataset.act) {
+      case 'go-project': {
+        e.preventDefault();
+        if (dirty() && !confirm('Discard your unsaved changes?')) break;
+        itemCtx.saved = true;
+        const target = '#project/' + itemCtx.project.id;
+        if (parseHash().name === 'item') history.replaceState(null, '', state.backHash);
+        modal('#itemModal').hide();
+        if (location.hash !== target) location.hash = target;
+        break;
+      }
+      case 'ask-approval': if (dirty() && !confirm('Discard your unsaved changes?')) e.preventDefault(); break;
+      case 'assign-me': itemCtx.who.add(me); break;
+      case 'check-add': addCheckItem(); break;
+      case 'check-remove': itemCtx.checklist.splice(Number(act.dataset.i), 1); drawChecklist(); break;
+      case 'delete-item': deleteItem(); break;
+    }
+  });
+
+  /* ---------- custom fields ---------- */
+  let fieldsCtx = null;
+  const fieldsSnapshot = () => JSON.stringify(fieldsCtx.schema);
+
+  function openFields(p) {
+    const schema = JSON.parse(JSON.stringify((p.schema || []).filter(f => f && f.id)));
+    fieldsCtx = { project: p, schema, savedIds: new Set(schema.map(f => f.id)), saved: false };
+    fieldsCtx.snapshot = fieldsSnapshot();
+    qs('#fmProject').textContent = p.title;
+    qs('#fmName').value = '';
+    qs('#fmType').value = 'text';
+    qs('#fmTarget').value = 'workItem';
+    qs('#fmOpts').value = '';
+    qs('#fmOptsWrap').classList.add('d-none');
+    hideErr(qs('#fieldsModal'));
+    drawFields();
+    modal('#fieldsModal').show();
+  }
+
+  function drawFields() {
+    const active = fieldsCtx.schema.filter(f => !f.archived);
+    const removed = fieldsCtx.schema.filter(f => f.archived);
+    qs('#fmList').innerHTML = (active.length ? `<div class="list-group">${active.map(f => `
+      <div class="list-group-item bg-light">
+        <div class="row g-2 align-items-center">
+          <div class="col-12 col-md-4"><input type="text" class="form-control form-control-sm" data-fname="${esc(f.id)}" value="${esc(f.name)}" maxlength="60" aria-label="Field name"></div>
+          <div class="col-12 col-md-3 small text-secondary">${FIELD_TYPES[f.type] || 'Text'} · ${TARGETS[f.target] || TARGETS.workItem}</div>
+          <div class="col-10 col-md-4">${f.type === 'choice' ? `<input type="text" class="form-control form-control-sm" data-fopts="${esc(f.id)}" value="${esc((f.options || []).join(', '))}" placeholder="Options, comma-separated" aria-label="Options for ${esc(f.name)}">` : ''}</div>
+          <div class="col-2 col-md-1 text-end"><button type="button" class="btn btn-sm btn-outline-secondary" data-act="field-remove" data-id="${esc(f.id)}" title="Remove field" aria-label="Remove ${esc(f.name)}"><i class="bi bi-trash"></i></button></div>
+        </div>
+      </div>`).join('')}</div>` : '<p class="small text-secondary mb-0">No custom fields yet.</p>') +
+      (removed.length ? `<div class="small text-secondary mt-3">Removed: ${removed.map(f => `${esc(f.name)} <button type="button" class="btn btn-link btn-sm p-0 align-baseline text-decoration-none" data-act="field-restore" data-id="${esc(f.id)}">Restore</button>`).join(', ')}
+        <div style="font-size: 12px;">Removed fields keep their values, so restoring one brings everything back.</div></div>` : '');
+  }
+
+  function syncFieldInputs() {
+    qsa('[data-fname]').forEach(el => { const f = fieldsCtx.schema.find(x => x.id === el.dataset.fname); if (f) f.name = el.value.trim(); });
+    qsa('[data-fopts]').forEach(el => { const f = fieldsCtx.schema.find(x => x.id === el.dataset.fopts); if (f) f.options = splitOptions(el.value); });
+  }
+  const nameTaken = (name, exceptId) => fieldsCtx.schema.some(f => !f.archived && f.id !== exceptId && low(f.name) === low(name));
+
+  function addField() {
+    syncFieldInputs();
+    const name = qs('#fmName').value.trim(), type = qs('#fmType').value, target = qs('#fmTarget').value;
+    const opts = splitOptions(qs('#fmOpts').value);
+    const problem = !name ? 'Give the new field a name.'
+      : nameTaken(name) ? `There's already a field named "${name}".`
+      : type === 'choice' && !opts.length ? 'Add at least one option, separated by commas.' : '';
+    if (problem) { showErr(qs('#fieldsModal'), problem); return; }
+    hideErr(qs('#fieldsModal'));
+    fieldsCtx.schema.push({ id: newFieldId(new Set(fieldsCtx.schema.map(f => f.id))), name, type, target, ...(type === 'choice' ? { options: opts } : {}) });
+    qs('#fmName').value = '';
+    qs('#fmOpts').value = '';
+    drawFields();
+    qs('#fmName').focus();
+  }
+
+  function saveFields(e) {
+    e.preventDefault();
+    syncFieldInputs();
+    let problem = '';
+    const seen = new Set();
+    for (const f of fieldsCtx.schema.filter(x => !x.archived)) {
+      if (!f.name) { problem = 'Every field needs a name.'; break; }
+      if (seen.has(low(f.name))) { problem = `Two fields are named "${f.name}". Rename one of them.`; break; }
+      seen.add(low(f.name));
+      if (f.type === 'choice' && !(f.options || []).length) { problem = `Add at least one option for "${f.name}".`; break; }
+    }
+    if (!problem && qs('#fmName').value.trim()) problem = 'You typed a new field name but haven\'t added it. Click Add, or clear the name.';
+    if (problem) { showErr(qs('#fieldsModal'), problem); return; }
+    saveRecord('projects', { id: fieldsCtx.project.id, schema: fieldsCtx.schema });
+    fieldsCtx.saved = true;
+    modal('#fieldsModal').hide();
+    toast('Fields saved');
+    refresh();
+  }
+
+  qs('#fieldsModal').addEventListener('click', e => {
+    const act = e.target.closest('[data-act]');
+    if (!act || !fieldsCtx) return;
+    syncFieldInputs();
+    const f = fieldsCtx.schema.find(x => x.id === act.dataset.id);
+    if (act.dataset.act === 'field-add') addField();
+    else if (act.dataset.act === 'field-remove' && f) {
+      if (fieldsCtx.savedIds.has(f.id)) f.archived = true;               // saved before: hide it, keep its values
+      else fieldsCtx.schema = fieldsCtx.schema.filter(x => x.id !== f.id); // added just now: drop it
+      drawFields();
+    } else if (act.dataset.act === 'field-restore' && f) {
+      if (nameTaken(f.name, f.id)) { showErr(qs('#fieldsModal'), `Rename the other "${f.name}" field before restoring this one.`); return; }
+      delete f.archived;
+      drawFields();
+    }
+  });
+  qs('#fmType').addEventListener('change', e => qs('#fmOptsWrap').classList.toggle('d-none', e.target.value !== 'choice'));
+  qsa('#fmName, #fmOpts').forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addField(); } }));
+
+  /* ---------- modal wiring ---------- */
+  qs('#projectModal form').addEventListener('submit', saveProject);
+  qs('#itemModal form').addEventListener('submit', saveItem);
+  qs('#fieldsModal form').addEventListener('submit', saveFields);
+  qs('#pmDelete').addEventListener('click', deleteProject);
+  qs('#newProject').addEventListener('click', () => openProject(null));
+
+  // Ask before closing a form with unsaved changes.
+  const guard = (sel, ctx, snapshot) => qs(sel).addEventListener('hide.bs.modal', e => {
+    const c = ctx();
+    if (!c || c.saved) return;
+    if (snapshot() !== c.snapshot && !confirm('Discard your unsaved changes?')) e.preventDefault();
+  });
+  guard('#projectModal', () => projectCtx, projectSnapshot);
+  guard('#itemModal', () => itemCtx, itemSnapshot);
+  guard('#fieldsModal', () => fieldsCtx, () => { syncFieldInputs(); return fieldsSnapshot() + (qs('#fmName').value.trim() ? '+' : ''); });
+
+  qs('#itemModal').addEventListener('shown.bs.modal', () => { if (!itemCtx?.item) qs('#imName').focus(); });
+  qs('#projectModal').addEventListener('shown.bs.modal', () => { if (!projectCtx?.project) qs('#pmName').focus(); });
+  qs('#itemModal').addEventListener('hidden.bs.modal', () => {
+    if (parseHash().name === 'item') history.replaceState(null, '', state.backHash || '#home');
+    itemCtx = null;
+  });
+
+  qs('#resetBtn').addEventListener('click', () => {
+    if (!confirm('Reset the demo data in all apps? Your changes will be removed.')) return;
+    DEMO.reset();
+    load();
+    toast('Demo data reset');
+    if (location.hash === '#home') refresh(); else location.hash = '#home';
+  });
+
+  /* ---------- start ---------- */
+  if (!window.bootstrap) {
+    view.innerHTML = '<div class="alert alert-light border small">Bootstrap did not load. Check that cdn.jsdelivr.net is reachable from this network.</div>';
+    return;
+  }
+  qs('#who').textContent = `${nameOf(me)} · ${DEMO.person(me).title}`;
+  load();
+  window.addEventListener('hashchange', onHashChange);
+  // Changes made in another tab: reload, unless a form is open.
+  window.addEventListener('storage', e => { if (e.key === DEMO.KEYS.projects && !qs('.modal.show')) { load(); refresh(); } });
+  onHashChange();
+})();
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});</script>

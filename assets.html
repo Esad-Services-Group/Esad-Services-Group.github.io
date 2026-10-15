@@ -1,0 +1,433 @@
+<!doctype html>
+<!-- Assets (demo): company IT assets, who has them and their warranty. Sample data comes from demo.js and is kept in this browser. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assets</title>
+<link rel="icon" type="image/png" href="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+
+<div class="container py-3 py-md-4" style="max-width: 1100px; font-family: 'Segoe UI', Arial, sans-serif;">
+
+  <!-- All apps + who you are -->
+  <div class="d-flex justify-content-between align-items-center gap-2 mb-2 small text-secondary">
+    <a href="index.html" class="text-secondary text-decoration-none text-nowrap"><i class="bi bi-grid-3x3-gap me-1"></i>All apps</a>
+    <span class="text-nowrap"><i class="bi bi-person-circle me-1"></i><span id="who"></span></span>
+  </div>
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between gap-2 border-bottom pb-3 mb-3">
+    <div class="d-flex align-items-center gap-3" style="min-width: 0;">
+      <a href="index.html" class="flex-shrink-0"><img src="https://esadservices.com/wp-content/uploads/2025/02/EsadLogowithouttext-01.png" alt="ESAD" style="height: 48px; width: auto;"></a>
+      <h1 class="h4 mb-0 text-truncate"><a href="#" class="text-dark text-decoration-none">Assets</a></h1>
+    </div>
+    <button type="button" class="btn btn-sm btn-primary flex-shrink-0" id="newAsset" title="New asset"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">New asset</span></button>
+  </div>
+
+  <!-- Menu -->
+  <ul class="nav nav-underline gap-3 border-bottom mb-4" id="nav">
+    <li class="nav-item"><a class="nav-link" href="#" data-nav="home">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="#all" data-nav="all">All assets</a></li>
+  </ul>
+
+  <div id="view"></div>
+
+  <div class="border-top mt-5 pt-3 d-flex flex-wrap justify-content-between gap-2 text-secondary" style="font-size: 12px;">
+    <span>Demo with sample data. Changes are saved in this browser only.</span>
+    <button type="button" class="btn btn-link btn-sm p-0 text-secondary text-decoration-none" style="font-size: 12px;" id="resetBtn">Reset demo data</button>
+  </div>
+
+  <!-- Asset form -->
+  <div class="modal fade" id="assetModal" tabindex="-1" aria-labelledby="amHeading" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 mb-0" id="amHeading">New asset</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold" for="amName">Make and model</label>
+            <input type="text" class="form-control form-control-sm" id="amName" maxlength="120" required>
+            <div class="invalid-feedback">Enter the make and model.</div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6"><label class="form-label small fw-semibold" for="amCategory">Category</label><select class="form-select form-select-sm" id="amCategory"></select></div>
+            <div class="col-6"><label class="form-label small fw-semibold" for="amSerial">Serial number</label><input type="text" class="form-control form-control-sm" id="amSerial" maxlength="60"></div>
+            <div class="col-6"><label class="form-label small fw-semibold" for="amLocation">Location</label><select class="form-select form-select-sm" id="amLocation"></select></div>
+            <div class="col-6"><label class="form-label small fw-semibold" for="amCost">Cost (SAR)</label><input type="number" class="form-control form-control-sm" id="amCost" min="0" step="0.01" inputmode="decimal"></div>
+            <div class="col-6"><label class="form-label small fw-semibold" for="amPurchased">Purchased</label><input type="date" class="form-control form-control-sm" id="amPurchased"></div>
+            <div class="col-6"><label class="form-label small fw-semibold" for="amWarranty">Warranty until</label><input type="date" class="form-control form-control-sm" id="amWarranty"></div>
+          </div>
+          <label class="form-label small fw-semibold" for="amNotes">Notes <span class="fw-normal text-secondary">(optional)</span></label>
+          <textarea class="form-control form-control-sm" id="amNotes" rows="2" maxlength="500"></textarea>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary" id="amSave">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assign to someone -->
+  <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="asHeading" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" novalidate autocomplete="off">
+        <div class="modal-header py-2">
+          <h2 class="modal-title h6 mb-0" id="asHeading">Assign</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small fw-semibold" for="asPerson">Who gets it</label>
+          <select class="form-select form-select-sm mb-3" id="asPerson"></select>
+          <div class="invalid-feedback mt-n2 mb-3">Choose someone.</div>
+          <label class="form-label small fw-semibold" for="asNote">Note <span class="fw-normal text-secondary">(optional)</span></label>
+          <input type="text" class="form-control form-control-sm" id="asNote" maxlength="200" placeholder="For example: with charger and bag">
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div class="toast align-items-center text-bg-dark border-0" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body small" id="toastMsg"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="demo.js"></script>
+<script>
+(() => {
+  'use strict';
+  const { ASSET_CATEGORIES: CATEGORIES, ASSET_STATUS: STATUS, ASSET_LOCATIONS: LOCATIONS } = DEMO;
+  const me = DEMO.ME;
+  const WARRANTY_WINDOW = 60;   // days: warranties ending within this window need attention
+
+  /* ---------- helpers ---------- */
+  const qs = (sel, root = document) => root.querySelector(sel);
+  const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  const low = v => String(v ?? '').toLowerCase();
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const people = n => `${n} ${n === 1 ? 'person' : 'people'}`;
+  const fmtDate = s => { const d = new Date(String(s).length === 10 ? `${s}T00:00` : s); return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+  const money = n => `SAR ${Number(n || 0).toLocaleString('en-US')}`;
+  const inDays = n => DEMO.ymd(new Date(Date.now() + n * 864e5));
+  const nameOf = id => (id === me ? 'You' : DEMO.person(id).name);
+  const who = id => (id === me ? 'you' : DEMO.person(id).name);   // in sentences: "Assigned to you"
+  const icon = cat => CATEGORIES.find(c => c.name === cat)?.icon || 'bi-box';
+  const modal = sel => bootstrap.Modal.getOrCreateInstance(qs(sel));
+  const view = qs('#view');
+  let data = DEMO.assets();
+  const ui = { q: '', category: '', status: '', location: '' };
+
+  // Colours carry meaning: blue = in use, green = available, amber = in repair or warranty ending, red = warranty ended
+  const LOOK = { 'In use': 'text-bg-primary', 'In stock': 'text-bg-success', 'In repair': 'text-bg-warning', Retired: 'text-bg-light border text-secondary' };
+  const badge = s => `<span class="badge fw-normal ${LOOK[s] || 'text-bg-secondary'}">${esc(s)}</span>`;
+  const live = a => a.status !== 'Retired';
+  const warrantyEnded = a => !!a.warranty && a.warranty < DEMO.today();
+  const warrantyEnding = a => !!a.warranty && !warrantyEnded(a) && a.warranty <= inDays(WARRANTY_WINDOW);
+  function warrantyText(a) {
+    if (!a.warranty) return '<span class="text-muted">—</span>';
+    if (!live(a)) return esc(fmtDate(a.warranty));
+    if (warrantyEnded(a)) return `<span class="text-danger text-nowrap"><i class="bi bi-exclamation-circle me-1"></i>Ended ${esc(fmtDate(a.warranty))}</span>`;
+    if (warrantyEnding(a)) return `<span class="text-warning-emphasis text-nowrap"><i class="bi bi-hourglass-split me-1"></i>${esc(fmtDate(a.warranty))}</span>`;
+    return `<span class="text-nowrap">${esc(fmtDate(a.warranty))}</span>`;
+  }
+  const holder = a => (a.assignee ? esc(nameOf(a.assignee)) : '<span class="text-muted">—</span>');
+
+  function toast(msg) {
+    qs('#toastMsg').textContent = msg;
+    bootstrap.Toast.getOrCreateInstance(qs('#toast'), { delay: 3000 }).show();
+  }
+  function setNav(name) { qsa('#nav [data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === name)); }
+  const save = () => DEMO.saveAssets(data);
+  function record(a, action, extra = {}) { a.history.push({ at: new Date().toISOString(), action, by: me, ...extra }); }
+
+  // Phones (< 768px) get stacked cards; tablets and up get tables.
+  const table = (head, rows) => `<div class="d-none d-md-block table-responsive border rounded">
+      <table class="table table-hover table-sm align-middle mb-0">
+        <thead class="table-light"><tr>${head.map((h, i) => `<th class="small${i === 0 ? ' ps-3' : ''}${i === head.length - 1 ? ' pe-3' : ''}">${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table></div>`;
+  const assetRows = list => list.map(a => `
+    <tr data-href="#asset/${a.id}" style="cursor: pointer;">
+      <td class="small text-nowrap ps-3">${esc(a.tag)}</td>
+      <td class="small"><a href="#asset/${a.id}" class="text-decoration-none"><i class="bi ${icon(a.category)} text-secondary me-1"></i>${esc(a.name)}</a></td>
+      <td>${badge(a.status)}</td>
+      <td class="small">${holder(a)}</td>
+      <td class="small">${esc(a.location)}</td>
+      <td class="small pe-3">${warrantyText(a)}</td>
+    </tr>`);
+  const assetCards = list => `<div class="list-group d-md-none">${list.map(a => `
+    <a href="#asset/${a.id}" class="list-group-item list-group-item-action py-2">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <span class="small fw-semibold text-primary" style="min-width: 0;"><i class="bi ${icon(a.category)} me-1"></i>${esc(a.name)}</span>${badge(a.status)}
+      </div>
+      <div class="text-secondary mt-1" style="font-size: 12px;">${[esc(a.tag), a.assignee ? esc(nameOf(a.assignee)) : '', esc(a.location), warrantyText(a)].filter(Boolean).join(' · ')}</div>
+    </a>`).join('')}</div>`;
+  const ASSET_HEAD = ['Tag', 'Asset', 'Status', 'Assigned to', 'Location', 'Warranty'];
+
+  /* ---------- Home ---------- */
+  function renderHome() {
+    setNav('home');
+    const inUse = data.assets.filter(a => a.status === 'In use');
+    const stock = data.assets.filter(a => a.status === 'In stock');
+    const repair = data.assets.filter(a => a.status === 'In repair');
+    const attention = data.assets.filter(a => live(a) && (warrantyEnding(a) || (warrantyEnded(a) && a.status === 'In use')) || a.status === 'In repair')
+      .sort((a, b) => String(a.warranty).localeCompare(String(b.warranty)));
+    const reason = a => (a.status === 'In repair' ? 'In repair' : warrantyEnded(a) ? 'Out of warranty and still in use' : `Warranty ends ${fmtDate(a.warranty)}`);
+    const tile = (value, label, sub, ic, cls, dim, href) => `
+      <a href="${href}" class="card h-100 bg-light border text-decoration-none text-reset${dim ? ' opacity-75' : ''}"><div class="card-body p-3">
+        <div class="d-flex justify-content-between align-items-start"><span class="fs-2 fw-semibold lh-1">${esc(value)}</span><i class="bi bi-${ic} fs-4 ${cls}"></i></div>
+        <p class="small text-dark mb-0 mt-2">${esc(label)}</p>
+        <p class="text-secondary mb-0" style="font-size: 12px;">${esc(sub)}</p>
+      </div></a>`;
+    const ending = data.assets.filter(a => live(a) && warrantyEnding(a));
+    view.innerHTML = `
+      <div class="d-grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+        ${tile(inUse.length, 'In use', people(new Set(inUse.map(a => a.assignee).filter(Boolean)).size), 'person-check', 'text-primary', !inUse.length, '#all?status=In%20use')}
+        ${tile(stock.length, 'In stock', 'Ready to hand out', 'box-seam', 'text-success', !stock.length, '#all?status=In%20stock')}
+        ${tile(repair.length, 'In repair', repair.length ? 'With the vendor' : 'Nothing in repair', 'tools', 'text-warning', !repair.length, '#all?status=In%20repair')}
+        ${tile(ending.length, 'Warranty ending', `In the next ${WARRANTY_WINDOW} days`, 'hourglass-split', 'text-warning', !ending.length, '#all?warranty=ending')}
+      </div>
+      ${attention.length ? `
+      <h2 class="h5 mb-3 text-dark">Needs attention</h2>
+      <div class="list-group mb-4">${attention.map(a => `
+        <a href="#asset/${a.id}" class="list-group-item list-group-item-action bg-light d-flex flex-wrap align-items-center gap-2">
+          <i class="bi ${icon(a.category)} text-secondary"></i>
+          <span class="small"><span class="fw-semibold">${esc(a.name)}</span> <span class="text-secondary">· ${esc(a.tag)}</span></span>
+          <span class="ms-auto" style="font-size: 12px;">${a.status === 'In repair' ? badge('In repair') : warrantyText(a)}</span>
+          <span class="w-100 text-secondary" style="font-size: 12px;">${esc(reason(a))}${a.assignee ? ` · ${esc(nameOf(a.assignee))}` : ''} · ${esc(a.location)}</span>
+        </a>`).join('')}</div>` : ''}
+      <h2 class="h5 mb-3 text-dark">By category</h2>
+      ${table(['Category', ...STATUS.slice(0, 3)], CATEGORIES.map(c => {
+        const list = data.assets.filter(a => a.category === c.name);
+        return `<tr data-href="#all?category=${encodeURIComponent(c.name)}" style="cursor: pointer;">
+          <td class="small ps-3"><i class="bi ${c.icon} text-secondary me-2"></i>${esc(c.name)}</td>
+          ${STATUS.slice(0, 3).map((s, i) => `<td class="small${i === 2 ? ' pe-3' : ''}">${list.filter(a => a.status === s).length || ''}</td>`).join('')}
+        </tr>`;
+      }))}
+      <div class="list-group d-md-none">${CATEGORIES.map(c => {
+        const list = data.assets.filter(a => a.category === c.name);
+        return `<a href="#all?category=${encodeURIComponent(c.name)}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+          <i class="bi ${c.icon} text-secondary"></i><span class="small flex-grow-1">${esc(c.name)}</span>
+          <span class="text-secondary" style="font-size: 12px;">${STATUS.slice(0, 3).map(s => [s, list.filter(a => a.status === s).length]).filter(([, n]) => n).map(([s, n]) => `${n} ${s.toLowerCase()}`).join(' · ')}</span></a>`;
+      }).join('')}</div>`;
+  }
+
+  /* ---------- All assets ---------- */
+  function renderAll(params) {
+    setNav('all');
+    Object.assign(ui, { category: params.get('category') || '', status: params.get('status') || '', location: params.get('location') || '', warranty: params.get('warranty') || '' });
+    const select = (id, label, list, value) => `<select id="${id}" class="form-select form-select-sm w-auto flex-grow-1 flex-md-grow-0" aria-label="${label}">
+      <option value="">${label}</option>${list.map(x => `<option${x === value ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+    view.innerHTML = `
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="input-group input-group-sm flex-grow-1 flex-md-grow-0" style="width: 260px;">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-secondary"></i></span>
+          <input type="search" class="form-control" id="fQ" placeholder="Tag, model, serial or person" aria-label="Search assets" value="${esc(ui.q)}">
+        </div>
+        ${select('fCategory', 'All categories', CATEGORIES.map(c => c.name), ui.category)}
+        ${select('fStatus', 'All statuses', STATUS, ui.status)}
+        ${select('fLocation', 'All locations', LOCATIONS, ui.location)}
+      </div>
+      ${ui.warranty ? `<div class="small mb-2">Warranty ending in the next ${WARRANTY_WINDOW} days · <a href="#all" class="text-decoration-none">Show all</a></div>` : ''}
+      <div id="list"></div>`;
+    qs('#fQ').addEventListener('input', e => { ui.q = e.target.value; drawAll(); });
+    [['#fCategory', 'category'], ['#fStatus', 'status'], ['#fLocation', 'location']].forEach(([sel, key]) => qs(sel).addEventListener('change', e => { ui[key] = e.target.value; drawAll(); }));
+    drawAll();
+  }
+  function drawAll() {
+    const q = low(ui.q.trim());
+    const list = data.assets.filter(a =>
+      (!ui.category || a.category === ui.category) && (!ui.location || a.location === ui.location) &&
+      (ui.status ? a.status === ui.status : live(a)) &&
+      (ui.warranty !== 'ending' || warrantyEnding(a)) &&
+      (!q || [a.tag, a.name, a.serial, a.assignee ? DEMO.person(a.assignee).name : ''].some(v => low(v).includes(q))))
+      .sort((a, b) => a.tag.localeCompare(b.tag));
+    qs('#list').innerHTML = list.length
+      ? `${table(ASSET_HEAD, assetRows(list))}${assetCards(list)}<p class="small text-secondary mt-2 mb-0">${plural(list.length, 'asset')}${ui.status ? '' : ' · retired assets are hidden'}</p>`
+      : '<p class="small text-secondary">No assets match.</p>';
+  }
+
+  /* ---------- One asset ---------- */
+  const HISTORY = {
+    Added: ['plus-circle', 'text-secondary', h => `Added by ${esc(who(h.by))}`],
+    Assigned: ['person-check', 'text-primary', h => `Assigned to ${esc(who(h.to))}`],
+    Returned: ['box-arrow-in-down', 'text-success', h => `Returned to stock by ${esc(who(h.from))}`],
+    'Sent for repair': ['tools', 'text-warning', () => 'Sent for repair'],
+    'Back from repair': ['check-circle', 'text-success', () => 'Back from repair'],
+    Retired: ['archive', 'text-secondary', () => 'Retired'],
+    Edited: ['pencil', 'text-secondary', h => `Details edited by ${esc(who(h.by))}`],
+  };
+  function renderAsset(id) {
+    setNav('all');
+    const a = data.assets.find(x => x.id === id);
+    const back = '<a href="#all" class="small text-decoration-none d-inline-block mb-2"><i class="bi bi-arrow-left me-1"></i>All assets</a>';
+    if (!a) { view.innerHTML = `${back}<p class="small text-secondary">This asset doesn't exist.</p>`; return; }
+    const btn = (act, label, cls = 'btn-outline-secondary', ic = '') => `<button type="button" class="btn btn-sm ${cls}" data-act="${act}">${ic ? `<i class="bi bi-${ic} me-1"></i>` : ''}${label}</button>`;
+    const actions = {
+      'In stock': [btn('assign', 'Assign', 'btn-primary', 'person-plus'), btn('repair', 'Send for repair'), btn('retire', 'Retire')],
+      'In use': [btn('return', 'Return to stock', 'btn-primary', 'box-arrow-in-down'), btn('assign', 'Reassign'), btn('repair', 'Send for repair')],
+      'In repair': [btn('fixed', 'Back from repair', 'btn-primary', 'check-lg')],
+      Retired: [],
+    }[a.status] || [];
+    const field = (label, value) => `<div class="col"><div class="text-secondary" style="font-size: 12px;">${label}</div><div class="small">${value || '<span class="text-muted">—</span>'}</div></div>`;
+    view.innerHTML = `${back}
+      <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+        <div style="min-width: 0;">
+          <div class="small text-secondary">${esc(a.tag)}</div>
+          <div class="d-flex flex-wrap align-items-center gap-2"><h2 class="h4 mb-0 text-dark"><i class="bi ${icon(a.category)} text-secondary me-2"></i>${esc(a.name)}</h2>${badge(a.status)}</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">${actions.join('')}${btn('edit', 'Edit', 'btn-outline-secondary', 'pencil')}</div>
+      </div>
+      <div class="row g-4">
+        <div class="col-12 col-lg-7">
+          <div class="card bg-light border"><div class="card-body p-3">
+            <div class="row row-cols-2 row-cols-md-3 g-3">
+              ${field('Assigned to', a.assignee ? esc(nameOf(a.assignee)) : '')}${field('Location', esc(a.location))}${field('Category', esc(a.category))}
+              ${field('Serial number', esc(a.serial))}${field('Purchased', esc(fmtDate(a.purchased)))}${field('Cost', a.cost ? esc(money(a.cost)) : '')}
+              ${field('Warranty until', a.warranty ? warrantyText(a) : '')}
+            </div>
+            ${a.notes ? `<div class="border-top pt-3 mt-3 small" style="white-space: pre-line;">${esc(a.notes)}</div>` : ''}
+          </div></div>
+        </div>
+        <div class="col-12 col-lg-5">
+          <div class="card border"><div class="card-body p-3">
+            <div class="small fw-semibold mb-2">History</div>
+            <ul class="list-unstyled mb-0">${[...a.history].reverse().map(h => {
+              const [ic, cls, text] = HISTORY[h.action] || ['dot', 'text-secondary', () => esc(h.action)];
+              return `<li class="d-flex gap-2 py-2 border-bottom"><i class="bi bi-${ic} ${cls} flex-shrink-0" aria-hidden="true"></i>
+                <div class="small flex-grow-1" style="min-width: 0;">${text(h)}${h.note ? `<div class="text-secondary">${esc(h.note)}</div>` : ''}
+                  <div class="text-secondary" style="font-size: 12px;">${esc(fmtDate(h.at))}</div></div></li>`;
+            }).join('')}</ul>
+          </div></div>
+        </div>
+      </div>`;
+  }
+
+  /* ---------- actions ---------- */
+  let current = null;   // the asset an open form is for
+  function act(a, action) {
+    current = a;
+    if (action === 'edit') return openForm(a);
+    if (action === 'assign') {
+      qs('#asHeading').textContent = a.assignee ? `Reassign ${a.tag}` : `Assign ${a.tag}`;
+      qs('#asPerson').innerHTML = '<option value="">Select a person…</option>' + DEMO.DEPARTMENTS.map(d => {
+        const ppl = DEMO.PEOPLE.filter(p => p.dept === d && p.id !== a.assignee);
+        return ppl.length ? `<optgroup label="${esc(d)}">${ppl.map(p => `<option value="${p.id}">${esc(p.name)} · ${esc(p.title)}</option>`).join('')}</optgroup>` : '';
+      }).join('');
+      qs('#asPerson').classList.remove('is-invalid');
+      qs('#asNote').value = '';
+      return modal('#assignModal').show();
+    }
+    if (action === 'return') { record(a, 'Returned', { from: a.assignee }); Object.assign(a, { status: 'In stock', assignee: '' }); toast(`${a.tag} is back in stock`); }
+    if (action === 'repair') { record(a, 'Sent for repair'); a.status = 'In repair'; toast(`${a.tag} sent for repair`); }
+    if (action === 'fixed') { record(a, 'Back from repair'); a.status = a.assignee ? 'In use' : 'In stock'; toast(`${a.tag} is back from repair`); }
+    if (action === 'retire') {
+      if (!confirm(`Retire ${a.tag}? It will be hidden from the asset list.`)) return;
+      record(a, 'Retired'); Object.assign(a, { status: 'Retired', assignee: '' }); toast(`${a.tag} retired`);
+    }
+    save();
+    route();
+  }
+  qs('#assignModal form').addEventListener('submit', e => {
+    e.preventDefault();
+    const to = qs('#asPerson').value;
+    qs('#asPerson').classList.toggle('is-invalid', !to);
+    if (!to) return;
+    record(current, 'Assigned', { to, note: qs('#asNote').value.trim() });
+    Object.assign(current, { status: 'In use', assignee: to });
+    save();
+    modal('#assignModal').hide();
+    toast(`${current.tag} assigned to ${DEMO.person(to).name}`);
+    route();
+  });
+
+  function openForm(a) {
+    current = a;
+    const opts = (list, value) => list.map(x => `<option${x === value ? ' selected' : ''}>${esc(x)}</option>`).join('');
+    qs('#amHeading').textContent = a ? `Edit ${a.tag}` : 'New asset';
+    qs('#amName').value = a?.name || '';
+    qs('#amName').classList.remove('is-invalid');
+    qs('#amCategory').innerHTML = opts(CATEGORIES.map(c => c.name), a?.category || 'Laptop');
+    qs('#amSerial').value = a?.serial || '';
+    qs('#amLocation').innerHTML = opts(LOCATIONS, a?.location || LOCATIONS[0]);
+    qs('#amCost').value = a?.cost ?? '';
+    qs('#amPurchased').value = a?.purchased || DEMO.today();
+    qs('#amWarranty').value = a?.warranty || '';
+    qs('#amNotes').value = a?.notes || '';
+    qs('#amSave').textContent = a ? 'Save' : 'Add asset';
+    modal('#assetModal').show();
+  }
+  qs('#assetModal form').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = qs('#amName').value.trim();
+    qs('#amName').classList.toggle('is-invalid', !name);
+    if (!name) { qs('#amName').focus(); return; }
+    const values = {
+      name, category: qs('#amCategory').value, serial: qs('#amSerial').value.trim(), location: qs('#amLocation').value,
+      cost: qs('#amCost').value === '' ? '' : Number(qs('#amCost').value), purchased: qs('#amPurchased').value,
+      warranty: qs('#amWarranty').value, notes: qs('#amNotes').value.trim(),
+    };
+    let a = current;
+    if (a) { Object.assign(a, values); record(a, 'Edited'); }
+    else {
+      const id = data.next++;
+      a = { id, tag: `ESAD-IT-${String(id).padStart(4, '0')}`, status: 'In stock', assignee: '', history: [], ...values };
+      record(a, 'Added');
+      data.assets.push(a);
+    }
+    save();
+    modal('#assetModal').hide();
+    toast(current ? 'Asset saved' : `${a.tag} added`);
+    if (current) route(); else location.hash = `#asset/${a.id}`;
+  });
+
+  /* ---------- routing and events ---------- */
+  function route() {
+    const [path, query = ''] = location.hash.replace(/^#\/?/, '').split('?');
+    const [name, arg] = path.split('/');
+    if (name === 'all') renderAll(new URLSearchParams(query));
+    else if (name === 'asset') renderAsset(Number(arg));
+    else renderHome();
+  }
+  window.addEventListener('hashchange', () => { route(); window.scrollTo(0, 0); });
+
+  view.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]');
+    if (b) { const id = Number(location.hash.split('/')[1]); const a = data.assets.find(x => x.id === id); if (a) act(a, b.dataset.act); return; }
+    if (e.target.closest('a, button, input, select, label')) return;
+    const row = e.target.closest('[data-href]');
+    if (row) location.hash = row.dataset.href;
+  });
+  qs('#newAsset').addEventListener('click', () => openForm(null));
+
+  qs('#resetBtn').addEventListener('click', () => {
+    if (!confirm('Reset the demo data in all apps? Your changes will be removed.')) return;
+    DEMO.reset();
+    data = DEMO.assets();
+    toast('Demo data reset');
+    route();
+  });
+  window.addEventListener('storage', e => { if (e.key === DEMO.KEYS.assets && !qs('.modal.show')) { data = DEMO.assets(); route(); } });
+
+  qs('#who').textContent = `${DEMO.person(me).name} · ${DEMO.person(me).title}`;
+  route();
+})();
+</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});</script>
